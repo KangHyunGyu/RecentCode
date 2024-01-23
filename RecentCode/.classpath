@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="src_gen">
+		<attributes>
+			<attribute name="optional" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="D:/ptc/Windchill_12.1/Windchill/srclib/tool/AnnotationProcessing.jar"/>
+	<classpathentry kind="lib" path="D:/ptc/Windchill_12.1/Windchill/srclib/tool/Annotations.jar"/>
+	<classpathentry kind="lib" path="D:/ptc/Windchill_12.1/Windchill/srclib/tool/JasperUtil.jar"/>
+	<classpathentry kind="lib" path="D:/ptc/Windchill_12.1/Windchill/srclib/tool/PtcBuildSupport-ant.jar"/>
+	<classpathentry kind="lib" path="D:/ptc/Windchill_12.1/Windchill/srclib/tool/SystemGeneration.jar"/>
+	<classpathentry kind="lib" path="D:/ptc/Windchill_12.1/Windchill/eclipse-libs/ie3rdpartylibs.jar"/>
+	<classpathentry kind="lib" path="D:/ptc/Windchill_12.1/Windchill/eclipse-libs/wc3rdpartylibs.jar"/>
+	<classpathentry kind="lib" path="D:/ptc/Windchill_12.1/Windchill/eclipse-libs/wncEclipse-lib.jar"/>
+	<classpathentry kind="lib" path="D:/ptc/Windchill_12.1/Windchill/eclipse-libs/wncEclipse-webinflib.jar"/>
+	<classpathentry kind="lib" path="D:/ptc/Windchill_12.1/Windchill/eclipse-libs/wncEclipse-webinflib22.jar"/>
+	<classpathentry kind="lib" path="D:/ptc/Windchill_12.1/Windchill/eclipse-libs/wncEclipse-webinflibWeb.jar"/>
+	<classpathentry kind="lib" path="D:/ptc/Windchill_12.1/Windchill/codebase"/>
+	<classpathentry kind="lib" path="D:/ptc/Windchill_12.1/Windchill/codebase/WEB-INF/lib/scdkjava.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

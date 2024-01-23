@@ -1,0 +1,247 @@
+package com.e3ps.common.history.bean;
+
+import com.e3ps.change.EChangeActivity;
+import com.e3ps.change.EChangeOrder2;
+import com.e3ps.change.EChangeRequest2;
+import com.e3ps.common.bean.PersistableData;
+import com.e3ps.common.history.DownloadHistory;
+import com.e3ps.common.util.CommonUtil;
+import com.e3ps.common.util.DateUtil;
+import com.e3ps.doc.E3PSDocument;
+import com.e3ps.org.Department;
+import com.e3ps.org.bean.PeopleData;
+import com.e3ps.org.service.DepartmentHelper;
+import com.e3ps.project.EProject;
+import com.e3ps.project.issue.IssueRequest;
+import com.e3ps.project.issue.IssueSolution;
+import com.e3ps.project.issue.SolutionLink;
+import com.e3ps.workspace.notice.Notice;
+
+import wt.epm.EPMDocument;
+import wt.fc.Persistable;
+import wt.fc.PersistenceHelper;
+import wt.fc.QueryResult;
+import wt.org.OrganizationServicesHelper;
+import wt.org.WTUser;
+import wt.part.WTPart;
+import wt.session.SessionHelper;
+import wt.util.WTException;
+
+public class DownloadHistoryData extends PersistableData{
+
+	private String userId;
+	private String name;
+	private int dCount;			// download Count
+	private String fName;			// file Name
+	private String downloadDate;	// download 시간
+	private String dOid; 			// download file oid
+
+	private String module;			//모듈
+	private String number;			// 파일 번호
+	private String title;			// 파일 제목
+	
+	private String ip;
+	private String departmentName;
+	
+	public DownloadHistoryData(String oid) throws Exception {
+		super(oid);
+		
+		DownloadHistory history = (DownloadHistory) CommonUtil.getObject(oid);
+		
+		_DownloadHistoryData(history);
+	}
+	
+	public DownloadHistoryData(DownloadHistory history) throws Exception {
+		super(history);
+		
+		_DownloadHistoryData(history);
+	}
+	
+	public void _DownloadHistoryData(DownloadHistory history) throws Exception {
+		
+		this.userId = history.getUser().getName();
+		this.name = history.getUser().getFullName();
+		this.dCount = history.getDCount();
+		this.fName = history.getFName();
+		this.downloadDate = DateUtil.getTimeFormat(history.getDownloadDate(),"yyyy-MM-dd HH:mm:ss:SS");
+		this.dOid = history.getDOid();
+		this.ip = history.getIp();
+		Persistable persistable = CommonUtil.getPersistable(history.getDOid());
+		if(persistable != null){
+			if(persistable instanceof EPMDocument) {
+				this.module = "도면";
+				this.number = ((EPMDocument) persistable).getNumber();
+				this.title = ((EPMDocument) persistable).getName();
+			} else if(persistable instanceof WTPart) {
+				this.module = "부품";
+				this.number = ((WTPart) persistable).getNumber();
+				this.title = ((WTPart) persistable).getName();
+			} 
+//			else if(persistable instanceof DistributeDocument) {
+//				this.module = "배포";
+//				this.number = ((DistributeDocument) persistable).getDistributeNumber();
+//				this.title = ((DistributeDocument) persistable).getDistributeName();
+//			} 
+			else if(persistable instanceof E3PSDocument) {
+				this.module = "문서";
+				this.number = ((E3PSDocument) persistable).getNumber();
+				this.title = ((E3PSDocument) persistable).getName();
+			} else if(persistable instanceof IssueRequest) {
+				this.module = "이슈";
+				this.number = "";
+				this.title = ((IssueRequest) persistable).getName();
+			} else if(persistable instanceof IssueSolution) {
+				String issueName = "";
+				try {
+					QueryResult qr;
+					qr = PersistenceHelper.manager.navigate((IssueSolution) persistable, "request", SolutionLink.class);
+					IssueRequest issue = null;
+					if(qr.hasMoreElements()){
+						issue = (IssueRequest)qr.nextElement();
+					}
+					if(issue != null){
+						issueName = issue.getName();
+					}
+				} catch (WTException e) {
+					e.printStackTrace();
+				}
+				this.module = "이슈방안";
+				this.number = "";
+				this.title = issueName;
+			} else if(persistable instanceof EProject) {
+				this.module = "프로젝트";
+				this.number = ((EProject) persistable).getCode();
+				this.title = ((EProject) persistable).getName();
+			} else if(persistable instanceof EChangeOrder2) {
+				this.module = "ECO";
+				this.number = ((EChangeOrder2) persistable).getOrderNumber();
+				this.title = ((EChangeOrder2) persistable).getName();
+			} else if(persistable instanceof EChangeRequest2) {
+				this.module = "ECR";
+				this.number = ((EChangeRequest2) persistable).getRequestNumber();
+				this.title = ((EChangeRequest2) persistable).getName();
+			} else if(persistable instanceof EChangeActivity) {
+				this.module = "ECA";
+				EChangeActivity eca = (EChangeActivity) persistable;
+				Persistable p = eca.getOrder();
+				if(p instanceof EChangeOrder2) {
+					this.number = ((EChangeOrder2) p).getOrderNumber();
+					this.title = "[ECO]"+((EChangeActivity) persistable).getName();
+				}else if(p instanceof EChangeRequest2) {
+					this.number = ((EChangeRequest2) p).getRequestNumber();
+					this.title = "[ECR]"+((EChangeActivity) persistable).getName();
+				}
+			} else if(persistable instanceof Notice){
+				this.module = "공지사항";
+				Notice notice = (Notice)persistable;
+				
+				this.number = notice.getNotifyType();
+				this.title = notice.getTitle();
+			
+			} else {
+				this.number = "확인 필요";
+				this.title = "확인 필요";
+			}
+		}else{
+			this.module = "없음";
+			this.number = "없음";
+			this.title = "없음";
+		}
+		
+		WTUser user = OrganizationServicesHelper.manager.getUser(this.userId);
+		Department dept = DepartmentHelper.manager.getDepartment(user);
+		this.departmentName = dept.getName();
+	}
+	
+
+	public String getUserId() {
+		return userId;
+	}
+
+	public void setUserId(String id) {
+		this.userId = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public int getdCount() {
+		return dCount;
+	}
+
+	public void setdCount(int dCount) {
+		this.dCount = dCount;
+	}
+
+	public String getfName() {
+		return fName;
+	}
+
+	public void setfName(String fName) {
+		this.fName = fName;
+	}
+
+	public String getDownloadDate() {
+		return downloadDate;
+	}
+
+	public void setDownloadDate(String downloadDate) {
+		this.downloadDate = downloadDate;
+	}
+
+	public String getdOid() {
+		return dOid;
+	}
+
+	public void setdOid(String dOid) {
+		this.dOid = dOid;
+	}
+
+	public String getModule() {
+		return module;
+	}
+
+	public void setModule(String module) {
+		this.module = module;
+	}
+
+	public String getNumber() {
+		return number;
+	}
+
+	public void setNumber(String number) {
+		this.number = number;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	
+	public String getIp() {
+		return ip;
+	}
+
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
+
+	public String getDepartmentName() {
+		return departmentName;
+	}
+
+	public void setDepartmentName(String departmentName) {
+		this.departmentName = departmentName;
+	}
+	
+	
+}

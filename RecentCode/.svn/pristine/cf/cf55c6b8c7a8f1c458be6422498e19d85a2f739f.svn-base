@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <base href="../..">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summary</title>
+
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/custom.css">
+</head>
+
+<body>
+
+    <!-- pop -->
+    <div class="pop">
+
+        <!-- top -->
+        <div class="top">
+            <h2>
+                Stage-Gate Dashboard – PSO Project 001
+            </h2>
+
+            <span class="close">
+                <a>
+                    <img src="./images/colse_bt.png" alt="닫기">
+                </a>
+            </span>
+        </div>
+        <!-- //top -->
+
+        <div class="pop_nav">
+            ▶ 관련 프로젝트: PSO Project 2/관련 부품번호(부품명): SHPART001(SHPartName001)
+        </div>
+
+        <!--tap -->
+        <div class="tap pt15">
+            <ul>
+                <li data-module="summary">Summary</li>
+                <li data-module="timing">Timing</li>
+                <li data-module="quality">Quality</li>
+                <li data-module="c_stop">C_Stop</li>
+                <li data-module="risk">Risk</li>
+                <li data-module="deliverable">Deliverable Status</li>
+                <li data-module="gateReviews">Gate Reviews</li>
+                <li data-module="productDev">Product Dev.</li>
+                <li class="on" data-module="inchanges">ECR</li>
+                <!-- <li data-module="">MM</li>
+			<li data-module="">Action</li> -->
+            </ul>
+
+            <div class="tapbutton">
+                <button type="button" class="s_bt03">1</button>
+                <button type="button" class="s_bt03">2</button>
+                <button type="button" class="s_bt03">3</button>
+                <button type="button" class="s_bt03">4</button>
+                <button type="button" class="s_bt09">5</button>
+                <button type="button" class="s_bt03">6</button>
+                <button type="button" class="s_bt010">7</button>
+            </div>
+        </div>
+        <!--//tap -->
+		
+		
+		<div class="seach_arm3 pl25 pt5 ">
+            <div class="leftbt">
+                <img class="pointer content--toggle" src="./images/minus_icon.png" data-target="inchanges">
+                Inchanges
+                <button class="s_bt03 property_update" data-target="inchanges"></button>
+                <!-- <button class="s_bt03 property_update"></button> -->
+            </div>
+        </div>
+
+		<div class="pro_table pt5 pl25 pr25">
+			<div class="objectives">
+				<div style="display: flex; border-left: none; border-bottom: none; border-right: none; ">
+					<table class="mainTable ecrTable" style="width: 50%; margin-left:0">
+						<caption>검색조건보기</caption>
+						<colgroup>
+							<col style="width:50%">
+							<col style="width:auto">
+						</colgroup>
+						<tbody>
+							<tr>
+								<th colspan="2" class="tac">
+									ECR 리스트
+								</th>
+							</tr>
+							<tr>
+								<th class="tac">
+									ECR 번호
+								</th>
+								<th class="tac">
+									ECR 이름
+								</th>
+							</tr>
+						</tbody>
+						<tbody id="ecrMainBody">
+							
+						</tbody>
+					</table>
+
+					<div style="width: 5%"> </div>
+
+					<table class="mainTable ecoTable" style="width: 50%; margin:auto; margin-top:0">
+						<caption>검색조건보기</caption>
+						<colgroup>
+							<col style="width:50%">
+							<col style="width:auto">
+						</colgroup>
+						<tbody>
+							<tr>
+								<th colspan="2" class="tac">
+									ECO 리스트
+								</th>
+							</tr>
+							<tr>
+								<th class="tac">
+									ECO 번호
+								</th>
+								<th class="tac">
+									ECO 이름
+								</th>
+							</tr>
+						</tbody>
+						<tbody id="ecoMainBody">
+						</tbody>
+					</table>
+
+				</div>
+			</div>
+		</div>
+		
+    </div>
+    <script src="./index.js"></script>
+    <script src="./modules/inchanges/data.js"></script>
+    <script src="./modules/inchanges/inchanges.js"></script>
+</body>
+
+</html>

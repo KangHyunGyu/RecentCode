@@ -1,0 +1,71 @@
+@CHARSET "UTF-8";
+/* AUIGrid Design */
+
+/* 수정 불가능 열 헤더 색상 변경 */
+.aui-grid-non-editable-header {background:skyblue;}
+/* 수정 불가능 열 데이터 색상 변경 */
+.aui-grid-non-editable-cell {background:#F6E3CE; color:#FE2E2E; font-weight:bold;}
+
+/* 수정 가능 열 헤더 색상 변경 */
+.aui-grid-editable-header {background:skyblue;}
+/* 수정 가능 열 데이터 색상 변경 */
+.aui-grid-editable-cell {background:#EBF7FF; color:#0000ff; font-weight:bold;}
+
+/* 리스트 템플릿에서 사용할 클래스*/
+.myList-style {
+	text-align :left;
+	white-space:nowrap;
+}
+.myList-style .myList-col {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display:inline-block;
+}
+
+.AUIGrid_Left {
+	text-align:left;
+}
+
+.AUIGrid_Right {
+	text-align:right;
+}
+
+.AUIGrid_Center {
+	text-align:center;
+}
+
+/* 소팅 가능 헤더 색상 변경 */
+.aui-grid-sortable-header {background:skyblue;}
+.aui-grid-sortable-header:hover {background:skyblue;}
+
+/* bom 비교 데이터 색상 변경 */
+.aui-grid-added-cell {background:skyblue;}
+.aui-grid-added-cell:hover {background:skyblue;}
+.aui-grid-deleted-cell {background:#FE2E2E;}
+.aui-grid-deleted-cell:hover {background:#FE2E2E;}
+.aui-grid-modified-cell {background:#ff8000;}
+.aui-grid-modified-cell:hover {background:#ff8000;}
+
+/* bom 폐기 데이터 색상 변경 */
+.aui-grid-withdrawn-cell {background:#FE2E2E;}
+.aui-grid-withdrawn-cell:hover {background:#FE2E2E;}
+
+/* bom 비교 데이터 색상 변경 */
+.aui-grid-bomcompare-add-cell {background: #fffde2;}
+.aui-grid-bomcompare-add-cell:hover {background:#fffde2;}
+.aui-grid-bomcompare-update-cell {background:#bcf2ff;}
+.aui-grid-bomcompare-update-cell:hover {background:#bcf2ff;}
+
+/* S-BOM 제외 취소선*/
+.aui-grid-registSbom-except {text-decoration:line-through}
+
+.my-flash-style {background: #fffde2;}
+
+/* 빨간 글자 */
+.aui-grid-warning {color:#FE2E2E; font-weight:bold;}
+
+.aui-grid-ecr-contents {
+	background-color: #FFFFDE;
+	color:#000000;
+	font-weight:bold;
+}

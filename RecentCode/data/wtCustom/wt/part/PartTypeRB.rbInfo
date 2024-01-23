@@ -1,0 +1,35 @@
+ResourceInfo.class=wt.tools.resource.EnumResourceInfo
+ResourceInfo.customizable=true
+ResourceInfo.deprecated=false
+ResourceInfo.UUID=f3c9f6a8-0be9-48ea-b534-13151f7ec706
+
+# Entry Format (values equal to default value are not included)
+# <key>.value=
+# <key>.comment=
+# <key>.argComment<n>=
+# <key>.constant=
+# <key>.customizable=
+# <key>.deprecated=
+# <key>.abbreviatedDisplay=
+# <key>.fullDisplay=
+# <key>.shortDescription=
+# <key>.longDescription=
+# <key>.comment=
+# <key>.order=
+# <key>.defaultValue=
+# <key>.selectable=
+
+# Entry Contents
+
+project.value=project
+project.shortDescription=End Item
+project.order=40
+
+module.value=module
+module.shortDescription=module
+module.order=50
+
+unit.value=unit
+unit.shortDescription=unit
+unit.order=60
+

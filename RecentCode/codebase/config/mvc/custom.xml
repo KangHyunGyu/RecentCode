@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"	
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd">
+
+	<!-- Configurations in this file override all other configurations -->
+	<context:component-scan base-package="com.e3ps">
+		<context:include-filter type="regex" expression="(service|controller)\..*" />
+	</context:component-scan>
+	
+	<task:annotation-driven/>
+	
+	<!-- add e3ps PLM config [Start] -->
+	<bean id="jacksonMessageConverter" class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+		<property name="objectMapper">
+			<bean class="org.springframework.http.converter.json.Jackson2ObjectMapperFactoryBean"></bean>
+		</property>
+	</bean>
+	
+<!--
+	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+	
+		<property name="messageConverters">
+			<list>
+				<ref bean="jacksonMessageConverter"/>
+			</list>
+		</property>
+
+	</bean>
+-->	
+	
+	<!-- add e3ps PLM config [End] -->
+   <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+   <!-- add e3ps PLM config [Start] -->
+      <property name="messageConverters">
+         <list>
+            <ref bean="jacksonMessageConverter"/>
+         </list>
+      </property>
+      <!-- <property name="requireSession" value="false"/> -->
+   <!-- add e3ps PLM config [End] -->
+   </bean>
+
+	
+
+	<!--Tiles setting -->
+	<bean id="tilesviewResolver" class="org.springframework.web.servlet.view.tiles3.TilesViewResolver">
+		<property name="viewClass" value="org.springframework.web.servlet.view.tiles3.TilesView"/>
+		<property name="order" value="1"/>
+	</bean>
+
+    <bean id="tilesConfigurer" class="org.springframework.web.servlet.view.tiles3.TilesConfigurer">
+        <property name="definitions">
+            <list>
+                <value>/config/tiles/layouts.xml</value>
+            </list>
+        </property>
+    </bean>
+    
+    <mvc:interceptors>
+    	<mvc:interceptor>
+    		<mvc:mapping path="/**"/>
+    		<mvc:exclude-mapping path="**.css"/>
+    		<mvc:exclude-mapping path="**.js"/>
+    		<mvc:exclude-mapping path="**.jsp"/>
+    		<bean id="e3psInterceptor" class="com.e3ps.common.util.AuthInterceptor"/>
+    	</mvc:interceptor>
+    </mvc:interceptors>
+	
+	
+	
+    <!-- Json view -->
+	<bean class="org.springframework.web.servlet.view.BeanNameViewResolver">
+		<property name="order" value="0"/>
+	</bean>
+	<bean id="jsonView" class="com.e3ps.project.JsonView" />
+</beans>

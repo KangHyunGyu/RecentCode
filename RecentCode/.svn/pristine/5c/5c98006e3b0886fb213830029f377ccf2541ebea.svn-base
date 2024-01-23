@@ -1,0 +1,264 @@
+<%@page import="com.e3ps.workspace.notice.Notice"%>
+<%@page import="com.e3ps.admin.FolderAuthGroup"%>
+<%@page import="com.e3ps.common.iba.IBAUtil"%>
+<%@page import="java.util.Set"%>
+<%@page import="wt.org.WTRolePrincipal"%>
+<%@page import="com.ptc.windchill.uwgm.common.container.OrganizationHelper"%>
+<%@page import="com.e3ps.common.jdf.config.ConfigImpl"%>
+<%@page import="com.e3ps.common.message.util.MessageUtil"%>
+<%@page import="com.e3ps.admin.AuthorityObjectType"%>
+<%@page import="wt.access.AccessControlRule"%>
+<%@page import="com.e3ps.doc.E3PSDocument"%>
+<%@page import="wt.admin.PolicyRuleAlreadyExistsException"%>
+<%@page import="wt.folder.SubFolder"%>
+<%@page import="com.e3ps.admin.service.AdminHelper"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="wt.query.SearchCondition"%>
+<%@page import="wt.query.QuerySpec"%>
+<%@page import="com.e3ps.distribute.DistributeRegistration"%>
+<%@page import="wt.fc.QueryResult"%>
+<%@page import="wt.fc.WTObject"%>
+<%@page import="wt.fc.Persistable"%>
+<%@page import="com.e3ps.admin.EsolutionMenu"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="wt.pom.WTConnection"%>
+<%@page import="java.sql.Connection"%>
+<%@page import="java.text.DecimalFormat"%>
+<%@page import="wt.pom.DBProperties"%>
+<%@page import="wt.method.MethodContext"%>
+<%@page import="com.e3ps.common.code.NumberCode"%>
+<%@page import="java.util.Date"%>
+<%@page import="java.util.Locale"%>
+<%@page import="java.util.TimeZone"%>
+<%@page import="org.apache.commons.lang3.time.FastDateFormat"%>
+<%@page import="com.e3ps.distribute.DistributeDocument"%>
+<%@page import="wt.admin.AdminDomainRef"%>
+<%@page import="wt.org.WTPrincipalReference"%>
+<%@page import="wt.access.AccessPermission"%>
+<%@page import="wt.access.AccessPermissionSet"%>
+<%@page import="wt.lifecycle.State"%>
+<%@page import="wt.admin.AdministrativeDomainHelper"%>
+<%@page import="wt.admin.AdministrativeDomain"%>
+<%@page import="wt.access.AccessControlHelper"%>
+<%@page import="com.e3ps.common.util.CommonUtil"%>
+<%@page import="com.e3ps.org.People"%>
+<%@page import="java.util.List"%>
+<%@page import="java.util.ArrayList"%>
+<%@page import="wt.session.SessionHelper"%>
+<%@page import="wt.org.WTPrincipal"%>
+<%@page import="com.e3ps.org.service.UserHelper"%>
+<%@page import="wt.org.WTUser"%>
+<%@page import="wt.fc.collections.WTArrayList"%>
+<%@page import="wt.fc.collections.WTCollection"%>
+<%@page import="wt.org.StandardOrganizationServicesManager"%>
+<%@page import="wt.org.DirectoryContextProvider"%>
+<%@page import="wt.inf.container.OrgContainer"%>
+<%@page import="wt.inf.container.WTContainerHelper"%>
+<%@page import="wt.inf.container.ExchangeContainer"%>
+<%@page import="wt.org.WTOrganization"%>
+<%@page import="java.util.Enumeration"%>
+<%@page import="wt.org.WTGroup"%>
+<%@page import="wt.org.OrganizationServicesHelper"%>
+<%@page import="wt.fc.PersistenceHelper"%>
+<%@page import="wt.lifecycle.LifeCycleManaged"%>
+<%@page import="wt.lifecycle.LifeCycleTemplate"%>
+<%@page import="wt.lifecycle.LifeCycleHelper"%>
+<%@page import="wt.clients.folder.FolderTaskLogic"%>
+<%@page import="wt.folder.FolderHelper"%>
+<%@page import="wt.folder.FolderEntry"%>
+<%@page import="wt.folder.Folder"%>
+<%@page import="wt.inf.container.WTContained"%>
+<%@page import="wt.inf.container.WTContainerRef"%>
+<%@page import="com.e3ps.common.util.WCUtil"%>
+<%@page import="wt.inf.container.WTContainer"%>
+<%@page import="com.e3ps.common.service.CommonHelper"%>
+<%@page import="wt.vc.views.ViewHelper"%>
+<%@page import="wt.part.Source"%>
+<%@page import="wt.part.PartType"%>
+<%@page import="wt.part.QuantityUnit"%>
+<%@page import="wt.part.WTPart"%>
+<%@page import="com.e3ps.common.util.StringUtil"%>
+<%@page import="java.util.Map"%>
+<%@page import="java.util.HashMap"%>
+<%@page import="com.e3ps.part.service.PartHelper"%>
+<%@page import="com.e3ps.part.service.PartService"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%
+/* String oid = "com.e3ps.distribute.DistributeDocument:2864307";
+DistributeDocument dist = (DistributeDocument)CommonUtil.getObject(oid);
+
+QueryResult result = PersistenceHelper.manager.navigate(dist, DistributeRegistration.DISTRIBUTE , DistributeRegistration.class, false);
+while(result.hasMoreElements()){
+	Object o[] = (Object[])result.nextElement();
+	System.out.println(o[0]);
+} */
+
+
+ /*
+QuerySpec qs = new QuerySpec();
+
+SearchCondition sc = null;
+
+int idx2 = qs.appendClassList(DistributeRegistration.class, true);
+sc = new SearchCondition(DistributeRegistration.class, DistributeRegistration.DISTRIBUTE_REFERENCE + ".key.id", SearchCondition.EQUAL, CommonUtil.getOIDLongValue(oid));
+qs.appendWhere(sc, new int[] {idx2});
+
+System.out.println(qs);
+
+QueryResult qr = PersistenceHelper.manager.find(qs);
+while(qr.hasMoreElements()){
+	Object o[] = (Object[])qr.nextElement();
+	System.out.println(o[0]);
+}*/
+
+/* 
+Connection con = DriverManager.getConnection("jdbc:postgresql://cpc.worldex.com:5432/postgres", "postgres", "pgadmin");
+
+out.print("con=>"+con); */
+SubFolder folder = (SubFolder)CommonUtil.getObject("wt.folder.SubFolder:1868064");
+WTGroup group =(WTGroup)CommonUtil.getObject("wt.org.WTGroup:1874709");
+WTGroup childGroup =(WTGroup)CommonUtil.getObject("wt.org.WTGroup:1871563");
+//도메인 생성
+//AdminDomainRef domainRef = AdminHelper.service.createDomain("D"+CommonUtil.getOIDLongValue(folder), folder.getName());
+//생성한 폴더에 생성한 도메인 적용
+//AdministrativeDomainHelper.manager.changeAdministrativeDomain(folder, domainRef, false);
+//도메인에 적용할 그룹 생성
+//WTGroup group = AdminHelper.service.createWTGroup(folder.getDomainRef().getName(), folder.getName());
+
+//AdminHelper.service.editACL((AdministrativeDomain)folder.getDomainRef().getObject(), "DOC", group, "DENY", "create", true);
+//WTPrincipalReference prinRef = WTPrincipalReference.newWTPrincipalReference(group);
+//AccessControlRule rule = AccessControlHelper.manager.getAccessControlRule(folder.getDomainRef(), "WCTYPE|" + E3PSDocument.class.getName(), null, prinRef, true);
+//out.print(rule.getDomainRef().getName()+"<br>");
+
+// Enumeration<?> members = group.members();
+// out.print("group 이름 : "+ group.getName()+"<br>");
+// while(members.hasMoreElements()){
+// 	Object o = (Object)members.nextElement();
+// 	if(o instanceof WTUser){
+// 		WTUser u = (WTUser)o;
+// 		out.print("유저:"+u.getFullName()+"<br>");
+// 	}else if(o instanceof WTPrincipalReference){
+// 		WTPrincipalReference g = (WTPrincipalReference)o;
+// 		out.print("그룹:"+g.getName()+"<br>");
+// 	}
+// }
+// WTPrincipal[] principalsInGroup = new WTPrincipal[1];
+// WTPrincipal principal = (WTPrincipal) childGroup;
+// principalsInGroup[0] = principal;
+//OrganizationServicesHelper.manager.addMembers(group, principalsInGroup);
+//OrganizationServicesHelper.manager.removeMembers(group, principalsInGroup);
+
+
+// Enumeration<?> groups = childGroup.parentGroups();
+// out.print("group 이름 : "+ childGroup.getName()+"<br>");
+// while(groups.hasMoreElements()){
+// 	Object o = (Object)groups.nextElement();
+// 	out.print("class:"+o.getClass()+"<br>");
+	
+// 	if(o instanceof WTPrincipalReference){
+// 		WTPrincipalReference u = (WTPrincipalReference)o;
+// 		WTGroup g = (WTGroup)u.getPrincipal();
+// 		out.print("그룹임:"+g.getName()+"<br>");
+// 	}
+// }
+
+
+// AuthorityObjectType[] codeType = AuthorityObjectType.getAuthorityObjectTypeSet();
+
+// List<Map<String,String>> list = new ArrayList<Map<String,String>>();
+
+// for(int i=0; i < codeType.length; i++){
+// 	out.print("key:"+codeType[i].toString()+"<br>");
+// 	out.print("value:"+codeType[i].getDisplay()+"<br>");
+// 	out.print("full:"+codeType[i].getFullDisplay()+"<br>");
+// }
+
+// AuthorityObjectType type = AuthorityObjectType.toAuthorityObjectType("DOC");
+// out.print("key:"+type.toString()+"<br>");
+// out.print("value:"+type.getDisplay()+"<br>");
+// out.print("full:"+type.getFullDisplay()+"<br>");
+
+out.print("======================================<br>");
+// WTGroup grp = null;
+
+// String targetOrgName = ConfigImpl.getInstance().getString("org.context.name");
+// out.print("targetOrgName:"+targetOrgName+"<br>");
+// QuerySpec qs = new QuerySpec();
+// int orgIndex = qs.appendClassList( OrgContainer.class, true );
+// SearchCondition sc = new SearchCondition( OrgContainer.class, "containerInfo.name", SearchCondition.EQUAL, targetOrgName );
+// qs.appendWhere( sc );
+// QueryResult qr = PersistenceHelper.manager.find( qs );
+// if( qr.hasMoreElements() ){
+// 	 Persistable [] p = ( Persistable [] ) qr.nextElement();
+// 	 OrgContainer org = ( OrgContainer ) p[0];
+// 	 grp = OrganizationServicesHelper.manager.getGroup("DOC_PERMISSION", org.getContextProvider() );
+// }
+
+// out.print("group:"+grp.getName()+"<br>");
+out.print("======================================<br>");
+AuthorityObjectType objType = AuthorityObjectType.toAuthorityObjectType("ECR");
+out.print("objType:"+objType.getDisplay()+"<br>");
+
+out.print("======================================<br>");
+String orgName = ConfigImpl.getInstance().getString("org.context.name");
+String productName = ConfigImpl.getInstance().getString("product.context.name");
+// WTContainerRef container_ref = WTContainerHelper.service.getByPath("/wt.inf.container.OrgContainer="+orgName);
+WTContainerRef container_ref = WTContainerHelper.service.getByPath("/wt.inf.container.ExchangeContainer=사이트");
+AdministrativeDomain domain = AdministrativeDomainHelper.manager.getDomain("/Default", container_ref);
+AdminDomainRef domainRef = AdminDomainRef.newAdminDomainRef(domain);
+out.print("doamin OID:"+domain.getPersistInfo().getObjectIdentifier().getStringValue()+"<br>");
+
+WTOrganization wtorg = OrganizationServicesHelper.manager.getOrganization(orgName);
+out.print("wtorg :"+wtorg.getName()+"<br>");
+out.print("wtorg :"+wtorg.getPersistInfo().getObjectIdentifier().getStringValue()+"<br>");
+String targetObject = "WCTYPE|" + "wt.fc.WTObject";
+WTPrincipal prin = OrganizationServicesHelper.manager.getAdministratorsGroup();
+//WTPrincipal prin2 = SessionHelper.manager.setPrincipal("2015042");
+WTRolePrincipal rp = OrganizationServicesHelper.manager.getRolePrincipal("teamMembers", container_ref, true, MessageUtil.getLocale());
+out.print("WTRolePrincipal :"+rp.getName()+"<br>");
+
+WTPrincipalReference prinRef = WTPrincipalReference.newWTPrincipalReference(wtorg);
+//out.print("WTRolePrincipal hasAccess:"+AccessControlHelper.manager.hasAccess(prin2, CommonUtil.getObject("com.e3ps.doc.E3PSDocument:1879579"), AccessPermission.READ)+"<br>");
+//////////////////////////////////////////////
+
+// WTPart part = (WTPart) CommonUtil.getObject("wt.part.WTPart:1881424");
+// out.print("part :"+part+"<br>");
+// out.print("part number :"+part.getLocation()+"<br>");
+// Map<String, Object> attributes = IBAUtil.getAttributes(part);
+// Set<String> ibaKeySet = attributes.keySet();
+// out.print("part :"+attributes.get("p_MATERIAL")+"<br>");
+// for (String ibaKey : ibaKeySet) {
+// 	out.print("key:"+ibaKey+"/ value:"+attributes.get(ibaKey)+"<br>");
+// }
+AccessPermissionSet grant = new AccessPermissionSet();
+AccessPermissionSet deny = new AccessPermissionSet();
+AccessPermissionSet absolutDeny = new AccessPermissionSet();
+grant.add(AccessPermission.ALL);
+// grant.add(AccessPermission.READ);
+// grant.add(AccessPermission.DOWNLOAD);
+// deny.add(AccessPermission.MODIFY);
+// deny.add(AccessPermission.MODIFY_SECURITY_LABELS);
+// deny.add(AccessPermission.CREATE_BY_MOVE);
+// deny.add(AccessPermission.CREATE);
+// deny.add(AccessPermission.CHANGE_DOMAIN);
+// deny.add(AccessPermission.CHANGE_PERMISSIONS);
+// deny.add(AccessPermission.DELETE);
+// deny.add(AccessPermission.ADMINISTRATIVE);
+// deny.add(AccessPermission.CHANGE_CONTEXT);
+// deny.add(AccessPermission.MODIFY_CONTENT);
+// deny.add(AccessPermission.SET_STATE);
+// deny.add(AccessPermission.NEW_VIEW_VERSION);
+// deny.add(AccessPermission.REVISE);
+// deny.add(AccessPermission.MODIFY_IDENTITY);
+// OrganizationServicesHelper.manager.getRoleForName("teamMembers", container_ref);
+AccessControlHelper.manager.createAccessControlRule(domainRef, targetObject, null, prinRef, false, grant, deny, absolutDeny);
+
+
+// SubFolder subfff =(SubFolder) CommonUtil.getObject("wt.folder.SubFolder:1883007");
+// FolderAuthGroup fag1 = AdminHelper.manager.getFolderAuthGroupBySubFolder(subfff, "PERMISSION");
+// out.print("folder gourp :" + fag1.getAuthFoldergroup().parentGroups()+"<br>");
+
+
+%>
+

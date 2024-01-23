@@ -1,0 +1,438 @@
+/**
+ *  기본 js 기능
+ */
+/**************************************************************
+*                      url 기본 세팅
+****************************************************************/
+var webContext = "worldex";
+var getURLString = function(arg1) {
+	var url = "/Windchill/" + webContext + arg1;
+	
+	return url;
+}
+
+function openView(oid, width, height) {
+	if(width == null) {
+		width = 'full';
+		height = 'full';
+	}
+	var url = getViewURL(oid);
+	if(url != "") {
+		if( oid.indexOf("EPMDocument") > 0) {
+			openPopup(url, oid, 1124, 600);
+		}else if( oid.indexOf("E3PSDocument") > 0){
+			//alert("url ->"+url+"// oid ->"+oid);
+			openPopup(url, oid, 1124, 600);
+		}else if( oid.indexOf("OldWTPart") > 0){
+			openPopup(url, oid, 1124, 600);
+		}else if( oid.indexOf("WTPart") > 0){
+			openPopup(url, oid, 1124, 600);
+		}else if( oid.indexOf("notice.Notice") > 0){
+			location.href = url;
+		}else if( oid.indexOf("Department") > 0){
+			openPopup(url, oid, 700, 300);
+		}else if( oid.indexOf("MultiApproval") > 0) {
+			openPopup(url, oid, 1024, 600);
+		}else if( oid.indexOf("Issue") > 0) {
+			openPopup(url, oid, 1024, 600);
+		}else if( oid.indexOf("JELProject") > 0) {
+			openPopup(url, oid, 1124, 600);
+		}else if( oid.indexOf("Supplier") > 0) {
+			openPopup(url, oid, 1124, 600);
+		}else if( oid.indexOf("E3PSEChangeRequest") > 0) {
+			openPopup(url, oid, 1324, 600);
+		}else if( oid.indexOf("E3PSEChangeOrder") > 0) {
+			openPopup(url, oid, 1324, 600);
+		}else if( oid.indexOf("E3PSEChangeNotice") > 0) {
+			openPopup(url, oid, 1024, 600);
+		}else if( oid.indexOf("RunTask") > 0) {
+			openPopup(url, oid, 1024, 600);
+		}else if( oid.indexOf("E3PSEChangeActivity") > 0) {
+			openPopup(url, oid, 1124, 500);
+		}else if( oid.indexOf("EProject") > 0) {
+			location.href = url;
+		}else if( oid.indexOf("issue.IssueRequest") > 0) {
+			openPopup(url, oid, 1024, 600);
+		}else if(oid.indexOf("Oldcar") > 0) {
+			openPopup(url, oid, 1024, 750);
+		}else if(oid.indexOf("Benchmarking") > 0) {
+			openPopup(url, oid, 1024, 600);
+		}else if(oid.indexOf("EChangeOrder2") > 0) {
+			openPopup(url, oid, 1224, 600);
+		}else if(oid.indexOf("EChangeRequest2") > 0) {
+			openPopup(url, oid, 1224, 600);
+		}else if(oid.indexOf("ETask") > 0) {
+			location.href = url;
+		}else{
+			openPopup(url, oid, 1024, 600);
+		}
+	}
+}
+
+function getViewURL(oid) {
+	
+	var url = "";
+	if( oid.indexOf("E3PSDocument") > 0) {
+		url = getURLString("/doc/viewDoc");
+	} else if( oid.indexOf("EPMDocument") > 0) {
+		url = getURLString("/epm/viewEpm");
+	} else if( oid.indexOf("WTPart") > 0) {
+		if( oid.indexOf("OldWTPart") > 0){
+			url = getURLString("/part/viewOldPart");
+		}else{
+			url = getURLString("/part/viewPart");
+		}
+	} else if( oid.indexOf("notice.Notice") > 0) {
+		url = getURLString("/workspace/viewNotice");
+	} else if( oid.indexOf("Department") > 0) {
+		url = getURLString("/department/viewDepartment");
+	}else if( oid.indexOf("MultiApproval") > 0) {
+		url = getURLString("/multi/viewMulti");
+	}else if( oid.indexOf("DistributeDocument") > 0) {
+		url = getURLString("/distribute/viewDistribute");
+	}else if( oid.indexOf("issue.IssueRequest") > 0) {
+		url = getURLString("/project/issue/viewIssue");
+	}else if( oid.indexOf("JELProject") > 0) {
+		url = getURLString("/project/viewProject");
+	}else if( oid.indexOf("Supplier") > 0) {
+		url = getURLString("/distribute/viewSupplier");
+	}else if( oid.indexOf("E3PSEChangeOrder") > 0) {
+		url = getURLString("/change/viewECO");
+	}else if( oid.indexOf("E3PSEChangeNotice") > 0) {
+		url = getURLString("/change/viewECN");
+	}else if( oid.indexOf("RunTask") > 0) {
+		url = getURLString("/task/viewRunTask");
+	}else if( oid.indexOf("EChangeActivity") > 0) {
+		url = getURLString("/change/viewECA");
+	}else if( oid.indexOf("DistributeTemp") > 0) {
+		url = getURLString("/distribute/viewTempDistribute");
+	}else if( oid.indexOf("EProject") > 0) {
+		url = getURLString("/project/viewMain");
+	}else if( oid.indexOf("Oldcar") > 0) {
+		url = getURLString("/oldcar/viewOldcar");
+	}else if( oid.indexOf("Benchmarking") > 0) {
+		url = getURLString("/benchmarking/viewBenchmarking");
+	}else if( oid.indexOf("EChangeOrder2") > 0) {
+		url = getURLString("/change/viewECO");
+	}else if( oid.indexOf("EChangeRequest2") > 0) {
+		url = getURLString("/change/viewECR");
+	}else if( oid.indexOf("ETask") > 0) {
+		url = getURLString("/project/viewMain");
+	}
+	
+	if(url != "") return url+"?oid="+oid;
+	return "";
+}
+
+function openCreoViewWVSPopup(oid) {
+	// #. CreoView창을 연다
+	var dialogURL = "/Windchill/wtcore/jsp/wvs/edrview.jsp?viewIfPublished=1&sendToPublisher=" + oid;
+	openPopup(dialogURL, "creo_" + oid, 1024, 600);
+	
+}
+
+function openMiniWVSPopup(url) {
+	if(url.indexOf("wt.epm.EPMDocument") > -1 || url.indexOf("wt.part.WTPart")  > -1){
+		var dialogURL = "/Windchill/wtcore/jsp/wvs/edrview.jsp?viewIfPublished=1&sendToPublisher=" + url;
+		openPopup(dialogURL, "creoView", 1024, 600);
+	}else{
+		openPopup(url, "creoView", 1024, 600);
+	}
+	
+}
+
+function openBomTree(oid) {
+	
+	var url = getURLString("/bom/viewBom") + "?oid=" + oid;
+	
+	openPopup(url,"bom_" + oid, 1124, 700);
+}
+
+function openOldBomTree(oid) {
+	
+	var url = getURLString("/bom/viewOldBom") + "?oid=" + oid;
+	
+	openPopup(url,"bom_" + oid, 1124, 600);
+}
+
+function openBomEditor(oid) {
+	
+	if(oid == null) {
+		oid = "";
+	}
+	
+	var url = getURLString("/bomEditor/editBom") + "?oid=" + oid;
+	
+	openPopup(url,"bomEditor_" + oid, 1200, 600);
+}
+
+function openCodePopup(id, codeType) {
+	
+	var code = $("#" + id).val();
+	
+	var url = getURLString("/common/openCodePopup") + "?codeType=" + codeType + "&id=" + id + "&code=" + code;
+	
+	openPopup(url,"openCode", 1000, 600);
+}
+
+function openSearchProjectPopup(id) {
+	
+	var url = getURLString("/project/searchProjectPopup") + "?type=single&id=" + id;
+	
+	openPopup(url,"searchProjectPopup", 1000, 700);
+}
+
+function openSearchIssuePopup(id) {
+	
+	var url = getURLString("/issue/searchIssuePopup") + "?type=single&id=" + id;
+	
+	openPopup(url,"searchIssuePopup", 1000, 700);
+}
+
+function openSearchECRPopup(id, type) {
+	
+	var url = getURLString("/change/searchEcrPopup");
+	
+	url += "?id=" + id;
+	
+	if(type != null) {
+		url += "&type=" + type;
+	}
+	
+	if(id != "creator" && id != "modifier"){
+		url += "&except=true";
+	}
+	
+	openPopup(url,"searchEcrPopup", 1000, 600);
+}
+
+function openSearchDepartmentPopup(pageName) {
+	
+	var url = getURLString("/common/searchDepartmentPopup");
+
+	if(pageName != null) {
+		url += "?pageName=" + pageName;
+	}
+	
+	openPopup(url,"searchDepartmentPopup", 500, 600);
+}
+
+function openDepartmentPopup(id) {
+	
+	var url = getURLString("/common/searchDepartmentPopup");
+
+	url += "?id=" + id;
+	
+	openPopup(url,"searchDepartmentPopup", 500, 600);
+}
+
+function openUserPopup(id, type) {
+	
+	var url = getURLString("/common/searchUserPopup");
+
+	url += "?id=" + id;
+	
+	if(type != null) {
+		url += "&type=" + type;
+	}
+	if(id != "creator" && id != "modifier"){
+		url += "&except=true";
+	}
+	
+	openPopup(url,"searchUserPopup", 1200, 700);
+}
+
+function openDistributeDocPopup(id, state) {
+	
+	var url = getURLString("/distribute/searchDistributeDocPopup");
+
+	url += "?id=" + id +"&state=" + state;
+	
+	openPopup(url,"searchDistributeDocPopup", 1200, 700);
+}
+
+function deleteDistributeDoc(id){
+	$("#" + id).val("");
+	$("#" + id).empty();
+	$("#" + id).trigger("change");
+}
+
+/**************************************************************
+*                     리스트 엑셀 다운로드
+****************************************************************/
+function excelDown(formId, url) {
+	var url = getURLString("/excel/" + url);
+	
+	$("#" + formId).attr("action", url);
+	$("#" + formId).attr("method", "post");
+	
+	$("#" + formId).submit();
+	
+	startProgress();
+	$("#progressSpan").show();
+	setCookie("fileDownload", "false", 1);
+	var downloadTimer = setInterval(function() {
+		if (document.cookie.indexOf("fileDownload=true") > 0) {
+			setCookie("fileDownload", "true", -1);
+			endProgress();
+			clearInterval(downloadTimer);
+		}
+	}, 1000 );
+}
+
+function excelDownOid(oid, url) {
+	var url = getURLString("/excel/" + url);
+	var form = document.createElement("form");
+	form.setAttribute("method", "post");
+    form.setAttribute("action", url);
+	
+	var inputOid = document.createElement("input");
+	
+	inputOid.setAttribute("type", "hidden");
+	inputOid.setAttribute("name", "oid");
+	inputOid.setAttribute("value", oid);
+	form.appendChild(inputOid);
+	document.body.appendChild(form);
+	form.submit();
+	
+	startProgress();
+	$("#progressSpan").show();
+	setCookie("fileDownload", "false", 1);
+	var downloadTimer = setInterval(function() {
+		if (document.cookie.indexOf("fileDownload=true") > 0) {
+			setCookie("fileDownload", "true", -1);
+			endProgress();
+			clearInterval(downloadTimer);
+		}
+	}, 1000 );
+}
+
+function bomExcelDown(oid) {
+	var url = getURLString("/bom/downloadBomExcel");
+	
+	var form = document.createElement("form");
+    form.setAttribute("method", "post");
+    form.setAttribute("action", url);
+    //form.setAttribute("target", "fileDownload");
+    
+    var oidInput = document.createElement("input") ;
+    
+    oidInput.setAttribute("type", "hidden");
+    oidInput.setAttribute("name", "oid");
+    oidInput.setAttribute("value", oid);
+    form.appendChild(oidInput);
+    
+	document.body.appendChild(form);
+	form.submit();
+	startProgress();
+	$("#progressSpan").show();
+	setCookie("fileDownload", "false", 1);
+	var downloadTimer = setInterval(function() {
+		if (document.cookie.indexOf("fileDownload=true") > 0) {
+			setCookie("fileDownload", "true", -1);
+			endProgress();
+			clearInterval(downloadTimer);
+		}
+	}, 1000 );
+	document.body.removeChild(form);
+}
+
+function oldBomExcelDown(oid) {
+	var url = getURLString("/bom/downloadOldBomExcel");
+	
+	var form = document.createElement("form");
+    form.setAttribute("method", "post");
+    form.setAttribute("action", url);
+    //form.setAttribute("target", "fileDownload");
+    
+    var oidInput = document.createElement("input") ;
+    
+    oidInput.setAttribute("type", "hidden");
+    oidInput.setAttribute("name", "oid");
+    oidInput.setAttribute("value", oid);
+    form.appendChild(oidInput);
+    
+	document.body.appendChild(form);
+	form.submit();
+	startProgress();
+	$("#progressSpan").show();
+	setCookie("fileDownload", "false", 1);
+	var downloadTimer = setInterval(function() {
+		if (document.cookie.indexOf("fileDownload=true") > 0) {
+			setCookie("fileDownload", "true", -1);
+			endProgress();
+			clearInterval(downloadTimer);
+		}
+	}, 1000 );
+	document.body.removeChild(form);
+}
+
+function openBomComparator(pjtNo) {
+	
+	var url = getURLString("/bomComparator/compareBom") + "?pjtNo=" + pjtNo;
+	
+	openPopup(url,"bomComparator_" + pjtNo, 1124, 600);
+}
+
+function openERPBom(pjtNo) {
+	
+	var url = getURLString("/erp/searchERPBom");
+	
+	if(pjtNo != null) {
+		url += "?pjtNo=" + pjtNo;
+	}
+	
+	openPopup(url,"erpBom", 1000, 600);
+}
+
+function openAddRevision(oid) {
+  if (oid == null) {
+    oid = "";
+  }
+
+  var url = getURLString("/part/addRevisionPopup") + "?oid=" + oid;
+
+  openPopup(url, "addRevisionPopup_" + oid, 600, 300);
+}
+/**************************************************************
+*                     즐겨찾기 추가/삭제
+****************************************************************/
+function add_favorite(){
+	var type = $("#favorite").data("type");
+	
+	var param = new Object();
+	var url = "";
+	
+	if(type){	// 즐겨찾기 삭제
+		var oid = $("#favorite").data("oid");
+		param["oid"] = oid;
+		
+		url = getURLString("/favorite/deleteFavoriteAction");
+	}else{		// 즐겨찾기 추가
+		var pathName = location.pathname + location.search;
+		var name = $("#menuLocation").text();
+		param["url"] = pathName;
+		param["name"] = name;
+		
+		url = getURLString("/favorite/createFavoriteAction");
+	}
+	ajaxCallServer(url, param, function(data){
+		if(!type){	// 즐겨찾기 O
+			$("#favorite").attr("src", "/Windchill/jsp/portal/images/favorites_icon_r.png");
+			$("#favorite").data("type", true);
+			$("#favorite").data("oid", data.oid);
+		}else{		// 즐겨찾기 X
+			$("#favorite").attr("src", "/Windchill/jsp/portal/images/favorites_icon_b.png");
+			$("#favorite").data("type", false);
+			$("#favorite").data("oid", "");
+		}
+	}, false);
+}
+
+/**************************************************************
+*                     폴더 팝업
+****************************************************************/
+function openFolderTreePopup(container, renderTo, formId, rootLocation) {
+	var url = getURLString("/common/viewFolderTree") + "?container=" + container + "&renderTo=" + renderTo + "&formId=" + formId + "&rootLocation=" + rootLocation;
+	openPopup(url,"viewFolderTree", 500, 700);
+}

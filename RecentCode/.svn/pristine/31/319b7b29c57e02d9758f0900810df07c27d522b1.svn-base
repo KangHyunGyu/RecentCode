@@ -1,0 +1,298 @@
+package com.e3ps.part.controller;
+
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.e3ps.common.log4j.Log4jPackages;
+import com.e3ps.common.message.util.MessageUtil;
+import com.e3ps.common.util.CommonUtil;
+import com.e3ps.common.util.StringUtil;
+import com.e3ps.part.bean.BomTreeData;
+import com.e3ps.part.bean.PartData;
+import com.e3ps.part.service.BomHelper;
+
+import wt.part.WTPart;
+
+@Controller
+@RequestMapping("/bom")
+public class BomController {
+	
+	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Log4jPackages.PART.getName());
+	
+	/**
+	 * @desc	: BOM 상세 보기
+	 * @author	: sangylee
+	 * @date	: 2019. 8. 6.
+	 * @method	: viewBom
+	 * @param reqMap
+	 * @return ModelAndView
+	 * @throws Exception
+	 */
+	@RequestMapping("/viewBom")
+	public ModelAndView viewBom(@RequestParam Map<String, Object> reqMap, HttpServletResponse res) throws Exception {
+		ModelAndView model = new ModelAndView();
+		
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		
+		WTPart part = (WTPart) CommonUtil.getObject(oid);
+		
+		if(part != null) {
+			PartData data = new PartData(part);
+			
+			model.addObject("part", data);
+			
+			model.setViewName("popup:/part/viewBom");
+		} else {
+			res.setContentType("text/html;charset=UTF-8");
+			PrintWriter writer = res.getWriter();
+			writer.println("<script>javascript:alert('해당 부품 관련 BOM이 없습니다.');javascript:window.close();</script>");
+			model = null;
+		}
+		
+		return model;
+	}
+	
+	/**
+	 * @desc	: BOM 트리
+	 * @author	: sangylee
+	 * @date	: 2019. 8. 6.
+	 * @method	: bomTree
+	 * @param reqMap
+	 * @return ModelAndView
+	 * @throws Exception
+	 */
+	@RequestMapping("/include_bomTree")
+	public ModelAndView bomTree(@RequestParam Map<String, Object> reqMap) throws Exception {
+		ModelAndView model = new ModelAndView();
+		
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		
+		model.addObject("oid", oid);
+		
+		model.setViewName("include:/part/include/bomTree");
+		
+		return model;
+	}
+	
+	/**
+	 * @desc	: Bom root 리스트
+	 * @author	: sangylee
+	 * @date	: 2019. 8. 6.
+	 * @method	: getBomRoot
+	 * @param reqMap
+	 * @return Map<String, Object>
+	 */
+	@ResponseBody
+	@RequestMapping("/getBomRoot")
+	public static Map<String, Object> getBomRoot(@RequestBody Map<String, Object> reqMap) {
+		
+		Map<String, Object> map = new HashMap<>();
+		
+		try {
+			long startTime = System.currentTimeMillis();
+			List<BomTreeData> list = BomHelper.manager.getBomRoot(reqMap);
+			long endTime = System.currentTimeMillis();
+			
+			LOGGER.debug("total Time ::: " + (endTime - startTime)/1000.0 + " second(s)");
+			
+			map.put("list", list);
+			map.put("result",true);
+		} catch (Exception e) {
+			e.printStackTrace();
+			map.put("result", false);
+			map.put("msg", "ERROR = " + e.getLocalizedMessage());
+		}
+		
+		return map;
+	}
+	
+	/**
+	 * @desc	: Bom children 리스트 가져오기
+	 * @author	: sangylee
+	 * @date	: 2019. 8. 6.
+	 * @method	: getBomChildren
+	 * @param reqMap
+	 * @return Map<String, Object>
+	 */
+	@ResponseBody
+	@RequestMapping("/getBomChildren")
+	public static Map<String, Object> getBomChildren(@RequestBody Map<String, Object> reqMap) {
+		
+		Map<String, Object> map = new HashMap<>();
+		
+		try {
+			List<BomTreeData> list = BomHelper.manager.getBomChildren(reqMap);
+			
+			map.put("list", list);
+			map.put("result",true);
+		} catch (Exception e) {
+			e.printStackTrace();
+			map.put("result", false);
+			map.put("msg", "ERROR = " + e.getLocalizedMessage());
+		}
+		
+		return map;
+	}
+	
+	/**
+	 * @desc	: Bom 상위, 하위 , END 화면
+	 * @author	: sangylee
+	 * @date	: 2019. 8. 6.
+	 * @method	: bomPartList
+	 * @param reqMap
+	 * @return ModelAndView
+	 */
+	@RequestMapping("/include_bomPartList")
+	public ModelAndView bomPartList(@RequestParam Map<String, Object> reqMap) {
+		ModelAndView model = new ModelAndView();
+		
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		String type = StringUtil.checkNull((String) reqMap.get("type"));
+		
+		String title = "";
+		if("up".equals(type)) {
+			title = MessageUtil.getMessage("상위 부품");
+		} else if("down".equals(type)) {
+			title = MessageUtil.getMessage("하위 부품");
+		} else if("end".equals(type)) {
+			title = "END ITEM";
+		}
+		
+		model.addObject("oid", oid);
+		model.addObject("title", title);
+		model.addObject("type", type);
+		
+		model.setViewName("include:/part/include/bomPartList");
+		
+		return model;
+	}
+	
+	/**
+	 * @desc	: Bom 상위, 하위 , END 화면 리스트
+	 * @author	: sangylee
+	 * @date	: 2019. 8. 6.
+	 * @method	: getBomPartList
+	 * @param reqMap
+	 * @return Map<String, Object>
+	 */
+	@ResponseBody
+	@RequestMapping("/getBomPartList")
+	public static Map<String, Object> getBomPartList(@RequestBody Map<String, Object> reqMap) {
+		
+		Map<String, Object> map = new HashMap<>();
+		
+		try {
+			List<BomTreeData> list = BomHelper.manager.getBomPartList(reqMap);
+			
+			map.put("list", list);
+			map.put("result",true);
+		} catch (Exception e) {
+			e.printStackTrace();
+			map.put("result", false);
+			map.put("msg", "ERROR = " + e.getLocalizedMessage());
+		}
+		
+		return map;
+	}
+
+	/**
+	 * @desc	: Bom Item 
+	 * @author	: sangylee
+	 * @date	: 2019. 8. 6.
+	 * @method	: bomItemList
+	 * @param reqMap
+	 * @return ModelAndView
+	 */
+	@RequestMapping("/include_bomItemList")
+	public ModelAndView bomItemList(@RequestParam Map<String, Object> reqMap) {
+		ModelAndView model = new ModelAndView();
+		
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		
+		model.addObject("oid", oid);
+		
+		model.setViewName("include:/part/include/bomItemList");
+		
+		return model;
+	}
+	
+	/**
+	 * @desc	: Bom Item 리스트
+	 * @author	: sangylee
+	 * @date	: 2019. 8. 6.
+	 * @method	: getBomItemList
+	 * @param reqMap
+	 * @return Map<String, Object>
+	 */
+	@ResponseBody
+	@RequestMapping("/getBomItemList")
+	public static Map<String, Object> getBomItemList(@RequestBody Map<String, Object> reqMap) {
+		
+		Map<String, Object> map = new HashMap<>();
+		
+		try {
+			List<BomTreeData> list = BomHelper.manager.getBomItemList(reqMap);
+			
+			map.put("list", list);
+			map.put("result",true);
+		} catch (Exception e) {
+			e.printStackTrace();
+			map.put("result", false);
+			map.put("msg", "ERROR = " + e.getLocalizedMessage());
+		}
+		
+		return map;
+	}
+	
+	/**
+	 * @desc	: Bom 검색 팝업
+	 * @author	: sangylee
+	 * @date	: 2019. 8. 6.
+	 * @method	: searchBomPopup
+	 * @param reqMap
+	 * @return ModelAndView
+	 * @throws Exception
+	 */
+	@RequestMapping("/searchBomPopup")
+	public ModelAndView searchBomPopup(@RequestParam Map<String, Object> reqMap) throws Exception {
+		ModelAndView model = new ModelAndView();
+		
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		String pageName = StringUtil.checkNull((String) reqMap.get("pageName"));
+		String moduleType = StringUtil.checkNull((String) reqMap.get("moduleType"));
+		
+		WTPart part = (WTPart) CommonUtil.getObject(oid);
+		
+		PartData data = new PartData(part);
+		
+		model.addObject("oid", oid);
+		model.addObject("part", data);
+		model.addObject("pageName", pageName);
+		model.addObject("moduleType", moduleType);
+		
+		model.setViewName("popup:/part/searchBomPopup");
+		
+		return model;
+	}
+	
+	@RequestMapping("/downloadBomExcel")
+	public void downloadBomExcel(HttpServletRequest request, HttpServletResponse response) {
+		try {
+			BomHelper.manager.downloadBomExcel(request, response);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+}

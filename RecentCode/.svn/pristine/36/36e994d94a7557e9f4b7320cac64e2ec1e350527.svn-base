@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Configuration
+  SYSTEM "xconf.dtd">
+  
+<Configuration xmlns:xlink="http://www.w3.org/1999/xlink">
+
+   <!-- add <ConfigurationRef xlink:href="e3ps.xconf"/> on site.xconf -->
+   
+   <!-- listener service -->
+   <Property name="wt.services.service.70000" overridable="true"
+	     targetFile="codebase/wt.properties"
+	     value="com.e3ps.listener.ListenerService/com.e3ps.listener.StandardListenerService"/>
+	
+	
+	
+	<!-- Form 인증 에서 shell non 인증 추가-->
+	<Property name="wt.auth.form.enabled" overridable="true" targetFile="codebase/wt.properties" value="true"/>
+	<Property name="wt.auth.handlers" overridable="true" targetFile="codebase/wt.properties" value="wt.auth.NullAuthentication,wt.httpgw.HTTPAuthentication"/>
+	<Property name="wvs.openincreoview.use.plugin.ie" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties"  value="true"/> 
+                          
+    <Property name="wt.auth.trustedHosts" overridable="true" targetFile="codebase/wt.properties" value="172.16.240.57 172.16.240.53 172.16.240.47" />
+    
+    <!-- TimeZone -->
+	<Property name="wt.method.timezone" overridable="true"
+	             targetFile="codebase/wt.properties"
+	             value="Asia/Seoul"/>
+	
+	<!-- WVS REF PROPERTIES -->	
+	<Property name="worker.exe.allowlist.prefixes" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value="E:\|D:\|X:\|Y:\|Z:\|/|nohup /"/> 
+	<Property name="publish.usesPublishRules" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value="ARBORTEXT PROE"/>    
+	<Property name="publish.afterloadermethod" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties"  value="com.e3ps.wvs.util.AfterEDRloader/renameAdditionalfiles"/> 
+	
+	
+	<!-- WVS PUBLISH FILTER CONFIG -->	
+	<!--<Property name="publish.service.filterpublishmethod" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value="com.e3ps.wvs.util.EPMDocumentPublishFilters/filterPublish"/>
+	<Property name="publish.service.filterepmdocumentpublishmethod" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value="com.e3ps.wvs.util.EPMDocumentPublishFilters/filterEPMDocumentPublish"/>
+	<Property name="publish.service.filterepmdocumentpublishmethod.defaultrule" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value="include"/>
+	<Property name="publish.service.filterepmdocumentpublishmethod.excludelist" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value="CONTAINERS>*;EXTENSIONS>frm,lay,pdf;LIFECYCLES>INWORK,APPROVING,RETURN,REWORK,CANCELLED"/>
+	<Property name="publish.service.filterepmdocumentpublishmethod.excludestartsNumberlist" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value=""/>-->	
+	
+    <!-- File Vault Setting : 단일 볼트 설정 -->
+    <Property name="wt.fv.forceContentToVault" overridable="true" targetFile="codebase/wt.properties" value="true"/>
+    <Property name="wt.fv.useFvFileThreshold" overridable="true" targetFile="codebase/wt.properties" value="true"/>
+    <Property name="wt.fv.fvFileThreshold" overridable="true" targetFile="codebase/wt.properties" value="20000"/>   
+    
+    <!-- Add E3PS Schedule JobType Definition -->
+	<Property name="jobTypes6" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value="e3psJob"/>
+	<Property name="e3psJob.icon" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value="netmarkets/images/repair_failure.gif"/>
+	<Property name="e3psJob.resourceBase" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value="com.ptc.wvs.common.util.JobTypeResource"/>
+	<Property name="e3psJob.scheduledProcessorClass" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value="com.e3ps.wvs.schedule.E3PSScheduleWVSProcessor"/>   
+	
+	<!-- Add E3PS Schedule schedulejobs39 Definition -->
+    <Property name="schedulejobs39" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value="JOB_ERP_RECEIVE"/>
+    <Property name="JOB_ERP_RECEIVE.class" overridable="true"  targetFile="codebase/WEB-INF/conf/wvs.properties" value="com.e3ps.wvs.schedule.E3PSScheduleWVSJobs"/>
+    <Property name="JOB_ERP_RECEIVE.description" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties"  value="JOB_ERP_RECEIVE"/>
+    <Property name="JOB_ERP_RECEIVE.enableOnContainers" overridable="true"  targetFile="codebase/WEB-INF/conf/wvs.properties" value="true"/>
+    <Property name="JOB_ERP_RECEIVE.method" overridable="true"  targetFile="codebase/WEB-INF/conf/wvs.properties" value="erpReceiveDailyBatch"/>
+    <Property name="JOB_ERP_RECEIVE.jobType" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value="e3psJob"/>
+    
+</Configuration>

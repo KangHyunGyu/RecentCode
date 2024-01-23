@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC
+        "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+        "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+
+    <definition name="layoutDefault"    template="/jsp/portal/layouts/layoutDefault.jsp">
+    	<put-attribute name="title"		value="WORLDEX PLM" />
+        <put-attribute name="header"	value="/jsp/portal/top.jsp" />
+        <put-attribute name="menu"      value="/jsp/portal/mainMenu.jsp" />
+        <put-attribute name="subMenu"   value="" />
+        <put-attribute name="navbar"     value="/jsp/portal/navbar.jsp"/>
+        <put-attribute name="body"      value=""/>
+        <put-attribute name="footer"    value="/jsp/portal/footer.jsp" />
+    </definition>
+    
+    <definition name="default:/*/*" extends="layoutDefault">
+    	<put-attribute name="subMenu" value="/jsp/{1}/menu.jsp" />
+		<put-attribute name="body" value="/jsp/{1}/{2}.jsp" />
+	</definition>
+	
+	<definition name="default:/*/*/*" extends="layoutDefault">
+    	<put-attribute name="subMenu" value="/jsp/{1}/menu.jsp" />
+		<put-attribute name="body" value="/jsp/{1}/{2}/{3}.jsp" />
+	</definition>
+
+    <definition name="layoutMain"    template="/jsp/portal/layouts/layoutMain.jsp">
+    	<put-attribute name="title"		value="WORLDEX PLM" />
+        <put-attribute name="header"	value="/jsp/portal/top.jsp" />
+        <put-attribute name="menu"      value="/jsp/portal/mainMenu.jsp" />
+        <put-attribute name="body"      value=""/>
+        <put-attribute name="footer"    value="/jsp/portal/footer.jsp" />
+    </definition>
+    
+    <definition name="main:/*/*" extends="layoutMain">
+		<put-attribute name="body" value="/jsp/{1}/{2}.jsp" />
+	</definition>
+	
+	<definition name="main:/*/*/*" extends="layoutMain">
+		<put-attribute name="body" value="/jsp/{1}/{2}/{3}.jsp" />
+	</definition>
+	
+	<definition name="layoutInclude"    template="/jsp/portal/layouts/layoutInclude.jsp">
+		<put-attribute name="include"  value=""/>
+	</definition>
+    
+	<definition name="include:/*/*" extends="layoutInclude">
+		<put-attribute name="include" value="/jsp/{1}/{2}.jsp" />
+	</definition>
+	
+	<definition name="include:/*/*/*" extends="layoutInclude">
+		<put-attribute name="include" value="/jsp/{1}/{2}/{3}.jsp" />
+	</definition>
+	
+	<definition name="include:/*/*/*/*" extends="layoutInclude">
+		<put-attribute name="include" value="/jsp/{1}/{2}/{3}/{4}.jsp" />
+	</definition>
+	
+	<definition name="layoutPopup"    template="/jsp/portal/layouts/layoutPopup.jsp">
+		<put-attribute name="title"		value="WORLDEX PLM" />
+		<put-attribute name="body"  value=""/>
+		<put-attribute name="footer"    value="/jsp/portal/footer.jsp" />
+	</definition>
+    
+	<definition name="popup:/*/*" extends="layoutPopup">
+		<put-attribute name="body" value="/jsp/{1}/{2}.jsp" />
+	</definition>
+	
+	<definition name="popup:/*/*/*" extends="layoutPopup">
+		<put-attribute name="body" value="/jsp/{1}/{2}/{3}.jsp" />
+	</definition>
+	
+	<definition name="layoutEmpty"    template="/jsp/portal/layouts/layoutEmpty.jsp">
+		<put-attribute name="title"		value="WORLDEX PLM" />
+		<put-attribute name="body"  value=""/>
+	</definition>
+    
+	<definition name="empty:/*/*" extends="layoutEmpty">
+		<put-attribute name="body" value="/jsp/{1}/{2}.jsp" />
+		<put-attribute name="footer"    value="/jsp/portal/footer.jsp" />
+	</definition>
+	
+	<definition name="empty:/*/*/*" extends="layoutEmpty">
+		<put-attribute name="body" value="/jsp/{1}/{2}/{3}.jsp" />
+		<put-attribute name="footer"    value="/jsp/portal/footer.jsp" />
+	</definition>
+	
+</tiles-definitions>

@@ -1,0 +1,57 @@
+﻿ResourceInfo.class=wt.tools.resource.EnumResourceInfo
+ResourceInfo.customizable=true
+ResourceInfo.deprecated=false
+
+# Entry Format (values equal to default value are not included)
+# <key>.value=
+# <key>.category=
+# <key>.comment=
+# <key>.argComment<n>=
+# <key>.constant=
+# <key>.customizable=
+# <key>.deprecated=
+# <key>.abbreviatedDisplay=
+# <key>.fullDisplay=
+# <key>.shortDescription=
+# <key>.longDescription=
+# <key>.order=
+# <key>.defaultValue=
+# <key>.selectable=
+
+# Entry Contents
+
+#LC_Default(작업 중-승인중-승인됨-반려됨-취소됨-폐기)
+
+APPROVING.value=\uC2B9\uC778\uC911
+RETURN.value=\uBC18\uB824\uB428
+
+#Project
+READY.value=\uc900\ube44\uc911
+READY.shortDescription=\uc900\ube44\uc911
+
+SIGN.value=\uacb0\uc7ac\uc911
+SIGN.shortDescription=\uacb0\uc7ac\uc911
+
+REPORTWRITE.value=\uc0c1\uc2e0\uc911
+REPORTWRITE.shortDescription=\uc0c1\uc2e0\uc911
+
+PROGRESS.value=\uc9c4\ud589\uc911
+PROGRESS.shortDescription=\uc9c4\ud589\uc911
+
+MODIFY.value=\uc218\uc815\uc911
+MODIFY.shortDescription=\uc218\uc815\uc911
+
+STOP.value=\uc911\ub2e8\ub428
+STOP.shortDescription=\uc911\ub2e8\ub428
+
+BEFOREAPPROVIG.value=\uC0AC\uC804\uACB0\uC7AC\uC911
+BEFOREAPPROVIG.shortDescription=\uC0AC\uC804\uACB0\uC7AC\uC911
+
+ECAWORKING.value=\u0045\u0043\u0041\u0020\uD65C\uB3D9\uC911
+ECAWORKING.shortDescription=\u0045\u0043\u0041\u0020\uD65C\uB3D9\uC911
+
+ECACOMOLETE.value=\u0045\u0043\u0041\u0020\uD65C\uB3D9\uC644\uB8CC
+ECACOMOLETE.shortDescription=\u0045\u0043\u0041\u0020\uD65C\uB3D9\uC644\uB8CC
+
+AFTERAPPROVIG.value=\uCD5C\uC885\uC2B9\uC778\uC911
+AFTERAPPROVIG.shortDescription=\uCD5C\uC885\uC2B9\uC778\uC911

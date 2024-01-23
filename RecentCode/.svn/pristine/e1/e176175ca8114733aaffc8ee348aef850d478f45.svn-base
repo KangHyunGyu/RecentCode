@@ -1,0 +1,74 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!-- 각 화면 개발시 Tag 복사해서 붙여넣고 사용할것 -->    
+<%@ taglib prefix="c"		uri="http://java.sun.com/jsp/jstl/core"			%>
+<%@ taglib prefix="e3ps" 	uri="/WEB-INF/tlds/e3ps-functions.tld"%>
+<script>
+$(document).ready(function(){
+	
+});
+</script>
+<div class="seach_arm2 pt10 pb10">
+	<div class="leftbt"><h4><img class="pointer" onclick="switchPopupDiv(this);" src="/Windchill/jsp/portal/images/minus_icon.png">${e3ps:getMessage('속성')}</h4></div>
+	<div class="rightbt"></div>
+</div>
+<!-- pro_table -->
+<div class="pro_table">
+	<table class="mainTable">
+		<colgroup>
+			<col style="width:10%">
+			<col style="width:23%">
+			<col style="width:10%">
+			<col style="width:23%">
+			<col style="width:10%">
+			<col style="width:24%">
+		</colgroup>
+		<tbody>
+			<tr>
+				<th scope="col">${e3ps:getMessage('MATERIAL')}</th>
+				<td>${attributes.MATERIAL}</td>
+				<th scope="col">${e3ps:getMessage('RESISTIVITY')}</th>
+				<td>${attributes.RESISTIVITY}</td>
+				<th scope="col">${e3ps:getMessage('SURFACES')}</th>
+				<td>${attributes.SURFACES}</td>
+			</tr>
+			
+			<tr>
+				<th scope="col">${e3ps:getMessage('OEM_PART_NO')}</th>
+				<td>${attributes.OEM_PART_NO}</td>
+				<th scope="col">${e3ps:getMessage('CUSTOMER')}</th>
+				<td>${attributes.CUSTOMER}</td>
+				<th scope="col">${e3ps:getMessage('CUSTOMER_NO')}</th>
+				<td>${attributes.CUSTOMER_NO}</td>
+			</tr>
+			
+			<tr>
+				<th scope="col">${e3ps:getMessage('DATE')}</th>
+				<td>${attributes.DATE}</td>
+				<th scope="col">${e3ps:getMessage('DRAWN')}</th>
+				<td>${attributes.DRAWN}</td>
+				<th scope="col">${e3ps:getMessage('EQUIPMENT')}</th>
+				<td>${attributes.EQUIPMENT}</td>
+			</tr>
+			
+			<tr>
+				<th scope="col">${e3ps:getMessage('CHECKED1')}</th>
+				<td>${attributes.CHECKED1}</td>
+				<th scope="col">${e3ps:getMessage('CHECKED2')}</th>
+				<td>${attributes.CHECKED2}</td>
+				<th scope="col">${e3ps:getMessage('APPROVED')}</th>
+				<td>${attributes.APPROVED}</td>
+			</tr>
+			
+			<tr>
+				<th scope="col">${e3ps:getMessage('OLD_PN')}</th>
+				<td>${attributes.OLD_PN}</td>
+				<th scope="col">${e3ps:getMessage('TITLE')}</th>
+				<td>${attributes.TITLE}</td>
+				<th scope="col">${e3ps:getMessage('DRAW_NO')}</th>
+				<td>${attributes.DRAW_NO}</td>
+			</tr>
+		</tbody>
+	</table>	
+</div>
+<!-- //pro_table -->

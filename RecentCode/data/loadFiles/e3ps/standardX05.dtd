@@ -1,0 +1,2642 @@
+<!-- DTD for EPMDocument and WTPart related objects -->
+<!--
+<!ELEMENT CADAssembly (EPMDocument | EPMMemberLink | EPMReferenceLink | EPMBuildLinksRule | EPMFamilyInstance | EPMOccurencyTable | EPMSupportingData )* >
+-->
+<!ELEMENT CADAssembly (EPMDocument | EPMSepFamilyTable | EPMMemberLink | EPMReferenceLink | EPMBuildLinksRule | EPMOccurencyTable | EPMSupportingData)*>
+<!ELEMENT EnterpriseProductStructure (WTPart | WTPartUsageLink | WTPartDescribeLink | WTPartReferenceLink | WTDocument)*>
+<!-- Container path information for exported objects -->
+<!ELEMENT container-info (container*)>
+<!ELEMENT container (container-path, objects?)>
+<!ELEMENT container-path (#PCDATA)>
+<!-- For the list of all source containers -->
+<!ELEMENT objects (xml-file-id*)>
+<!ELEMENT xml-file-id (#PCDATA)>
+<!ELEMENT objectContainerPath (#PCDATA)>
+<!-- For WTContained objects -->
+<!ELEMENT objectContainerOid (#PCDATA)>
+
+<!-- START of Windchill objects definition -->
+<!ELEMENT EPMDocument (dtd?, ObjectID, objectContainerPath?, objectContainerOid?, ownerApplication?, authoringApplication, organizationId?, number, masterUfid?, masterExternalTypeId?, masterTypeOid?, masterIba*,  name, CADName?, epmDocType, epmDocSubType?, defaultUnit?, description?, authoringApplicationVersion?, dbKeySize?, isVerified?, revisionNumber?, familyTableStatus?, epmCADReferenceControl?, extentsValid?, epmBoxExtents?, domainName?, folderPath, folderOid?, versionInfo?, lifecycleInfo?, teamIdentity?, contentItem*, externalTypeId?, typeOid?, iba*, excludedIba*, EPMParameterMap*, isMissingDependents?, EPMFeatureValue*, EPMParameterValue*, archiveInfo?)>
+<!ELEMENT EPMSepFamilyTable (dtd?, ObjectID, objectContainerPath?, objectContainerOid?, versionInfo?, genericUfid?, masterUfid?, name, EPMFeatureDefinition*, EPMParameterDefinition*, EPMFamilyTableColumn*, contentItem*)>
+<!ELEMENT EPMMemberLink (dtd?, ObjectID, usedBy, uses, externalTypeId?, typeOid?, depType?, asStoredChildName?, isRequired?, uniqueLinkID?, uniqueNDId?, iba*, excludedIba*, EPMParameterMap*, isSuppressed?, name?, identifier?, quantityAmount?, quantityUnit?, isPlaced?, (hasTransform, transform)?, compNumber?, compRevNumber?, compLayerIdx?, epmCADReferenceControl?, occurences*)>
+<!ELEMENT EPMContainedIn (dtd?, ObjectID, contains, containedIn, containedType, identifier?, verifyStatus?, isLocked?, EPMFamilyTableCell*)>
+<!ELEMENT EPMVariantLink (dtd?, ObjectID, variant, generic, isRequired?)>
+<!ELEMENT EPMReferenceLink (dtd?, ObjectID, referencedBy, references, externalTypeId?, typeOid?, depType?, asStoredChildName?, isRequired?, uniqueLinkID?, uniqueNDId?, iba*, excludedIba*, EPMParameterMap*)>
+<!ELEMENT EPMDescribeLink (dtd?, ObjectID, describedBy, describes, isBuiltFlag?)>
+<!ELEMENT EPMBuildLinksRule (dtd?, ObjectID, (buildSource, buildTarget))>
+<!ELEMENT EPMOccurencyTable (dtd?, ObjectID, ObjectReference, (occId, pathElem*)*)>
+<!--
+	EPMBuildHistory contains both the information for the EPMBuildHistory link as well as the information needed
+   to perform a "pseudo-build" to mark WTPartUsageLinks as built.
+   builtLink contains 1)ObjectReference for a built WTPartUsageLink.
+	                   2)ObjectReference for the child EPMDocument master that the part usage link was built from
+	There is one pair per built part usage link  BuiltBuildableLink, BuiltFromBuildSourceMaster
+-->
+<!ELEMENT EPMBuildHistory (dtd?, ObjectID, (buildSource, buildTarget), builtLink*, buildRuleID?)>
+<!--
+	ObjectReference in EPMOccurenceTable represents reference to EPMDocumentMaster by UFID or by customID = number
+-->
+<!ELEMENT occId (#PCDATA)>
+<!-- occurenceIdentifier -->
+<!ELEMENT pathElem (#PCDATA)>
+<!-- occurencePathElement -->
+<!ELEMENT EPMSupportingData ANY>
+<!ELEMENT WTPart (dtd?, ObjectID, objectContainerPath?, objectContainerOid?, organizationId?, ((number, masterUfid?), name, defaultUnit?), partType, partSource, domainName?, folderPath, folderOid?, view?, versionInfo?, lifecycleInfo?, teamIdentity?, externalTypeId?, typeOid?, contentItem*, iba*, excludedIba*, archiveInfo?, markUp?)>
+<!ELEMENT WTProduct (ObjectID, objectContainerPath?, objectContainerOid?, organizationId?, ((number, masterUfid?), name, defaultUnit?), partType, partSource, domainName?, folderPath, folderOid?, view?, versionInfo?, lifecycleInfo?, teamIdentity?, externalTypeId?, typeOid?, contentItem*, iba*, excludedIba*, archiveInfo?, markUp?)>
+<!ELEMENT WTSerialNumberedPart (ObjectID, objectContainerPath?, objectContainerOid?, organizationId?, ((number, masterUfid?), name, defaultUnit?), partType, partSource, domainName?, folderPath, folderOid?, view?, versionInfo?, lifecycleInfo?, teamIdentity?, externalTypeId?, typeOid?, contentItem*, iba*, excludedIba*, archiveInfo?, markUp?)>
+<!ELEMENT WTDocument (dtd?, ObjectID, objectContainerPath?, objectContainerOid?, organizationId?, ((number, masterUfid?), name), docType, docTitle, description?, department, domainName?, folderPath, folderOid?, versionInfo?, lifecycleInfo?, teamIdentity?, externalTypeId?, typeOid?, contentItem*, iba*, excludedIba*, archiveInfo?, markUp?)>
+<!ELEMENT WTPartUsageLink (dtd?, ObjectID, (usedBy, uses), externalTypeId?, typeOid?, iba*, excludedIba*, quantityAmount, quantityUnit, lineNumber?, occurences?, occurence*)>
+<!ELEMENT WTPartDescribeLink (dtd?, ObjectID, (describedBy, describes))>
+<!ELEMENT WTPartReferenceLink (dtd?, ObjectID, (referencedBy, references))>
+<!-- END of Windchill objects definition -->
+<!ELEMENT attribute (#PCDATA)>
+<!ELEMENT occurences (attribute+)>
+<!ELEMENT occurence (name, transformString?)>
+<!ELEMENT transformString (#PCDATA)>
+<!ELEMENT quantityUnit (#PCDATA)>
+<!-- Allowed values for quantityUnit are: ea | as_needed | kg | m | l -->
+<!ELEMENT quantityAmount (#PCDATA)>
+<!ELEMENT InternalID (#PCDATA)>
+<!ELEMENT uses (ObjectReference)>
+<!-- Reference to master of the object being used -->
+<!ELEMENT usedBy (ObjectReference)>
+<!-- Reference to the Version -->
+<!ELEMENT containedIn (ObjectReference)>
+<!-- Reference to the container EPMDocument -->
+<!ELEMENT contains (ObjectReference)>
+<!-- Reference to the contained EPMDocument -->
+<!ELEMENT generic (ObjectReference)>
+<!-- Reference to the generic EPMDocumentMaster -->
+<!ELEMENT variant (ObjectReference)>
+<!-- Reference to the varaint EPMDocumentVersion -->
+<!ELEMENT references (ObjectReference)>
+<!-- Reference to master of the object being used -->
+<!ELEMENT referencedBy (ObjectReference)>
+<!-- Reference to the Version -->
+<!ELEMENT describes (ObjectReference)>
+<!-- Reference to the Versioned Object -->
+<!ELEMENT describedBy (ObjectReference)>
+<!-- Reference to the Versioned Object -->
+<!ELEMENT defaultUnit (#PCDATA)>
+<!ELEMENT lineNumber (#PCDATA)>
+<!ELEMENT builtLink (builtBuildableLink, builtFromBuildSourceMaster, builtOccurrencePair*)>
+<!-- Pairs representing the information needed to mark a link as built -->
+<!-- along with the built occurrences for the link -->
+<!ELEMENT builtBuildableLink (ObjectReference)>
+<!-- Reference to the built WTPartUsageLink -->
+<!ELEMENT builtFromBuildSourceMaster (ObjectReference)>
+<!-- Reference to the EPMDocument the link is built from -->
+<!ELEMENT builtOccurrencePair (builtOccurrence, builtFromOccurrence)>
+<!ELEMENT builtOccurrence (name)>
+<!-- The built usage occurrence -->
+<!ELEMENT builtFromOccurrence (name)>
+<!-- The EPMOccurrence the occurrence is built from -->
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT number (#PCDATA)>
+<!ELEMENT masterUfid (#PCDATA)>
+<!-- masterUfid should be a string corresponding to convention for Windchill UFID representation -->
+<!ELEMENT partType (#PCDATA)>
+<!-- Allowed values for partType are: separable | inseparable | component -->
+<!ELEMENT partSource (#PCDATA)>
+<!-- Allowed values for partSource are: make | buy -->
+<!-- WTDocument specific attributes -->
+<!-- Allowed values for docType are: $$Document | $$Requirements | $$Specification | $$TestPlan -->
+<!ELEMENT docType (#PCDATA)>
+<!ELEMENT docSubType (#PCDATA)>
+<!-- Allowed values for department are: ACTG | DESIGN | DOCUMENTATION | ENG | HR | LEGAL | MFTG | MRKT | PROCESS | PUBS | SAFETY | SALES | SUPPORT | TRNING -->
+<!ELEMENT department (#PCDATA)>
+<!ELEMENT docTitle (#PCDATA)>
+<!ELEMENT epmDocType (#PCDATA)>
+<!ELEMENT epmDocSubType (#PCDATA)>
+<!ELEMENT ownerApplication (#PCDATA)>
+<!ELEMENT authoringApplication (#PCDATA)>
+<!ELEMENT authoringApplicationVersion (versionNumber, versionName)>
+<!ELEMENT versionNumber (#PCDATA)>
+<!ELEMENT versionName (#PCDATA)>
+<!ELEMENT description (#PCDATA)>
+<!ELEMENT view (#PCDATA)>
+<!ELEMENT versionInfo (versionId, iterationId, oneOffVersionId?, versionLevel)>
+<!ELEMENT versionId (#PCDATA)>
+<!ELEMENT iterationId (#PCDATA)>
+<!ELEMENT oneOffVersionId (#PCDATA)>
+<!ELEMENT versionLevel (#PCDATA)>
+<!ELEMENT epmCADReferenceControl (geomRestr, isGeomRestrRecursive, scope, violRestriction)>
+<!ELEMENT geomRestr (#PCDATA)>
+<!ELEMENT isGeomRestrRecursive (#PCDATA)>
+<!ELEMENT scope (#PCDATA)>
+<!ELEMENT violRestriction (#PCDATA)>
+<!ELEMENT extentsValid (#PCDATA)>
+<!ELEMENT epmBoxExtents (Ax, Ay, Az, Bx, By, Bz)>
+<!ELEMENT Ax (#PCDATA)>
+<!ELEMENT Ay (#PCDATA)>
+<!ELEMENT Az (#PCDATA)>
+<!ELEMENT Bx (#PCDATA)>
+<!ELEMENT By (#PCDATA)>
+<!ELEMENT Bz (#PCDATA)>
+<!-- EPMFamilyTable related -->
+<!ELEMENT genericUfid (#PCDATA)>
+<!ELEMENT EPMFamilyTableColumn (ftColumnClassname, name, title, columnType, epmAttribute, definitionName?)>
+<!ELEMENT EPMFeatureDefinition (name, internalId, valueType, featureType)>
+<!ELEMENT EPMParameterDefinition (name, internalId, valueType, parameterType)>
+<!ELEMENT featureType (#PCDATA)>
+<!ELEMENT parameterType (#PCDATA)>
+<!ELEMENT definitionName (#PCDATA)>
+<!ELEMENT ftColumnName (#PCDATA)>
+<!ELEMENT ftColumnClassname (#PCDATA)>
+<!ELEMENT epmAttribute (#PCDATA)>
+<!ELEMENT title (#PCDATA)>
+<!ELEMENT columnType (#PCDATA)>
+<!ELEMENT internalId (#PCDATA)>
+<!ELEMENT valueType (#PCDATA)>
+<!ELEMENT EPMFamilyTableCell (ftCellClassname, ftColumnClassname, ftColumnName, isInherited, isDefinedHere, (uniqueId, isSuppressed, childName)?)>
+<!ELEMENT ftCellClassname (#PCDATA)>
+<!ELEMENT isInherited (#PCDATA)>
+<!ELEMENT isDefinedHere (#PCDATA)>
+<!ELEMENT uniqueId (#PCDATA)>
+<!ELEMENT childName (#PCDATA)>
+<!ELEMENT EPMFeatureValue (definitionName, (valueClassname, valueString)+)>
+<!ELEMENT EPMParameterValue (definitionName, (valueClassname, valueString)+)>
+<!ELEMENT valueClassname (#PCDATA)>
+<!ELEMENT valueString (#PCDATA)>
+<!ELEMENT EPMParameterMap (ibaPath, parameterName)>
+<!ELEMENT parameterName (#PCDATA)>
+<!ELEMENT contentItem (contentId, contentType, category?, formatName?, fileName, fileType?, size?, role, isPrimary?, descriptor?, urlLocation?)>
+<!-- contentId maybe a physical file path, an url, an entry in a zipfile, or a zipfile path/zipentry combination. -->
+<!ELEMENT contentId (#PCDATA)>
+<!ELEMENT contentType (#PCDATA)>
+<!ELEMENT category (#PCDATA)>
+
+<!-- data sharing maps -->
+<!ELEMENT shareMapSet (shareMap*)>
+<!ELEMENT shareMap (ObjectID, shareSpec?, shareTarget, folderPath?)>
+<!ELEMENT shareSpec (shareType, shareKey)>
+<!ELEMENT shareType (#PCDATA)>
+<!ELEMENT shareKey (#PCDATA)>
+<!ELEMENT shareTarget (ObjectReference, iterationId?)>
+<!ATTLIST shareTarget isVersion (true | false) "true">
+<!-- sandbox baseline -->
+<!ELEMENT sandboxBaseline (ObjectReference, baselinedObject*)>
+<!ELEMENT baselinedObject (ObjectReference)>
+<!-- Allowed values for contentType are: ApplicationData | URLData -->
+<!ELEMENT fileName (#PCDATA)>
+<!-- fileName should include extension like spec.doc -->
+<!ELEMENT fileType (#PCDATA)>
+<!ELEMENT formatName (#PCDATA)>
+<!ELEMENT isPrimary (#PCDATA)>
+<!ELEMENT size (#PCDATA)>
+<!-- Allowed values for role are: DIRECTORY | PRIMARY | REGULAR | RENDITION |  SECONDARY | PRODUCT_VIEW_EDZ | THUMBNAIL | VIRTUAL_FILE -->
+<!ELEMENT role (#PCDATA)>
+<!ELEMENT urlLocation (#PCDATA)>
+<!ELEMENT descriptor (#PCDATA)>
+<!-- For IBA values -->
+<!ELEMENT iba (denominator?, unit?, precision?, ibaName?, ibaPath?, ibaOid?, ibaValue, ibaType)>
+<!ELEMENT masterIba (iba*, excludedIba*)>
+<!ELEMENT excludedIba (ibaPath, ibaOid?, ibaValue, ibaType)>
+<!ELEMENT quantityOfMeasure (name, symbol?, description?)>
+<!ELEMENT unit (precision)>
+<!ELEMENT ibaValue (#PCDATA)>
+<!ELEMENT ibaType (#PCDATA)>
+<!ELEMENT path (#PCDATA)>
+<!ELEMENT displayName (#PCDATA)>
+<!ELEMENT hierachyDisplayName (#PCDATA)>
+<!ELEMENT ibaName (#PCDATA)>
+<!ELEMENT ibaPath (#PCDATA)>
+<!ELEMENT ibaOid  (#PCDATA)>
+
+<!ELEMENT BusinessEntityID (#PCDATA)>
+<!ELEMENT symbol (#PCDATA)>
+<!ELEMENT precision (#PCDATA)>
+<!ELEMENT denominator (#PCDATA)>
+<!ELEMENT ibaReferenceClass (#PCDATA)>
+<!ELEMENT dtd (#PCDATA)>
+<!ELEMENT ms-name-value (#PCDATA)>
+<!ELEMENT ms-default-name-value (#PCDATA)>
+<!-- For IBA Definitions and AttributeOrganizers -->
+<!ELEMENT ibaDefinitions (dtd?, (StringDefinition | IntegerDefinition | FloatDefinition | BooleanDefinition | URLDefinition | TimestampDefinition | ReferenceDefinition | RatioDefinition | UnitDefinition | AttributeOrganizer)*)>
+<!ELEMENT StringDefinition (ibaName, path, ibaOid?, displayName, description, hierachyDisplayName?)>
+<!ELEMENT IntegerDefinition (ibaName, path, ibaOid?, displayName, description, hierachyDisplayName?)>
+<!ELEMENT FloatDefinition (ibaName, path, ibaOid?, displayName, description, hierachyDisplayName?)>
+<!ELEMENT BooleanDefinition (ibaName, path, ibaOid?, displayName, description, hierachyDisplayName?)>
+<!ELEMENT URLDefinition (ibaName, path, ibaOid?, displayName, description, hierachyDisplayName?)>
+<!ELEMENT TimestampDefinition (ibaName, path, ibaOid?, displayName, description, hierachyDisplayName?)>
+<!ELEMENT ReferenceDefinition (ibaName, path, ibaOid?, displayName, description, hierachyDisplayName, ibaReferenceClass)>
+<!ELEMENT UnitDefinition (ibaName, path, ibaOid?, displayName, description, hierachyDisplayName?, quantityOfMeasure, ms-name-value*, ms-default-name-value*)>
+<!ELEMENT RatioDefinition (ibaName, path, ibaOid?, displayName, description, hierachyDisplayName?)>
+<!ELEMENT AttributeOrganizer (ibaName, description, hierachyDisplayName?, path?)>
+<!-- For IBAReferenceable handlers -->
+<!ELEMENT BusinessEntity (localId, name, BusinessEntityID)>
+<!ELEMENT ClassificationNode (ObjectID, name, path, description, counterpartID, imageHolder?, iba*, classificationStruct)>
+<!ELEMENT counterpartID (#PCDATA)>
+<!ELEMENT imageHolder (contentId)>
+<!ELEMENT classificationStruct (className, ibaPath)>
+<!-- For Units -->
+<!ELEMENT DisplayUnits (MeasurementSystem | QuantityOfMeasure)*>
+<!ELEMENT MeasurementSystem (measurementSystemName, measurementSystemDesc, measurementSystemKeySymbol*)>
+<!ELEMENT QuantityOfMeasure (quantityOfMeasureName, quantityOfMeasureDesc, quantityOfMeasureSymbol, measurementSystem*, default-MS*)>
+<!ELEMENT measurementSystem (name-value*)>
+<!ELEMENT default-MS (name-value*)>
+<!ELEMENT name-value (#PCDATA)>
+<!ELEMENT measurementSystemName (#PCDATA)>
+<!ELEMENT measurementSystemDesc (#PCDATA)>
+<!ELEMENT measurementSystemKeySymbol (#PCDATA)>
+<!ELEMENT quantityOfMeasureName (#PCDATA)>
+<!ELEMENT quantityOfMeasureDesc (#PCDATA)>
+<!ELEMENT quantityOfMeasureSymbol (#PCDATA)>
+<!-- For WTTypeDefinitions the following attribuets are ignored in 7.0 and are included for analysis purposes only.
+domainName, containerDomainName, folderPath, iterationId
+-->
+<!ELEMENT WTTypeDefinitions (ObjectID, objectContainerPath?, containerDomainName?, domainName?, folderPath?, folderOid?, iterationId?, name, path, displayName?, description?, hierachyDisplayName, userAttributeable, instantiable, deleted, logicalIdentifier?, icon?, iba*, constraint*)>
+<!ELEMENT constraint (enforcementRuleClassName, bindingRuleClassName, enforcementRuleData, ibaPath)>
+<!ELEMENT icon (contentId, iconName, description, locale)>
+<!ELEMENT logicalIdentifier (logicalId, identifiedGroup)>
+<!ELEMENT userAttributeable (#PCDATA)>
+<!ELEMENT instantiable (#PCDATA)>
+<!ELEMENT deleted (#PCDATA)>
+<!ELEMENT enforcementRuleClassName (#PCDATA)>
+<!ELEMENT bindingRuleClassName (#PCDATA)>
+<!ELEMENT enforcementRuleData (#PCDATA)>
+<!ELEMENT masterExternalTypeId (#PCDATA)>
+<!ELEMENT masterTypeOid (#PCDATA)>
+<!ELEMENT externalTypeId (#PCDATA)>
+<!ELEMENT typeOid (#PCDATA)>
+<!ELEMENT iconName (#PCDATA)>
+<!ELEMENT locale (#PCDATA)>
+<!ELEMENT containerDomainName (#PCDATA)>
+<!ELEMENT identifiedGroup (#PCDATA)>
+<!ELEMENT logicalId (#PCDATA)>
+<!-- EPM Link Attributes Start -->
+<!ELEMENT asStoredChildName (#PCDATA)>
+<!ELEMENT depType (#PCDATA)>
+<!ELEMENT isRequired (#PCDATA)>
+<!ELEMENT compNumber (#PCDATA)>
+<!ELEMENT compRevNumber (#PCDATA)>
+<!ELEMENT compLayerIdx (#PCDATA)>
+<!ELEMENT uniqueNDId (#PCDATA)>
+<!ELEMENT sourceInstance (#PCDATA)>
+<!ELEMENT targetInstance (#PCDATA)>
+<!ELEMENT isGeneric (#PCDATA)>
+<!ELEMENT uniqueLinkID (#PCDATA)>
+<!ELEMENT isSuppressed (#PCDATA)>
+<!-- Not needed by all CAD packages -->
+<!ELEMENT identifier (#PCDATA)>
+<!ELEMENT quantity (#PCDATA)>
+<!ELEMENT isPlaced (#PCDATA)>
+<!-- Not needed by all CAD packages -->
+<!ELEMENT hasTransform (#PCDATA)>
+<!ELEMENT transform (matrix4d)>
+<!ELEMENT matrix4d (m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33)>
+<!ELEMENT m00 (#PCDATA)>
+<!ELEMENT m01 (#PCDATA)>
+<!ELEMENT m02 (#PCDATA)>
+<!ELEMENT m03 (#PCDATA)>
+<!ELEMENT m10 (#PCDATA)>
+<!ELEMENT m11 (#PCDATA)>
+<!ELEMENT m12 (#PCDATA)>
+<!ELEMENT m13 (#PCDATA)>
+<!ELEMENT m20 (#PCDATA)>
+<!ELEMENT m21 (#PCDATA)>
+<!ELEMENT m22 (#PCDATA)>
+<!ELEMENT m23 (#PCDATA)>
+<!ELEMENT m30 (#PCDATA)>
+<!ELEMENT m31 (#PCDATA)>
+<!ELEMENT m32 (#PCDATA)>
+<!ELEMENT m33 (#PCDATA)>
+<!ELEMENT occurrences (name)>
+<!ELEMENT buildSource (ObjectReference)>
+<!ELEMENT buildTarget (ObjectReference)>
+<!ELEMENT buildRuleID (#PCDATA)>
+<!ELEMENT isSuperceded (#PCDATA)>
+<!ELEMENT containedType (#PCDATA)>
+<!ELEMENT verifyStatus (#PCDATA)>
+<!ELEMENT isLocked (#PCDATA)>
+<!ELEMENT CADName (#PCDATA)>
+<!ELEMENT isMissingDependents (#PCDATA)>
+<!ELEMENT dbKeySize (#PCDATA)>
+<!ELEMENT isVerified (#PCDATA)>
+<!ELEMENT revisionNumber (#PCDATA)>
+<!ELEMENT familyTableStatus (#PCDATA)>
+<!-- EPM Link Attributes END -->
+<!ELEMENT domainName (#PCDATA)>
+<!ELEMENT folderPath (#PCDATA)>
+<!-- includes cabinet name, for example: /Design/Gadget -->
+<!ELEMENT folderOid (#PCDATA)>
+
+<!ELEMENT lifecycleInfo (lifecycleTemplateName, lifecycleTemplateOid?, lifecycleState)>
+<!ELEMENT lifecycleTemplateName (#PCDATA)>
+<!ELEMENT lifecycleTemplateOid (#PCDATA)>
+<!ELEMENT lifecycleState (#PCDATA)>
+<!ELEMENT teamIdentity (#PCDATA)>
+<!ELEMENT ObjectID (localId?, objectId?, ufid?)>
+<!ELEMENT objectId (#PCDATA)>
+<!-- This is a Windchill Object ID: wt.part.WTPart:10587 -->
+<!-- Now each end of a link is a WTContained object, so objectCotainerPath must be exported as well -->
+<!ELEMENT ObjectReference ((localId | ufid | customId), objectContainerPath?)>
+<!ELEMENT localId (#PCDATA)>
+<!-- localId represents object identifier that can identifier object in export/import package. Usually it is defined in objects (like WTPart, WTDocument) and used in links (like WTPartUsageLink) -->
+<!ELEMENT ufid (#PCDATA)>
+<!-- that should be String corresponding to convention for Windchill UFID representation -->
+<!ELEMENT customId (number)>
+<!-- that is a context specific reference. The context defines how to resolve it. For example, from context can follow that to resolve this reference we have to find WTPart object with number equal to this customId -->
+<!ELEMENT isBuiltFlag (#PCDATA)>
+<!ELEMENT urlString (#PCDATA)>
+<!ELEMENT organizationId (#PCDATA)>
+<!ELEMENT className (#PCDATA)>
+
+<!-- Archive & Restore (based upon ufid approach of flexible versioning) -->
+<!ELEMENT archiveInfo (flexibleVersioningInfo?, createRecord, objectHistory?)>
+
+<!ELEMENT flexibleVersioningInfo (predecessorBranchPointUfid?, mergeInwardsUfid*, mergeOutwardsUfid*)>
+<!ELEMENT createRecord (createStamp, modifyStamp, createdBy, modifiedBy, ownedBy)>
+
+<!ELEMENT objectHistory (lifeCycleHistory*)>
+<!ELEMENT lifeCycleHistory (action, actorName, lifeCycleName, phaseName, state, teamTemplateIdentity, createStamp, modifyStamp, lifeCycleSignature*, criterion*)>
+<!ELEMENT lifeCycleSignature (comments, phaseName, roleName, signerName, signer, vote, createStamp, modifyStamp)>
+<!ELEMENT criterion (assertion, satisfied, createStamp, modifyStamp)>
+
+<!ELEMENT action (#PCDATA)>
+<!ELEMENT actorName (#PCDATA)>
+<!ELEMENT lifeCycleName (#PCDATA)>
+<!ELEMENT phaseName (#PCDATA)>
+<!ELEMENT state (#PCDATA)>
+<!ELEMENT teamTemplateIdentity (#PCDATA)>
+<!ELEMENT comments (#PCDATA)>
+<!ELEMENT roleName (#PCDATA)>
+<!ELEMENT signerName (#PCDATA)>
+<!ELEMENT signer (#PCDATA)>
+<!ELEMENT vote (#PCDATA)>
+<!ELEMENT assertion (#PCDATA)>
+<!ELEMENT satisfied (#PCDATA)>
+<!ELEMENT predecessorBranchPointUfid (#PCDATA)>
+<!ELEMENT mergeInwardsUfid (#PCDATA)>
+<!ELEMENT mergeOutwardsUfid (#PCDATA)>
+<!ELEMENT createStamp (#PCDATA)>
+<!ELEMENT modifyStamp (#PCDATA)>
+<!ELEMENT createdBy (dnAddr, oidAddr)>
+<!ELEMENT modifiedBy (dnAddr, oidAddr)>
+<!ELEMENT ownedBy (dnAddr, oidAddr)>
+<!ELEMENT dnAddr (#PCDATA)>
+<!ELEMENT oidAddr (#PCDATA)>
+
+<!-- MarkUp content -->
+<!ELEMENT markUp (id)>
+
+<!-- Representation Reference -->
+
+<!ELEMENT Representation (RepresentationRef, description, default, republishable, domain, repContent)>
+<!ELEMENT RepresentationRef (RepresentableObjectRef, name, ObjectID)>
+<!ELEMENT RepresentableObjectRef (ClassName, (WTPartRef | WTProductRef | WTSerialNumberedPartRef | EPMDocRef | WTDocumentRef))>
+<!ELEMENT PublishedContentLink (dtd?, ObjectID,representationName, (publishedContentHolder, representable))>
+<!ELEMENT publishedContentHolder (ObjectReference)>
+<!ELEMENT representationName (#PCDATA)>
+<!ELEMENT representable (ObjectReference)>
+<!ELEMENT repContent (id)>
+<!ELEMENT id (#PCDATA)>
+<!ELEMENT default (#PCDATA)>
+<!ELEMENT republishable (#PCDATA)>
+<!ELEMENT domain (#PCDATA)>
+<!ELEMENT ClassName (#PCDATA)>
+
+<!-- For references -->
+<!ELEMENT WTPartRef (dtd?, ObjectID, objectContainerPath?, objectContainerOid?, organizationId?, ((number, masterUfid?), name, defaultUnit?), partType, partSource, view?, versionInfo?)>
+<!ELEMENT WTProductRef (ObjectID, objectContainerPath?, objectContainerOid?, organizationId?, ((number, masterUfid?), name, defaultUnit?), partType, partSource, view?, versionInfo?)>
+<!ELEMENT WTSerialNumberedPartRef (ObjectID, objectContainerPath?, objectContainerOid?, organizationId?, ((number, masterUfid?), name, defaultUnit?), partType, partSource, view?, versionInfo?)>
+<!ELEMENT EPMDocRef (dtd?, ObjectID, objectContainerPath?, objectContainerOid?, ownerApplication?, authoringApplication, organizationId?, number, masterUfid?, masterExternalTypeId?, masterTypeOid?, masterIba*,  name, CADName?, epmDocType, epmDocSubType?, description?, authoringApplicationVersion?, extentsValid?, versionInfo?)>
+<!ELEMENT WTDocumentRef (dtd?, ObjectID, objectContainerPath?, objectContainerOid?, organizationId?, ((number, masterUfid?), name), docType, docTitle, description?, department, versionInfo?)>
+
+<!-- dtd elements for objectcol criteria, relationship map and associated objects -->
+<!ELEMENT CollectionCriteria (ObjectID,objectContainerPath,name,description,logicalOperator,criterionObjects)>
+<!ELEMENT criterionObject (definitionSpec,inputValues)>
+<!ELEMENT criterionObjects (criterionObject+)>
+<!ELEMENT definitionSpec (ObjectID,name,displayName,description)>
+<!ELEMENT inputType (#PCDATA)>
+<!ELEMENT inputValue (name,operator,inputType,value)>
+<!ELEMENT inputValues (inputValue+)>
+<!ELEMENT logicalOperator (#PCDATA)>
+<!ELEMENT operator (#PCDATA)>
+<!ELEMENT value (#PCDATA)>
+<!ELEMENT CriterionDefValidWith (ObjectID,sourceDef,targetDef)>
+<!ELEMENT sourceDef (ObjectID)>
+<!ELEMENT targetDef (ObjectID)>
+<!ELEMENT RelationshipMapDef (ObjectID,masterRef,primaryDef,definitionHolder)>
+<!ELEMENT definitionHolder (contentId)>
+<!ELEMENT masterRef (ObjectID)>
+<!ELEMENT primaryDef (#PCDATA)>
+<!ELEMENT RelationshipMap (ObjectID,objectContainerPath,name,description,definitionSpec,inputValues)>
+<!ELEMENT BaseCriterionDef (ObjectID,masterRef,primaryDef,definitionHolder)>
+<!-- End - dtd elements for objectcol criteria, relationship map and associated objects -->
+<!ELEMENT NmLoader ( (csvDocument*,
+                          csvWfTimerTemplateBegin*,
+                          csvTypeDefAttrValue*,
+                          csvPrefEntry*,
+                          csvWfSynchRobotTemplateBegin*,
+                          csvEndBusinessEntity*,
+                          csvWfEnvironment*,
+                          csvClassificationImagesRootDir*,
+                          csvCreateFileBasedBegin*,
+                          csvActorRoleHolder2*,
+                          csvWfConnectorTemplate*,
+                          csvWfSynchRobotTemplateEnd*,
+                          csvAddPrincipalToRole*,
+                          csvExchangeContainer*,
+                          csvPhaseTemplateBegin*,
+                          csvLifeCycleTemplateBegin*,
+                          csvPartRepresentation*,
+                          csvReplaceContentFile*,
+                          csvAddCreator*,
+                          csvWfOverdueNotificationRoleAssignee*,
+                          csvSiteOrgContainer*,
+                          csvContainerConstraint*,
+                          csvWfPrincipalAssignee*,
+                          csvWfExternalMethodTemplateEnd*,
+                          csvTeamTemplateEnd*,
+                          csvWfProxyTemplateBegin*,
+                          csvWTSerialNumberedEffectivity*,
+                          csvProductSerialNumberEffectivity*,
+                          csvProductLotNumberEffectivity*,
+                          csvSaveNavStruct*,
+                          csvBeginWTDocument*,
+                          csvWfInternalMethodTemplateEnd*,
+                          csvBeginWTDocumentRetainContent*,
+                          csvAddElementToNodeTab*,
+                          csvBeginCreateOrUpdateWTPart*,
+                          csvPartDocLink*,
+                          csvIndirectRoleHolder*,
+                          csvBeginClassNode*,
+                          csvSpecification*,
+                          csvContentURL*,
+                          csvWfProcessTemplateEnd*,
+                          csvWfExternalMethodTemplateBegin*,
+                          csvWfNodeTemplateLinkEnd*,
+                          csvBeginCSMConstraints*,
+                          csvNewViewVersion*,
+                          csvWTLotEffectivity*,
+                          csvRemoveCSMConstraint*,
+                          csvOccurrencedAssemblyAdd*,
+                          csvAddSiteAdministrator*,
+                          csvRelationshipMapDef*,
+                          csvNotebookTemplate*,
+                          csvQuantityOfMeasure*,
+                          csvBeginNavStruct*,
+                          csvWfVariable*,
+                          csvAddOrgAdministrator*,
+                          csvConfirmParticipation*,
+                          csvNotebook*,
+                          csvWfExprRobotTemplateEnd*,
+                          csvSetElementValue*,
+                          csvSetDefaultDirectory*,
+                          csvAttrDefinizer*,
+                          csvSingleDefinitionConstraint*,
+                          csvWfApplRobotTemplateBegin*,
+                          csvOrgAdmin*,
+                          csvContentAggregateURL*,
+                          csvEndCSMConstraints*,
+                          csvWfTeamAssignee*,
+                          csvWfOverdueAction*,
+                          csvAddNavTab*,
+                          csvEndAttributeHierarchyLoader*,
+                          csvBeginWTPart*,
+                          csvBeginExport*,
+                          csvEndWTPart*,
+                          csvEndExport*,
+                          csvExport*,
+                          csvActivateContainer*,
+                          csvLDAPUser*,
+                          csvContentFile*,
+                          csvWfURLRobotTemplateEnd*,
+                          csvCachePart*,
+                          csvWfProjectAssignee*,
+                          csvEndWTDocumentRetainContent*,
+                          csvRelationshipMaps*,
+                          csvAccessRule*,
+                          csvContentAggregate*,
+                          csvWfInternalMethodTemplateBegin*,
+                          csvLifeCycleTemplateEnd*,
+                          csvCreateOrUpdateIBAValue*,
+                          csvContainer*,
+                          csvOLDIBAValue*,
+                          csvFolderShortcut*,
+                          csvWfAdHocActivityTemplateBegin*,
+                          csvWfAssignedActivityTemplateBegin*,
+                          csvClassicContainer*,
+                          csvUser*,
+                          csvEndIBAContainer*,
+                          csvShortcut*,
+                          csvEndCreateOrUpdateWTPart*,
+                          csvCreateContainerTemplate*,
+                          csvPartDocReference*,
+                          csvPart*,
+                          csvWfNodeTemplateLinkBegin*,
+                          csvWfURLRobotTemplateBegin*,
+                          csvWfAdHocActivityTemplateEnd*,
+                          csvWTDatedEffectivity*,
+                          csvWfApplRobotTemplateEnd*,
+                          csvWfProcessTemplateBegin*,
+                          csvBeginUpdateBusinessEntity*,
+                          csvendIBAHolder*,
+                          csvProductContainer*,
+                          csvTypeDefConsValue*,
+                          csvWfSignature*,
+                          csvAssemblyAddLoad*,
+                          csvViewPreference*,
+                          csvSiteViewPreference*,
+                          csvWfEventActionPair*,
+                          csvRoleHolder*,
+                          csvUserGroup*,
+                          csvAssemblyRemove*,
+                          csvOrgContainer*,
+                          csvTeamTemplateBegin*,
+                          csvEndWTDocument*,
+                          csvWfTransition*,
+                          csvWfActorAssignee*,
+                          csvProductUser*,
+                          csvSubFolder*,
+                          csvWfNotificationEnd*,
+                          csvWfVariableAssignee*,
+                          csvSingleDefinitionConstraintByName*,
+                          csvViewAssociation*,
+                          csvBeginIBAContainer*,
+                          csvBaseCriterionDef*,
+                          csvRoleHolder2*,
+                          csvCreateRankingContext*,
+                          csvEndTypeDefNode*,
+                          csvEndUpdateTypeDefNode*,
+                          csvWfProxyTemplateEnd*,
+                          csvWTAclEntry*,
+                          csvDataFormat*,
+                          csvBeginBusinessEntity*,
+                          csvView*,
+                          csvIBAValue*,
+                          csvEndClassNode*,
+                          csvEndWTPM*,
+                          csvWfBlockTemplateEnd*,
+                          csvAssemblyAdd*,
+                          csvBeginAttributeHierarchyLoader*,
+                          csvReportTemplate*,
+                          csvProduct*,
+                          csvCriterionDefValidWith*,
+                          csvPhaseTemplateEnd*,
+                          csvWfRoleAssignee*,
+                          csvEndExportNodeTemplate*,
+                          csvOccurrencedAssemblyAddLoad*,
+                          csvRequirements*,
+                          csvWfExceptionAction*,
+                          csvWfAuditAction*,
+		          csvWfIgnoreUnresolvedRoleAction*,
+                          csvWfVotingAction*,
+                          csvTypeNodeIconRoot*,
+                          csvBeginExportNodeTemplate*,
+                          csvDomain*,
+                          csvPhaseSuccessionBegin*,
+                          csvMeasurementSystem*,
+                          csvBeginWTPM*,
+                          csvEndNavStruct*,
+                          csvAddIndependentNode*,
+                          csvCreateRankingData*,
+                          csvAddGuest*,
+                          csvProjectBegin*,
+                          csvClassificationNavStruct*,
+                          csvWfExprRobotTemplateBegin*,
+                          csvWfExpression*,
+                          csvGeneral*,
+                          csvContentAggregateFile*,
+                          csvAddElementToNavTab*,
+                          csvEndUpdateBusinessEntity*,
+                          csvActorRoleHolder*,
+                          csvBeginTypeDefNode*,
+                          csvBeginUpdateTypeDefNode*,
+                          csvProjectEnd*,
+                          csvDocumentRetainContent*,
+                          csvCabinet*,
+                          csvSetDefaultURL*,
+                          csvPartDocDescribes*,
+                          csvWfAssignedActivityTemplateEnd*,
+                          csvConfigurationItem*,
+                          csvWfBlockTemplateBegin*,
+                          csvWfTimerTemplateEnd*,
+                          csvIndexPolicyRule*,
+                          csvCriterion*,
+                          csvWfNotificationBegin*,
+                          csvGroup*,
+                          csvESITarget*,
+                          csvESITargetAssignment*,
+                          csvEPMAuthoringAppVersion*, 
+                          csvCreateWTOrganization*, 
+                          csvCreateSupplier*, 
+                          csvEndSupplier*, 
+                          csvAddContactToSupplier*, 
+                          csvAddDocumentToSupplier*,
+			  csvSourcingContext*,
+			  csvEndSourcingContext*,
+			  csvManufacturerPart*,
+			  csvBeginManufacturerPart*,
+			  csvEndManufacturerPart*,
+			  csvVendorPart*,
+			  csvBeginVendorPart*,
+			  csvEndVendorPart*,
+			  csvAddAML*,
+			  csvAddAVL*,
+			  csvRemoveAML*,
+			  csvRemoveAVL*,
+			  csvSetAMLPreference*,
+			  csvSetAVLPreference*)*)
+>
+<!ELEMENT csvDocument ( csvuser, csvname, csvtitle, csvnumber, csvtype, csvdescription, csvdepartment, csvsaveIn, csvteamTemplate, csvdomain, csvlifecycletemplate, csvlifecyclestate, csvtypedef, csvprimarycontenttype, csvpath, csvformat, csvcontdesc, csvversion, csviteration )>
+
+<!ATTLIST csvDocument  handler CDATA #IMPLIED>
+<!ELEMENT csvuser (#PCDATA) >
+<!ELEMENT csvname (#PCDATA) >
+<!ELEMENT csvtitle (#PCDATA) >
+<!ELEMENT csvnumber (#PCDATA) >
+<!ELEMENT csvtype (#PCDATA) >
+<!ELEMENT csvdescription (#PCDATA) >
+<!ELEMENT csvdepartment (#PCDATA) >
+<!ELEMENT csvsaveIn (#PCDATA) >
+<!ELEMENT csvteamTemplate (#PCDATA) >
+<!ELEMENT csvdomain (#PCDATA) >
+<!ELEMENT csvlifecycletemplate (#PCDATA) >
+<!ELEMENT csvlifecyclestate (#PCDATA) >
+<!ELEMENT csvtypedef (#PCDATA) >
+<!ELEMENT csvprimarycontenttype (#PCDATA) >
+<!ELEMENT csvpath (#PCDATA) >
+<!ELEMENT csvformat (#PCDATA) >
+<!ELEMENT csvcontdesc (#PCDATA) >
+<!ELEMENT csvversion (#PCDATA) >
+<!ELEMENT csviteration (#PCDATA) >
+
+
+<!ELEMENT csvWfTimerTemplateBegin ( csvxCoordinate, csvyCoordinate, csvrouterType, csvroutingEvents, csvautoRoutingExpression, csvuniqueId, csvname, csvdescription, csvcategory, csvinstructions, csviconName, csvduration, csvprocessDuration, csvstartDelay, csvstartProcessDelay, csvnotifyBeforeDeadline, csvtimeToDeadline, csvnotifyAfterDeadline, csvtimePastDeadline, csvresponsibleRole, csvhost, csvtimerDelay, csvtimerProcessDelay )>
+
+<!ATTLIST csvWfTimerTemplateBegin  handler CDATA #IMPLIED>
+<!ELEMENT csvxCoordinate (#PCDATA) >
+<!ELEMENT csvyCoordinate (#PCDATA) >
+<!ELEMENT csvrouterType (#PCDATA) >
+<!ELEMENT csvroutingEvents (#PCDATA) >
+<!ELEMENT csvautoRoutingExpression (#PCDATA) >
+<!ELEMENT csvuniqueId (#PCDATA) >
+<!ELEMENT csvcategory (#PCDATA) >
+<!ELEMENT csvinstructions (#PCDATA) >
+<!ELEMENT csviconName (#PCDATA) >
+<!ELEMENT csvduration (#PCDATA) >
+<!ELEMENT csvprocessDuration (#PCDATA) >
+<!ELEMENT csvstartDelay (#PCDATA) >
+<!ELEMENT csvstartProcessDelay (#PCDATA) >
+<!ELEMENT csvnotifyBeforeDeadline (#PCDATA) >
+<!ELEMENT csvtimeToDeadline (#PCDATA) >
+<!ELEMENT csvnotifyAfterDeadline (#PCDATA) >
+<!ELEMENT csvtimePastDeadline (#PCDATA) >
+<!ELEMENT csvresponsibleRole (#PCDATA) >
+<!ELEMENT csvhost (#PCDATA) >
+<!ELEMENT csvtimerDelay (#PCDATA) >
+<!ELEMENT csvtimerProcessDelay (#PCDATA) >
+
+
+<!ELEMENT csvTypeDefAttrValue ( csvdefinition, csvvalue1 )>
+
+<!ATTLIST csvTypeDefAttrValue  handler CDATA #IMPLIED>
+<!ELEMENT csvdefinition (#PCDATA) >
+<!ELEMENT csvvalue1 (#PCDATA) >
+
+
+<!ELEMENT csvPrefEntry ( csvname, csvvalue, csvnode, csvuser, csvcontext )>
+
+<!ATTLIST csvPrefEntry  handler CDATA #IMPLIED>
+<!ELEMENT csvvalue (#PCDATA) >
+<!ELEMENT csvnode (#PCDATA) >
+<!ELEMENT csvcontext (#PCDATA) >
+
+
+<!ELEMENT csvWfSynchRobotTemplateBegin ( csvxCoordinate, csvyCoordinate, csvrouterType, csvroutingEvents, csvautoRoutingExpression, csvuniqueId, csvname, csvdescription, csvcategory, csvinstructions, csviconName, csvduration, csvprocessDuration, csvstartDelay, csvstartProcessDelay, csvnotifyBeforeDeadline, csvtimeToDeadline, csvnotifyAfterDeadline, csvtimePastDeadline, csvresponsibleRole, csvhost, csveventKey, csvtargetClass, csvsynchType, csvtargetVariableName )>
+
+<!ATTLIST csvWfSynchRobotTemplateBegin  handler CDATA #IMPLIED>
+<!ELEMENT csveventKey (#PCDATA) >
+<!ELEMENT csvtargetClass (#PCDATA) >
+<!ELEMENT csvsynchType (#PCDATA) >
+<!ELEMENT csvtargetVariableName (#PCDATA) >
+
+
+<!ELEMENT csvEndBusinessEntity  EMPTY >
+<!ATTLIST csvEndBusinessEntity  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfEnvironment ( csvenvironment )>
+
+<!ATTLIST csvWfEnvironment  handler CDATA #IMPLIED>
+<!ELEMENT csvenvironment (#PCDATA) >
+
+
+<!ELEMENT csvClassificationImagesRootDir ( csvimageDir )>
+
+<!ATTLIST csvClassificationImagesRootDir  handler CDATA #IMPLIED>
+<!ELEMENT csvimageDir (#PCDATA) >
+
+
+<!ELEMENT csvCreateFileBasedBegin ( csvfileName )>
+
+<!ATTLIST csvCreateFileBasedBegin  handler CDATA #IMPLIED>
+<!ELEMENT csvfileName (#PCDATA) >
+
+
+<!ELEMENT csvActorRoleHolder2 ( csvroleToAssign, csvassignedActorRole )>
+
+<!ATTLIST csvActorRoleHolder2  handler CDATA #IMPLIED>
+<!ELEMENT csvroleToAssign (#PCDATA) >
+<!ELEMENT csvassignedActorRole (#PCDATA) >
+
+
+<!ELEMENT csvWfConnectorTemplate ( csvxCoordinate, csvyCoordinate, csvrouterType, csvroutingEvents, csvautoRoutingExpression, csvuniqueId, csvfunction, csvtype, csvthreshold, csvterminateActivities )>
+
+<!ATTLIST csvWfConnectorTemplate  handler CDATA #IMPLIED>
+<!ELEMENT csvfunction (#PCDATA) >
+<!ELEMENT csvthreshold (#PCDATA) >
+<!ELEMENT csvterminateActivities (#PCDATA) >
+
+
+<!ELEMENT csvWfSynchRobotTemplateEnd  EMPTY >
+<!ATTLIST csvWfSynchRobotTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvAddPrincipalToRole ( csvcontainerClass, csvcontainerName, csvrole, csvprincipalNameOrDN, csvserviceName, csvconfirmParticipation )>
+
+<!ATTLIST csvAddPrincipalToRole  handler CDATA #IMPLIED>
+<!ELEMENT csvcontainerClass (#PCDATA) >
+<!ELEMENT csvcontainerName (#PCDATA) >
+<!ELEMENT csvrole (#PCDATA) >
+<!ELEMENT csvprincipalNameOrDN (#PCDATA) >
+<!ELEMENT csvserviceName (#PCDATA) >
+<!ELEMENT csvconfirmParticipation (#PCDATA) >
+
+
+<!ELEMENT csvExchangeContainer ( csvcontainerClass, csvcontainerTemplateRef, csvbusinessNamespace, csvsharingEnabled, csvcreator, csvowner, csvsubscriber, csvconferencingURL, csvcreatorSelector )>
+
+<!ATTLIST csvExchangeContainer  handler CDATA #IMPLIED>
+<!ELEMENT csvcontainerTemplateRef (#PCDATA) >
+<!ELEMENT csvbusinessNamespace (#PCDATA) >
+<!ELEMENT csvsharingEnabled (#PCDATA) >
+<!ELEMENT csvcreator (#PCDATA) >
+<!ELEMENT csvowner (#PCDATA) >
+<!ELEMENT csvsubscriber (#PCDATA) >
+<!ELEMENT csvconferencingURL (#PCDATA) >
+<!ELEMENT csvcreatorSelector (#PCDATA) >
+
+
+<!ELEMENT csvPhaseTemplateBegin ( csvname, csvphaseState, csvphaseWorkflow, csvgateWorkflow, csvseriesSelector )>
+
+<!ATTLIST csvPhaseTemplateBegin  handler CDATA #IMPLIED>
+<!ELEMENT csvphaseState (#PCDATA) >
+<!ELEMENT csvphaseWorkflow (#PCDATA) >
+<!ELEMENT csvgateWorkflow (#PCDATA) >
+<!ELEMENT csvseriesSelector (#PCDATA) >
+
+
+<!ELEMENT csvLifeCycleTemplateBegin ( csvname, csvdescription, csvsupportedClass, csvfolderLocation, csvenabled, csvrouting, csvbasic )>
+
+<!ATTLIST csvLifeCycleTemplateBegin  handler CDATA #IMPLIED>
+<!ELEMENT csvsupportedClass (#PCDATA) >
+<!ELEMENT csvfolderLocation (#PCDATA) >
+<!ELEMENT csvenabled (#PCDATA) >
+<!ELEMENT csvrouting (#PCDATA) >
+<!ELEMENT csvbasic (#PCDATA) >
+
+
+<!ELEMENT csvPartRepresentation ( csvpartNumber, csvpartVersion, csvpartIteration, csvrepDirectory, csvrepName, csvrepDescription, csvrepDefault, csvrepCreateThumbnail, csvrepStoreEdz, csvpartView, csvorganizationName?, csvorganizationID? )>
+
+<!ATTLIST csvPartRepresentation  handler CDATA #IMPLIED>
+<!ELEMENT csvpartNumber (#PCDATA) >
+<!ELEMENT csvpartVersion (#PCDATA) >
+<!ELEMENT csvpartIteration (#PCDATA) >
+<!ELEMENT csvrepDirectory (#PCDATA) >
+<!ELEMENT csvrepName (#PCDATA) >
+<!ELEMENT csvrepDescription (#PCDATA) >
+<!ELEMENT csvrepDefault (#PCDATA) >
+<!ELEMENT csvrepCreateThumbnail (#PCDATA) >
+<!ELEMENT csvrepStoreEdz (#PCDATA) >
+<!ELEMENT csvpartView (#PCDATA) >
+
+
+<!ELEMENT csvReplaceContentFile ( csvuser, csvpath )>
+
+<!ATTLIST csvReplaceContentFile  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvAddCreator ( csvuserNameOrDN, csvcontainerClassName )>
+
+<!ATTLIST csvAddCreator  handler CDATA #IMPLIED>
+<!ELEMENT csvuserNameOrDN (#PCDATA) >
+<!ELEMENT csvcontainerClassName (#PCDATA) >
+
+
+<!ELEMENT csvWfOverdueNotificationRoleAssignee ( csvrole )>
+
+<!ATTLIST csvWfOverdueNotificationRoleAssignee  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvSiteOrgContainer ( csvcontainerTemplateRef )>
+
+<!ATTLIST csvSiteOrgContainer  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvContainerConstraint ( csvConstraintType, csvminimum, csvmaximum, csvdiscreteSet )>
+
+<!ATTLIST csvContainerConstraint  handler CDATA #IMPLIED>
+<!ELEMENT csvConstraintType (#PCDATA) >
+<!ELEMENT csvminimum (#PCDATA) >
+<!ELEMENT csvmaximum (#PCDATA) >
+<!ELEMENT csvdiscreteSet (#PCDATA) >
+
+
+<!ELEMENT csvWfPrincipalAssignee ( csvprincipal, csvrequired, csvcompletionPolicyType, csvcompletionPolicyValue )>
+
+<!ATTLIST csvWfPrincipalAssignee  handler CDATA #IMPLIED>
+<!ELEMENT csvprincipal (#PCDATA) >
+<!ELEMENT csvrequired (#PCDATA) >
+<!ELEMENT csvcompletionPolicyType (#PCDATA) >
+<!ELEMENT csvcompletionPolicyValue (#PCDATA) >
+
+
+<!ELEMENT csvWfExternalMethodTemplateEnd  EMPTY >
+<!ATTLIST csvWfExternalMethodTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvTeamTemplateEnd  EMPTY >
+<!ATTLIST csvTeamTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfProxyTemplateBegin ( csvxCoordinate, csvyCoordinate, csvrouterType, csvroutingEvents, csvautoRoutingExpression, csvuniqueId, csvname, csvdescription, csvcategory, csvinstructions, csviconName, csvduration, csvprocessDuration, csvstartDelay, csvstartProcessDelay, csvnotifyBeforeDeadline, csvtimeToDeadline, csvnotifyAfterDeadline, csvtimePastDeadline, csvresponsibleRole, csvsubTemplate )>
+
+<!ATTLIST csvWfProxyTemplateBegin  handler CDATA #IMPLIED>
+<!ELEMENT csvsubTemplate (#PCDATA) >
+
+
+<!ELEMENT csvWTSerialNumberedEffectivity ( csvstartNumber, csvendNumber, csvconfigItem )>
+
+<!ATTLIST csvWTSerialNumberedEffectivity  handler CDATA #IMPLIED>
+<!ELEMENT csvstartNumber (#PCDATA) >
+<!ELEMENT csvendNumber (#PCDATA) >
+<!ELEMENT csvconfigItem (#PCDATA) >
+
+
+<!ELEMENT csvProductLotNumberEffectivity ( csvprodNumber, csvtype?, csvtargetNumber, csvtargetVer?, csvstartNumber, csvendNumber? )>
+
+<!ATTLIST csvProductLotNumberEffectivity  handler CDATA #IMPLIED>
+<!ELEMENT csvprodNumber (#PCDATA) >
+<!ELEMENT csvtargetNumber (#PCDATA) >
+<!ELEMENT csvtargetVer (#PCDATA) >
+
+<!ELEMENT csvProductSerialNumberEffectivity ( csvprodNumber, csvtype?, csvtargetNumber, csvtargetVer?, csvstartNumber, csvendNumber? )>
+
+<!ATTLIST csvProductSerialNumberEffectivity  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvSaveNavStruct  EMPTY >
+<!ATTLIST csvSaveNavStruct  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvBeginWTDocument ( csvname, csvtitle, csvnumber, csvtype, csvdescription, csvdepartment, csvsaveIn, csvteamTemplate, csvdomain, csvlifecycletemplate, csvlifecyclestate, csvtypedef, csvversion, csviteration )>
+
+<!ATTLIST csvBeginWTDocument  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfInternalMethodTemplateEnd  EMPTY >
+<!ATTLIST csvWfInternalMethodTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvBeginWTDocumentRetainContent ( csvname, csvtitle, csvnumber, csvtype, csvdescription, csvdepartment, csvsaveIn, csvteamTemplate, csvdomain, csvlifecycletemplate, csvlifecyclestate, csvtypedef, csvversion, csviteration )>
+
+<!ATTLIST csvBeginWTDocumentRetainContent  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvAddElementToNodeTab ( csvnavType, csvnodeName, csvtargetTab, csvtype, csvdefinition, csvtbNot, csvvisible, csvenforced, csvorder )>
+
+<!ATTLIST csvAddElementToNodeTab  handler CDATA #IMPLIED>
+<!ELEMENT csvnavType (#PCDATA) >
+<!ELEMENT csvnodeName (#PCDATA) >
+<!ELEMENT csvtargetTab (#PCDATA) >
+<!ELEMENT csvtbNot (#PCDATA) >
+<!ELEMENT csvvisible (#PCDATA) >
+<!ELEMENT csvenforced (#PCDATA) >
+<!ELEMENT csvorder (#PCDATA) >
+
+
+<!ELEMENT csvBeginCreateOrUpdateWTPart ( csvpartName, csvpartNumber, csvtype, csvsource, csvfolder, csvlifecycle, csvview, csvteamTemplate, csvlifecyclestate, csvtypedef, csvclassToUpdate, csvorganizationName?, csvorganizationID? )>
+
+<!ATTLIST csvBeginCreateOrUpdateWTPart  handler CDATA #IMPLIED>
+<!ELEMENT csvpartName (#PCDATA) >
+<!ELEMENT csvsource (#PCDATA) >
+<!ELEMENT csvfolder (#PCDATA) >
+<!ELEMENT csvlifecycle (#PCDATA) >
+<!ELEMENT csvview (#PCDATA) >
+<!ELEMENT csvclassToUpdate (#PCDATA) >
+
+
+<!ELEMENT csvPartDocLink ( csvdocNumber, csvdocVersion, csvdocIteration, csvpartNumber, csvpartVersion, csvpartIteration, csvpartView, csvorganizationName?, csvorganizationID?, csvdocRemoveOldRev? )>
+
+<!ATTLIST csvPartDocLink  handler CDATA #IMPLIED>
+<!ELEMENT csvdocNumber (#PCDATA) >
+<!ELEMENT csvdocVersion (#PCDATA) >
+<!ELEMENT csvdocIteration (#PCDATA) >
+<!ELEMENT csvdocRemoveOldRev (#PCDATA) >
+
+
+<!ELEMENT csvIndirectRoleHolder ( csvroleToAssign, csvassignedRole )>
+
+<!ATTLIST csvIndirectRoleHolder  handler CDATA #IMPLIED>
+<!ELEMENT csvassignedRole (#PCDATA) >
+
+
+<!ELEMENT csvBeginClassNode ( csvstructureClassName, csvnodeName, csvparentID, csvdescription, csvimageFile, csvrefDefName, csvinternalID )>
+
+<!ATTLIST csvBeginClassNode  handler CDATA #IMPLIED>
+<!ELEMENT csvstructureClassName (#PCDATA) >
+<!ELEMENT csvparentID (#PCDATA) >
+<!ELEMENT csvimageFile (#PCDATA) >
+<!ELEMENT csvrefDefName (#PCDATA) >
+<!ELEMENT csvinternalID (#PCDATA) >
+
+
+<!ELEMENT csvSpecification ( csvuser, csvname, csvtitle, csvnumber, csvdescription, csvdepartment, csvsaveIn, csvteamTemplate, csvdomain, csvlifecycletemplate, csvlifecyclestate, csvtypedef, csvprimarycontenttype, csvpath, csvformat, csvcontdesc, csvversion, csviteration )>
+
+<!ATTLIST csvSpecification  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvContentURL ( csvuser, csvlinkTo, csvcontdesc )>
+
+<!ATTLIST csvContentURL  handler CDATA #IMPLIED>
+<!ELEMENT csvlinkTo (#PCDATA) >
+
+
+<!ELEMENT csvWfProcessTemplateEnd  EMPTY >
+<!ATTLIST csvWfProcessTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfExternalMethodTemplateBegin ( csvxCoordinate, csvyCoordinate, csvrouterType, csvroutingEvents, csvautoRoutingExpression, csvuniqueId, csvname, csvdescription, csvcategory, csvinstructions, csviconName, csvduration, csvprocessDuration, csvstartDelay, csvstartProcessDelay, csvnotifyBeforeDeadline, csvtimeToDeadline, csvnotifyAfterDeadline, csvtimePastDeadline, csvresponsibleRole, csvhost, csvserviceName, csvmethodName, csvmethodReturn )>
+
+<!ATTLIST csvWfExternalMethodTemplateBegin  handler CDATA #IMPLIED>
+<!ELEMENT csvmethodName (#PCDATA) >
+<!ELEMENT csvmethodReturn (#PCDATA) >
+
+
+<!ELEMENT csvWfNodeTemplateLinkEnd  EMPTY >
+<!ATTLIST csvWfNodeTemplateLinkEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvBeginCSMConstraints ( csvstructureClassName, csvnodeName, csvparentID, csvimportOption )>
+
+<!ATTLIST csvBeginCSMConstraints  handler CDATA #IMPLIED>
+<!ELEMENT csvimportOption (#PCDATA) >
+
+
+<!ELEMENT csvNewViewVersion ( csvpartName, csvpartNumber, csvpartVersion, csvpartIteration, csvtype, csvsource, csvfolder, csvlifecycle, csvview, csvteamTemplate, csvlifecyclestate, csvtypedef, csvversion, csviteration, csvparentContainerPath, csvorganizationName?, csvorganizationID? )>
+
+<!ATTLIST csvNewViewVersion  handler CDATA #IMPLIED>
+<!ELEMENT csvparentContainerPath (#PCDATA) >
+
+
+<!ELEMENT csvWTLotEffectivity ( csvstartNumber, csvendNumber, csvconfigItem )>
+
+<!ATTLIST csvWTLotEffectivity  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvRemoveCSMConstraint  EMPTY >
+<!ATTLIST csvRemoveCSMConstraint  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvOccurrencedAssemblyAdd ( csvassemblyPartNumber, csvassemblyPartVersion, csvconstituentPartNumber, csvconstituentPartQty, csvconstituentPartUnit, csvlineNumber, csvoccurrenceLocation, csvreferenceDesignator, csvassemblyPartIteration, csvassemblyPartView, csvorganizationName?, csvorganizationID? )>
+
+<!ATTLIST csvOccurrencedAssemblyAdd  handler CDATA #IMPLIED>
+<!ELEMENT csvassemblyPartNumber (#PCDATA) >
+<!ELEMENT csvassemblyPartVersion (#PCDATA) >
+<!ELEMENT csvconstituentPartNumber (#PCDATA) >
+<!ELEMENT csvconstituentPartQty (#PCDATA) >
+<!ELEMENT csvconstituentPartUnit (#PCDATA) >
+<!ELEMENT csvlineNumber (#PCDATA) >
+<!ELEMENT csvoccurrenceLocation (#PCDATA) >
+<!ELEMENT csvreferenceDesignator (#PCDATA) >
+<!ELEMENT csvassemblyPartIteration (#PCDATA) >
+<!ELEMENT csvassemblyPartView (#PCDATA) >
+
+
+<!ELEMENT csvAddSiteAdministrator ( csvuserNameOrDN )>
+
+<!ATTLIST csvAddSiteAdministrator  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvRelationshipMapDef ( csvpath, csvuniqueId )>
+
+<!ATTLIST csvRelationshipMapDef  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvNotebookTemplate ( csvisUser )>
+
+<!ATTLIST csvNotebookTemplate  handler CDATA #IMPLIED>
+<!ELEMENT csvisUser (#PCDATA) >
+
+
+<!ELEMENT csvQuantityOfMeasure ( csvname, csvdescription, csvbaseUnitSymbol, csvnameAndValuePairs )>
+
+<!ATTLIST csvQuantityOfMeasure  handler CDATA #IMPLIED>
+<!ELEMENT csvbaseUnitSymbol (#PCDATA) >
+<!ELEMENT csvnameAndValuePairs (#PCDATA) >
+
+
+<!ELEMENT csvBeginNavStruct ( csvnavType, csvname, csvlabel, csvtargetClassName, csvshowGraphTab, csvshowAllAttributes )>
+
+<!ATTLIST csvBeginNavStruct  handler CDATA #IMPLIED>
+<!ELEMENT csvlabel (#PCDATA) >
+<!ELEMENT csvtargetClassName (#PCDATA) >
+<!ELEMENT csvshowGraphTab (#PCDATA) >
+<!ELEMENT csvshowAllAttributes (#PCDATA) >
+
+
+<!ELEMENT csvWfVariable ( csvname, csvtype, csvrequired, csvvisible, csvmutable, csvresetable, csvinitializeFrom, csvcopyInto, csvdefaultValue, csvpermissionList, csvreadOnly, csvdisplayNames )>
+
+<!ATTLIST csvWfVariable  handler CDATA #IMPLIED>
+<!ELEMENT csvmutable (#PCDATA) >
+<!ELEMENT csvresetable (#PCDATA) >
+<!ELEMENT csvinitializeFrom (#PCDATA) >
+<!ELEMENT csvcopyInto (#PCDATA) >
+<!ELEMENT csvdefaultValue (#PCDATA) >
+<!ELEMENT csvpermissionList (#PCDATA) >
+<!ELEMENT csvreadOnly (#PCDATA) >
+<!ELEMENT csvdisplayNames (#PCDATA) >
+
+
+<!ELEMENT csvAddOrgAdministrator ( csvuserNameOrDN )>
+
+<!ATTLIST csvAddOrgAdministrator  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvConfirmParticipation ( csvuserNameOrDN )>
+
+<!ATTLIST csvConfirmParticipation  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvNotebook ( csvparentContainerPath )>
+
+<!ATTLIST csvNotebook  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfExprRobotTemplateEnd  EMPTY >
+<!ATTLIST csvWfExprRobotTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvSetElementValue ( csvtype, csvdefinition, csvvalueType, csvvalue1, csvvalue2 )>
+
+<!ATTLIST csvSetElementValue  handler CDATA #IMPLIED>
+<!ELEMENT csvvalueType (#PCDATA) >
+<!ELEMENT csvvalue2 (#PCDATA) >
+
+
+<!ELEMENT csvSetDefaultDirectory ( csvdefaultDirectory )>
+
+<!ATTLIST csvSetDefaultDirectory  handler CDATA #IMPLIED>
+<!ELEMENT csvdefaultDirectory (#PCDATA) >
+
+
+<!ELEMENT csvAttrDefinizer ( csvname, csvhierarchyDisplayName, csvorganizerPaths, csvdefinitionPaths, csvdisplay_name, csvdescription, csvdata_type, csvQoMName, csvnameValuePairs, csvlogicalIdentifier )>
+
+<!ATTLIST csvAttrDefinizer  handler CDATA #IMPLIED>
+<!ELEMENT csvhierarchyDisplayName (#PCDATA) >
+<!ELEMENT csvorganizerPaths (#PCDATA) >
+<!ELEMENT csvdefinitionPaths (#PCDATA) >
+<!ELEMENT csvdisplay_name (#PCDATA) >
+<!ELEMENT csvdata_type (#PCDATA) >
+<!ELEMENT csvQoMName (#PCDATA) >
+<!ELEMENT csvnameValuePairs (#PCDATA) >
+<!ELEMENT csvlogicalIdentifier (#PCDATA) >
+
+
+<!ELEMENT csvSingleDefinitionConstraint ( csvattrHierarchyID, csvConstraintType, csvminimum, csvmaximum, csvdiscreteSet, csvappliesToDescendents )>
+
+<!ATTLIST csvSingleDefinitionConstraint  handler CDATA #IMPLIED>
+<!ELEMENT csvattrHierarchyID (#PCDATA) >
+<!ELEMENT csvappliesToDescendents (#PCDATA) >
+
+
+<!ELEMENT csvWfApplRobotTemplateBegin ( csvxCoordinate, csvyCoordinate, csvrouterType, csvroutingEvents, csvautoRoutingExpression, csvuniqueId, csvname, csvdescription, csvcategory, csvinstructions, csviconName, csvduration, csvprocessDuration, csvstartDelay, csvstartProcessDelay, csvnotifyBeforeDeadline, csvtimeToDeadline, csvnotifyAfterDeadline, csvtimePastDeadline, csvresponsibleRole, csvhost, csvcommand, csvsynchronous )>
+
+<!ATTLIST csvWfApplRobotTemplateBegin  handler CDATA #IMPLIED>
+<!ELEMENT csvcommand (#PCDATA) >
+<!ELEMENT csvsynchronous (#PCDATA) >
+
+
+<!ELEMENT csvOrgAdmin ( csvuser, csvnewUser, csvwebServerID, csvfullName, csvLocale, csvEmail, csvDescription, csvTitle, csvOrganization, csvStreet1, csvStreet2, csvCity, csvState, csvCountry, csvZipCode, csvignore, csvpassword )>
+
+<!ATTLIST csvOrgAdmin  handler CDATA #IMPLIED>
+<!ELEMENT csvnewUser (#PCDATA) >
+<!ELEMENT csvwebServerID (#PCDATA) >
+<!ELEMENT csvfullName (#PCDATA) >
+<!ELEMENT csvLocale (#PCDATA) >
+<!ELEMENT csvEmail (#PCDATA) >
+<!ELEMENT csvDescription (#PCDATA) >
+<!ELEMENT csvTitle (#PCDATA) >
+<!ELEMENT csvOrganization (#PCDATA) >
+<!ELEMENT csvStreet1 (#PCDATA) >
+<!ELEMENT csvStreet2 (#PCDATA) >
+<!ELEMENT csvCity (#PCDATA) >
+<!ELEMENT csvState (#PCDATA) >
+<!ELEMENT csvCountry (#PCDATA) >
+<!ELEMENT csvZipCode (#PCDATA) >
+<!ELEMENT csvignore (#PCDATA) >
+<!ELEMENT csvpassword (#PCDATA) >
+
+
+<!ELEMENT csvContentAggregateURL ( csvuser, csvlinkTo, csvcontdesc )>
+
+<!ATTLIST csvContentAggregateURL  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvEndCSMConstraints  EMPTY >
+<!ATTLIST csvEndCSMConstraints  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfTeamAssignee ( csvteamAssignee, csvrequired, csvcompletionPolicyType, csvcompletionPolicyValue )>
+
+<!ATTLIST csvWfTeamAssignee  handler CDATA #IMPLIED>
+<!ELEMENT csvteamAssignee (#PCDATA) >
+
+
+<!ELEMENT csvWfOverdueAction ( csvoverdueAction, csvoverdueActionFlag )>
+
+<!ATTLIST csvWfOverdueAction  handler CDATA #IMPLIED>
+<!ELEMENT csvoverdueAction (#PCDATA) >
+<!ELEMENT csvoverdueActionFlag (#PCDATA) >
+
+
+<!ELEMENT csvAddNavTab ( csvnewTabLabel, csvrefDefinition )>
+
+<!ATTLIST csvAddNavTab  handler CDATA #IMPLIED>
+<!ELEMENT csvnewTabLabel (#PCDATA) >
+<!ELEMENT csvrefDefinition (#PCDATA) >
+
+
+<!ELEMENT csvEndAttributeHierarchyLoader  EMPTY >
+<!ATTLIST csvEndAttributeHierarchyLoader  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvBeginWTPart ( csvpartName, csvpartNumber, csvtype, csvsource, csvfolder, csvlifecycle, csvview, csvteamTemplate, csvlifecyclestate, csvtypedef, csvversion, csviteration, csvorganizationName?, csvorganizationID? )>
+
+<!ATTLIST csvBeginWTPart  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvBeginExport ( csvExportMechanismClassName, csvExportMechanismParameters )>
+
+<!ATTLIST csvBeginExport  handler CDATA #IMPLIED>
+<!ELEMENT csvExportMechanismClassName (#PCDATA) >
+<!ELEMENT csvExportMechanismParameters (#PCDATA) >
+
+
+<!ELEMENT csvEndWTPart ( csvpublishFlag, csvparentContainerPath )>
+
+<!ATTLIST csvEndWTPart  handler CDATA #IMPLIED>
+<!ELEMENT csvpublishFlag (#PCDATA) >
+
+
+<!ELEMENT csvEndExport  EMPTY >
+<!ATTLIST csvEndExport  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvExport ( csvmapFileKey, csvexportClassName, csvobjectLocator, csvsearchCriteria, csvimageRootDir, csvcomment )>
+
+<!ATTLIST csvExport  handler CDATA #IMPLIED>
+<!ELEMENT csvmapFileKey (#PCDATA) >
+<!ELEMENT csvexportClassName (#PCDATA) >
+<!ELEMENT csvobjectLocator (#PCDATA) >
+<!ELEMENT csvsearchCriteria (#PCDATA) >
+<!ELEMENT csvimageRootDir (#PCDATA) >
+<!ELEMENT csvcomment (#PCDATA) >
+
+
+<!ELEMENT csvActivateContainer ( csvcontainerClass, csvcontainerName )>
+
+<!ATTLIST csvActivateContainer  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvLDAPUser ( csvuser, csvnewUser, csvjavaNamingProviderTag, csvwebServerID )>
+
+<!ATTLIST csvLDAPUser  handler CDATA #IMPLIED>
+<!ELEMENT csvjavaNamingProviderTag (#PCDATA) >
+
+
+<!ELEMENT csvContentFile ( csvuser, csvpath )>
+
+<!ATTLIST csvContentFile  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfURLRobotTemplateEnd  EMPTY >
+<!ATTLIST csvWfURLRobotTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvCachePart ( csvpartNumber, csvpartVersion, csvpartIteration, csvpartView, csvorganizationName?, csvorganizationID?)>
+<!ATTLIST csvCachePart  handler CDATA #IMPLIED>
+<!ELEMENT csvorganizationName (#PCDATA) >
+<!ELEMENT csvorganizationID (#PCDATA) >
+
+
+<!ELEMENT csvWfProjectAssignee ( csvprojectAssignee, csvrequired, csvcompletionPolicyType, csvcompletionPolicyValue )>
+
+<!ATTLIST csvWfProjectAssignee  handler CDATA #IMPLIED>
+<!ELEMENT csvprojectAssignee (#PCDATA) >
+
+
+<!ELEMENT csvEndWTDocumentRetainContent ( csvprimarycontenttype, csvpath, csvformat, csvcontdesc )>
+
+<!ATTLIST csvEndWTDocumentRetainContent  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvRelationshipMaps ( csvmapDefinitionId )>
+
+<!ATTLIST csvRelationshipMaps  handler CDATA #IMPLIED>
+<!ELEMENT csvmapDefinitionId (#PCDATA) >
+
+
+<!ELEMENT csvAccessRule ( csvuser, csvdomain, csvtypeId, csvpermission, csvprincipal, csvpermissionList, csvstate )>
+
+<!ATTLIST csvAccessRule  handler CDATA #IMPLIED>
+<!ELEMENT csvtypeId (#PCDATA) >
+<!ELEMENT csvpermission (#PCDATA) >
+<!ELEMENT csvstate (#PCDATA) >
+
+
+<!ELEMENT csvContentAggregate ( csvuser, csvpath, csvformat, csvcontdesc )>
+
+<!ATTLIST csvContentAggregate  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfInternalMethodTemplateBegin ( csvxCoordinate, csvyCoordinate, csvrouterType, csvroutingEvents, csvautoRoutingExpression, csvuniqueId, csvname, csvdescription, csvcategory, csvinstructions, csviconName, csvduration, csvprocessDuration, csvstartDelay, csvstartProcessDelay, csvnotifyBeforeDeadline, csvtimeToDeadline, csvnotifyAfterDeadline, csvtimePastDeadline, csvresponsibleRole, csvhost, csvserviceName, csvmethodName, csvmethodReturn )>
+
+<!ATTLIST csvWfInternalMethodTemplateBegin  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvLifeCycleTemplateEnd  EMPTY >
+<!ATTLIST csvLifeCycleTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvCreateOrUpdateIBAValue ( csvdefinition, csvvalue1, csvvalue2, csvdependency_id )>
+
+<!ATTLIST csvCreateOrUpdateIBAValue  handler CDATA #IMPLIED>
+<!ELEMENT csvdependency_id (#PCDATA) >
+
+
+<!ELEMENT csvContainer ( csvcontainerClass, csvcontainerName, csvparentContainerPath, csvcontainerTemplateRef, csvbusinessNamespace, csvsharingEnabled, csvcreator, csvowner, csvsubscriber, csvconferencingURL, csvdescription, csvorganization, csvcreatorSelector )>
+
+<!ATTLIST csvContainer  handler CDATA #IMPLIED>
+<!ELEMENT csvorganization (#PCDATA) >
+
+
+<!ELEMENT csvOLDIBAValue ( csvdefinition, csvvalue1, csvvalue2, csvdependent-definition, csvdependent-locator, csvdependent-identifier )>
+
+<!ATTLIST csvOLDIBAValue  handler CDATA #IMPLIED>
+<!ELEMENT csvdependent-definition (#PCDATA) >
+<!ELEMENT csvdependent-locator (#PCDATA) >
+<!ELEMENT csvdependent-identifier (#PCDATA) >
+
+
+<!ELEMENT csvFolderShortcut ( csvuser, csvshortcutTarget, csvfolderPath )>
+
+<!ATTLIST csvFolderShortcut  handler CDATA #IMPLIED>
+<!ELEMENT csvshortcutTarget (#PCDATA) >
+<!ELEMENT csvfolderPath (#PCDATA) >
+
+
+<!ELEMENT csvWfAdHocActivityTemplateBegin ( csvxCoordinate, csvyCoordinate, csvrouterType, csvroutingEvents, csvautoRoutingExpression, csvuniqueId, csvname, csvdescription, csvcategory, csvinstructions, csviconName, csvduration, csvprocessDuration, csvstartDelay, csvstartProcessDelay, csvnotifyBeforeDeadline, csvtimeToDeadline, csvnotifyAfterDeadline, csvtimePastDeadline, csvresponsibleRole, csvtask, csvsendNotification, csvlocalProject, csvvariableProject, csvsigningRequired )>
+
+<!ATTLIST csvWfAdHocActivityTemplateBegin  handler CDATA #IMPLIED>
+<!ELEMENT csvtask (#PCDATA) >
+<!ELEMENT csvsendNotification (#PCDATA) >
+<!ELEMENT csvlocalProject (#PCDATA) >
+<!ELEMENT csvvariableProject (#PCDATA) >
+<!ELEMENT csvsigningRequired (#PCDATA) >
+
+
+<!ELEMENT csvWfAssignedActivityTemplateBegin ( csvxCoordinate, csvyCoordinate, csvrouterType, csvroutingEvents, csvautoRoutingExpression, csvuniqueId, csvname, csvdescription, csvcategory, csvinstructions, csviconName, csvduration, csvprocessDuration, csvstartDelay, csvstartProcessDelay, csvnotifyBeforeDeadline, csvtimeToDeadline, csvnotifyAfterDeadline, csvtimePastDeadline, csvresponsibleRole, csvtask, csvsendNotification, csvlocalProject, csvvariableProject, csvsigningRequired )>
+
+<!ATTLIST csvWfAssignedActivityTemplateBegin  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvClassicContainer ( csvcontainerClass, csvcontainerTemplateRef, csvbusinessNamespace, csvsharingEnabled, csvcreator, csvowner, csvsubscriber, csvconferencingURL, csvcreatorSelector )>
+
+<!ATTLIST csvClassicContainer  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvUser ( csvuser, csvnewUser, csvwebServerID, csvfullName, csvLocale, csvEmail, csvDescription, csvTitle, csvOrganization, csvStreet1, csvStreet2, csvCity, csvState, csvCountry, csvZipCode, csvignore, csvpassword, csvDirectoryService? )>
+
+<!ATTLIST csvUser  handler CDATA #IMPLIED>
+<!ELEMENT csvDirectoryService (#PCDATA)>
+
+
+<!ELEMENT csvEndIBAContainer  EMPTY >
+<!ATTLIST csvEndIBAContainer  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvShortcut ( csvuser, csvshortcutTarget, csvfolderPath )>
+
+<!ATTLIST csvShortcut  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvEndCreateOrUpdateWTPart ( csvpublishFlag, csvparentContainerPath )>
+
+<!ATTLIST csvEndCreateOrUpdateWTPart  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvCreateContainerTemplate ( csvname, csvenabled, csvxmlPath, csvcontainerClassName, csvparentContainerPath, csvdescription )>
+
+<!ATTLIST csvCreateContainerTemplate  handler CDATA #IMPLIED>
+<!ELEMENT csvxmlPath (#PCDATA) >
+
+
+<!ELEMENT csvPartDocReference ( csvdocNumber, csvpartNumber, csvpartVersion, csvpartIteration, csvpartView, csvorganizationName?, csvorganizationID? )>
+
+<!ATTLIST csvPartDocReference  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvPart ( csvuser, csvpartName, csvpartNumber, csvtype, csvsource, csvfolder, csvlifecycle, csvview, csvteamTemplate, csvlifecyclestate, csvtypedef, csvversion, csviteration, csvparentContainerPath, csvorganizationName?, csvorganizationID? )>
+
+<!ATTLIST csvPart  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfNodeTemplateLinkBegin ( csvsourceNode, csvdestNode, csvbackLoop )>
+
+<!ATTLIST csvWfNodeTemplateLinkBegin  handler CDATA #IMPLIED>
+<!ELEMENT csvsourceNode (#PCDATA) >
+<!ELEMENT csvdestNode (#PCDATA) >
+<!ELEMENT csvbackLoop (#PCDATA) >
+
+
+<!ELEMENT csvWfURLRobotTemplateBegin ( csvxCoordinate, csvyCoordinate, csvrouterType, csvroutingEvents, csvautoRoutingExpression, csvuniqueId, csvname, csvdescription, csvcategory, csvinstructions, csviconName, csvduration, csvprocessDuration, csvstartDelay, csvstartProcessDelay, csvnotifyBeforeDeadline, csvtimeToDeadline, csvnotifyAfterDeadline, csvtimePastDeadline, csvresponsibleRole, csvhost, csvtaskURL, csvtaskResponseVariable )>
+
+<!ATTLIST csvWfURLRobotTemplateBegin  handler CDATA #IMPLIED>
+<!ELEMENT csvtaskURL (#PCDATA) >
+<!ELEMENT csvtaskResponseVariable (#PCDATA) >
+
+
+<!ELEMENT csvWfAdHocActivityTemplateEnd  EMPTY >
+<!ATTLIST csvWfAdHocActivityTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWTDatedEffectivity ( csvstartDate, csvendDate, csvconfigItem )>
+
+<!ATTLIST csvWTDatedEffectivity  handler CDATA #IMPLIED>
+<!ELEMENT csvstartDate (#PCDATA) >
+<!ELEMENT csvendDate (#PCDATA) >
+
+
+<!ELEMENT csvWfApplRobotTemplateEnd  EMPTY >
+<!ATTLIST csvWfApplRobotTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfProcessTemplateBegin ( csvxCoordinate, csvyCoordinate, csvrouterType, csvroutingEvents, csvautoRoutingExpression, csvuniqueId, csvname, csvdescription, csvcategory, csvinstructions, csviconName, csvduration, csvprocessDuration, csvstartDelay, csvstartProcessDelay, csvnotifyBeforeDeadline, csvtimeToDeadline, csvnotifyAfterDeadline, csvtimePastDeadline, csvresponsibleRole, csvenabled, csvfolderLocation )>
+
+<!ATTLIST csvWfProcessTemplateBegin  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvBeginUpdateBusinessEntity ( csvname )>
+
+<!ATTLIST csvBeginUpdateBusinessEntity  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvendIBAHolder  EMPTY >
+<!ATTLIST csvendIBAHolder  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvProductContainer ( csvuser, csvname, csvnumber, csvdescription, csvview, csvsource, csvdefaultUnit, csvtype, csvcontainerTemplate, csvorganizationName?, csvorganizationID?)>
+
+<!ATTLIST csvProductContainer  handler CDATA #IMPLIED>
+<!ELEMENT csvdefaultUnit (#PCDATA) >
+<!ELEMENT csvcontainerTemplate (#PCDATA) >
+
+
+<!ELEMENT csvTypeDefConsValue ( csvbindingRule, csvenforcementRule, csvbindingRuleData, csvenforcementRuleData )>
+
+<!ATTLIST csvTypeDefConsValue  handler CDATA #IMPLIED>
+<!ELEMENT csvbindingRule (#PCDATA) >
+<!ELEMENT csvenforcementRule (#PCDATA) >
+<!ELEMENT csvbindingRuleData (#PCDATA) >
+<!ELEMENT csvenforcementRuleData (#PCDATA) >
+
+
+<!ELEMENT csvWfSignature ( csvsignature )>
+
+<!ATTLIST csvWfSignature  handler CDATA #IMPLIED>
+<!ELEMENT csvsignature (#PCDATA) >
+
+
+<!ELEMENT csvAssemblyAddLoad ( csvassemblyPartNumber, csvconstituentPartNumber, csvconstituentPartQty, csvconstituentPartUnit, csvassemblyPartVersion, csvassemblyPartIteration, csvassemblyPartView, csvorganizationName?, csvorganizationID? )>
+
+<!ATTLIST csvAssemblyAddLoad  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvViewPreference ( csvuser, csvview )>
+
+<!ATTLIST csvViewPreference  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvSiteViewPreference ( csvview )>
+
+<!ATTLIST csvSiteViewPreference  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfEventActionPair ( csvevent, csvaction )>
+
+<!ATTLIST csvWfEventActionPair  handler CDATA #IMPLIED>
+<!ELEMENT csvevent (#PCDATA) >
+<!ELEMENT csvaction (#PCDATA) >
+
+
+<!ELEMENT csvRoleHolder ( csvroleToAssign, csvassignedPrincipal )>
+
+<!ATTLIST csvRoleHolder  handler CDATA #IMPLIED>
+<!ELEMENT csvassignedPrincipal (#PCDATA) >
+
+
+<!ELEMENT csvUserGroup ( csvuser, csvgroupName, csvuserName,csvDirectoryService? )>
+
+<!ATTLIST csvUserGroup  handler CDATA #IMPLIED>
+<!ELEMENT csvgroupName (#PCDATA) >
+<!ELEMENT csvuserName (#PCDATA) >
+
+
+<!ELEMENT csvAssemblyRemove ( csvassemblyPartNumber, csvassemblyPartVersion, csvconstituentPartNumber, csvassemblyPartIteration, csvassemblyPartView, csvorganizationName?, csvorganizationID? )>
+
+<!ATTLIST csvAssemblyRemove  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvOrgContainer ( csvcontainerName, csvcontainerTemplateRef, csvbusinessNamespace, csvsharingEnabled, csvcreator, csvowner, csvsubscriber, csvconferencingURL, csvdescription, csvinternetDomain, csvrestrictedDirectorySearchScope? )>
+
+<!ATTLIST csvOrgContainer  handler CDATA #IMPLIED>
+<!ELEMENT csvinternetDomain (#PCDATA) >
+<!ELEMENT csvrestrictedDirectorySearchScope (#PCDATA) >
+
+
+<!ELEMENT csvTeamTemplateBegin ( csvname, csvdescription, csvfolderLocation, csvenabled )>
+
+<!ATTLIST csvTeamTemplateBegin  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvEndWTDocument ( csvprimarycontenttype, csvpath, csvformat, csvcontdesc, csvparentContainerPath )>
+
+<!ATTLIST csvEndWTDocument  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfTransition ( csvtransition, csvexprBody, csvcheckSyntax )>
+
+<!ATTLIST csvWfTransition  handler CDATA #IMPLIED>
+<!ELEMENT csvtransition (#PCDATA) >
+<!ELEMENT csvexprBody (#PCDATA) >
+<!ELEMENT csvcheckSyntax (#PCDATA) >
+
+
+<!ELEMENT csvWfActorAssignee ( csvactor, csvrequired, csvcompletionPolicyType, csvcompletionPolicyValue )>
+
+<!ATTLIST csvWfActorAssignee  handler CDATA #IMPLIED>
+<!ELEMENT csvactor (#PCDATA) >
+
+
+<!ELEMENT csvProductUser ( csvuser, csvname, csvrole )>
+
+<!ATTLIST csvProductUser  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvSubFolder ( csvuser, csvfolderPath, csvadminDomain )>
+
+<!ATTLIST csvSubFolder  handler CDATA #IMPLIED>
+<!ELEMENT csvadminDomain (#PCDATA) >
+
+
+<!ELEMENT csvWfNotificationEnd  EMPTY >
+<!ATTLIST csvWfNotificationEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfVariableAssignee ( csvvariableAssignee, csvrequired, csvcompletionPolicyType, csvcompletionPolicyValue )>
+
+<!ATTLIST csvWfVariableAssignee  handler CDATA #IMPLIED>
+<!ELEMENT csvvariableAssignee (#PCDATA) >
+
+
+<!ELEMENT csvSingleDefinitionConstraintByName ( csvattributeName, csvConstraintType, csvminimum, csvmaximum, csvdiscreteSet, csvappliesToDescendents )>
+
+<!ATTLIST csvSingleDefinitionConstraintByName  handler CDATA #IMPLIED>
+<!ELEMENT csvattributeName (#PCDATA) >
+
+
+<!ELEMENT csvViewAssociation ( csvparentView, csvchildView )>
+
+<!ATTLIST csvViewAssociation  handler CDATA #IMPLIED>
+<!ELEMENT csvparentView (#PCDATA) >
+<!ELEMENT csvchildView (#PCDATA) >
+
+
+<!ELEMENT csvBeginIBAContainer ( csvcontainer-name )>
+
+<!ATTLIST csvBeginIBAContainer  handler CDATA #IMPLIED>
+<!ELEMENT csvcontainer-name (#PCDATA) >
+
+
+<!ELEMENT csvBaseCriterionDef ( csvpath, csvuniqueId, csvprimaryDef )>
+
+<!ATTLIST csvBaseCriterionDef  handler CDATA #IMPLIED>
+<!ELEMENT csvprimaryDef (#PCDATA) >
+
+
+<!ELEMENT csvRoleHolder2 ( csvroleToAssign, csvassignedPrincipal )>
+
+<!ATTLIST csvRoleHolder2  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvCreateRankingContext ( csvname, csvdescription, csvcriteriaMap )>
+
+<!ATTLIST csvCreateRankingContext  handler CDATA #IMPLIED>
+<!ELEMENT csvcriteriaMap (#PCDATA) >
+
+
+<!ELEMENT csvEndTypeDefNode  EMPTY >
+<!ATTLIST csvEndTypeDefNode  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvEndUpdateTypeDefNode  EMPTY >
+<!ATTLIST csvEndUpdateTypeDefNode  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfProxyTemplateEnd  EMPTY >
+<!ATTLIST csvWfProxyTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWTAclEntry ( csvrole, csvpermission )>
+
+<!ATTLIST csvWTAclEntry  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvDataFormat ( csvformatName, csvmimeType, csvdescription, csvindexable, csvfileFormatOnly, csvstandardIconStr, csvextensions )>
+
+<!ATTLIST csvDataFormat  handler CDATA #IMPLIED>
+<!ELEMENT csvformatName (#PCDATA) >
+<!ELEMENT csvmimeType (#PCDATA) >
+<!ELEMENT csvindexable (#PCDATA) >
+<!ELEMENT csvfileFormatOnly (#PCDATA) >
+<!ELEMENT csvstandardIconStr (#PCDATA) >
+<!ELEMENT csvextensions (#PCDATA) >
+
+
+<!ELEMENT csvBeginBusinessEntity ( csvname )>
+
+<!ATTLIST csvBeginBusinessEntity  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvView ( csvviewName )>
+
+<!ATTLIST csvView  handler CDATA #IMPLIED>
+<!ELEMENT csvviewName (#PCDATA) >
+
+
+<!ELEMENT csvIBAValue ( csvdefinition, csvvalue1, csvvalue2, csvdependency_id )>
+
+<!ATTLIST csvIBAValue  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvEndClassNode  EMPTY >
+<!ATTLIST csvEndClassNode  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvEndWTPM  EMPTY >
+<!ATTLIST csvEndWTPM  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfBlockTemplateEnd  EMPTY >
+<!ATTLIST csvWfBlockTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvAssemblyAdd ( csvassemblyPartNumber, csvconstituentPartNumber, csvconstituentPartQty, csvconstituentPartUnit, csvassemblyPartVersion, csvassemblyPartIteration, csvassemblyPartView, csvorganizationName?, csvorganizationID? )>
+
+<!ATTLIST csvAssemblyAdd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvBeginAttributeHierarchyLoader  EMPTY >
+<!ATTLIST csvBeginAttributeHierarchyLoader  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvReportTemplate ( csvfolder, csvname, csvdescription, csvxml, csvxslType, csvservice, csvcontainerPath, csvurl1, csvurl2 )>
+
+<!ATTLIST csvReportTemplate  handler CDATA #IMPLIED>
+<!ELEMENT csvxml (#PCDATA) >
+<!ELEMENT csvxslType (#PCDATA) >
+<!ELEMENT csvservice (#PCDATA) >
+<!ELEMENT csvcontainerPath (#PCDATA) >
+<!ELEMENT csvurl1 (#PCDATA) >
+<!ELEMENT csvurl2 (#PCDATA) >
+
+
+<!ELEMENT csvProduct ( csvuser, csvpartName, csvpartNumber, csvtype, csvsource, csvfolder, csvlifecycle, csvview, csvteamTemplate, csvlifecyclestate, csvtypedef, csvversion, csviteration, csvparentContainerPath, csvorganizationName?, csvorganizationID? )>
+
+<!ATTLIST csvProduct  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvCriterionDefValidWith ( csvsourceNode, csvtargetNodes )>
+
+<!ATTLIST csvCriterionDefValidWith  handler CDATA #IMPLIED>
+<!ELEMENT csvtargetNodes (#PCDATA) >
+
+
+<!ELEMENT csvPhaseTemplateEnd  EMPTY >
+<!ATTLIST csvPhaseTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfRoleAssignee ( csvrole, csvrequired, csvcompletionPolicyType, csvcompletionPolicyValue )>
+
+<!ATTLIST csvWfRoleAssignee  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvEndExportNodeTemplate  EMPTY >
+<!ATTLIST csvEndExportNodeTemplate  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvOccurrencedAssemblyAddLoad ( csvassemblyPartNumber, csvassemblyPartVersion, csvconstituentPartNumber, csvconstituentPartQty, csvconstituentPartUnit, csvlineNumber, csvoccurrenceLocation, csvreferenceDesignator, csvassemblyPartIteration, csvassemblyPartView, csvorganizationName?, csvorganizationID? )>
+
+<!ATTLIST csvOccurrencedAssemblyAddLoad  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvRequirements ( csvuser, csvname, csvtitle, csvnumber, csvdescription, csvdepartment, csvsaveIn, csvteamTemplate, csvdomain, csvlifecycletemplate, csvlifecyclestate, csvtypedef, csvprimarycontenttype, csvpath, csvformat, csvcontdesc, csvversion, csviteration )>
+
+<!ATTLIST csvRequirements  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfExceptionAction ( csvexceptionAction, csvexceptionActionFlag )>
+
+<!ATTLIST csvWfExceptionAction  handler CDATA #IMPLIED>
+<!ELEMENT csvexceptionAction (#PCDATA) >
+<!ELEMENT csvexceptionActionFlag (#PCDATA) >
+
+<!ELEMENT csvWfAuditAction ( csvauditAction, csvauditActionFlag )>
+
+<!ATTLIST csvWfAuditAction  handler CDATA #IMPLIED>
+<!ELEMENT csvauditAction (#PCDATA) >
+<!ELEMENT csvauditActionFlag (#PCDATA) >
+
+<!ELEMENT csvWfVotingAction ( csvvotingAction, csvvotingActionFlag )>
+
+<!ATTLIST csvWfVotingAction  handler CDATA #IMPLIED>
+<!ELEMENT csvvotingAction (#PCDATA) >
+<!ELEMENT csvvotingActionFlag (#PCDATA) >
+
+<!ELEMENT csvWfIgnoreUnresolvedRoleAction ( csvignoreUnresolvedRoleAction, csvignoreUnresolvedRoleActionFlag )>
+
+<!ATTLIST csvWfIgnoreUnresolvedRoleAction  handler CDATA #IMPLIED>
+<!ELEMENT csvignoreUnresolvedRoleAction (#PCDATA) >
+<!ELEMENT csvignoreUnresolvedRoleActionFlag (#PCDATA) >
+
+<!ELEMENT csvTypeNodeIconRoot ( csviconRoot )>
+
+<!ATTLIST csvTypeNodeIconRoot  handler CDATA #IMPLIED>
+<!ELEMENT csviconRoot (#PCDATA) >
+
+
+<!ELEMENT csvBeginExportNodeTemplate ( csvname, csvlabel, csvtargetClassName )>
+
+<!ATTLIST csvBeginExportNodeTemplate  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvDomain ( csvuser, csvname, csvdescription, csvparentDomainPath )>
+
+<!ATTLIST csvDomain  handler CDATA #IMPLIED>
+<!ELEMENT csvparentDomainPath (#PCDATA) >
+
+
+<!ELEMENT csvPhaseSuccessionBegin ( csvlifeCycleName, csvpredecessorPhaseState, csvsuccessorPhaseState, csvphaseTransition )>
+
+<!ATTLIST csvPhaseSuccessionBegin  handler CDATA #IMPLIED>
+<!ELEMENT csvlifeCycleName (#PCDATA) >
+<!ELEMENT csvpredecessorPhaseState (#PCDATA) >
+<!ELEMENT csvsuccessorPhaseState (#PCDATA) >
+<!ELEMENT csvphaseTransition (#PCDATA) >
+
+
+<!ELEMENT csvMeasurementSystem ( csvname, csvdescription, csvnameValuePairs )>
+
+<!ATTLIST csvMeasurementSystem  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvBeginWTPM ( csvnumber, csvname )>
+
+<!ATTLIST csvBeginWTPM  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvEndNavStruct  EMPTY >
+<!ATTLIST csvEndNavStruct  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvAddIndependentNode ( csvindependentNodes )>
+
+<!ATTLIST csvAddIndependentNode  handler CDATA #IMPLIED>
+<!ELEMENT csvindependentNodes (#PCDATA) >
+
+
+<!ELEMENT csvCreateRankingData ( csvcontextName, csvrankableClassname, csvpartName, csvnodeId, csvcriterionClassname, csvcriterionData, csvcriteriaKey )>
+
+<!ATTLIST csvCreateRankingData  handler CDATA #IMPLIED>
+<!ELEMENT csvcontextName (#PCDATA) >
+<!ELEMENT csvrankableClassname (#PCDATA) >
+<!ELEMENT csvnodeId (#PCDATA) >
+<!ELEMENT csvcriterionClassname (#PCDATA) >
+<!ELEMENT csvcriterionData (#PCDATA) >
+<!ELEMENT csvcriteriaKey (#PCDATA) >
+
+
+<!ELEMENT csvAddGuest ( csvcontainerClass, csvcontainerName, csvprincipalNameOrDN, csvserviceName )>
+
+<!ATTLIST csvAddGuest  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvProjectBegin ( csvname, csvdescription, csvfolderLocation, csvenabled )>
+
+<!ATTLIST csvProjectBegin  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvClassificationNavStruct ( csvname, csvparentID, csvuniqueID, csvdescription )>
+
+<!ATTLIST csvClassificationNavStruct  handler CDATA #IMPLIED>
+<!ELEMENT csvuniqueID (#PCDATA) >
+
+
+<!ELEMENT csvWfExprRobotTemplateBegin ( csvxCoordinate, csvyCoordinate, csvrouterType, csvroutingEvents, csvautoRoutingExpression, csvuniqueId, csvname, csvdescription, csvcategory, csvinstructions, csviconName, csvduration, csvprocessDuration, csvstartDelay, csvstartProcessDelay, csvnotifyBeforeDeadline, csvtimeToDeadline, csvnotifyAfterDeadline, csvtimePastDeadline, csvresponsibleRole, csvhost )>
+
+<!ATTLIST csvWfExprRobotTemplateBegin  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfExpression ( csvexpression, csvexprBody, csvcheckSyntax )>
+
+<!ATTLIST csvWfExpression  handler CDATA #IMPLIED>
+<!ELEMENT csvexpression (#PCDATA) >
+
+
+<!ELEMENT csvGeneral ( csvuser, csvname, csvtitle, csvnumber, csvtype, csvdescription, csvdepartment, csvsaveIn, csvteamTemplate, csvdomain, csvlifecycletemplate, csvlifecyclestate, csvtypedef, csvprimarycontenttype, csvpath, csvformat, csvcontdesc, csvversion, csviteration )>
+
+<!ATTLIST csvGeneral  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvContentAggregateFile ( csvuser, csvpath )>
+
+<!ATTLIST csvContentAggregateFile  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvAddElementToNavTab ( csvtargetTab, csvtype, csvdefinition, csvtbNot, csvvisible, csvenforced, csvorder )>
+
+<!ATTLIST csvAddElementToNavTab  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvEndUpdateBusinessEntity  EMPTY >
+<!ATTLIST csvEndUpdateBusinessEntity  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvActorRoleHolder ( csvroleToAssign, csvassignedActorRole )>
+
+<!ATTLIST csvActorRoleHolder  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvBeginTypeDefNode ( csvnodeName, csvparentHid, csviconFile, csvdescription, csvdisplayName, csvhierarchyDisplayName, csvinstantiable, csvdeleted, csvuserAttributable, csvlogicalIdentifier )>
+
+<!ATTLIST csvBeginTypeDefNode  handler CDATA #IMPLIED>
+<!ELEMENT csvparentHid (#PCDATA) >
+<!ELEMENT csviconFile (#PCDATA) >
+<!ELEMENT csvdisplayName (#PCDATA) >
+<!ELEMENT csvinstantiable (#PCDATA) >
+<!ELEMENT csvdeleted (#PCDATA) >
+<!ELEMENT csvuserAttributable (#PCDATA) >
+
+
+<!ELEMENT csvBeginUpdateTypeDefNode ( csvnodeName, csvparentHid, csviconFile, csvdescription, csvdisplayName, csvhierarchyDisplayName, csvinstantiable, csvdeleted, csvuserAttributable, csvlogicalIdentifier )>
+
+<!ATTLIST csvBeginUpdateTypeDefNode  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvProjectEnd  EMPTY >
+<!ATTLIST csvProjectEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvDocumentRetainContent ( csvuser, csvname, csvtitle, csvnumber, csvtype, csvdescription, csvdepartment, csvsaveIn, csvteamTemplate, csvdomain, csvlifecycletemplate, csvlifecyclestate, csvtypedef, csvprimarycontenttype, csvpath, csvformat, csvcontdesc, csvversion, csviteration )>
+
+<!ATTLIST csvDocumentRetainContent  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvCabinet ( csvuser, csvcabinet, csvadminDomain, csvdescription, csvowner, csvisPersonal )>
+
+<!ATTLIST csvCabinet  handler CDATA #IMPLIED>
+<!ELEMENT csvcabinet (#PCDATA) >
+<!ELEMENT csvisPersonal (#PCDATA) >
+
+
+<!ELEMENT csvSetDefaultURL ( csvdefaultURL )>
+
+<!ATTLIST csvSetDefaultURL  handler CDATA #IMPLIED>
+<!ELEMENT csvdefaultURL (#PCDATA) >
+
+
+<!ELEMENT csvPartDocDescribes ( csvdocNumber, csvdocVersion, csvdocIteration, csvpartNumber, csvpartVersion, csvpartIteration, csvpartView, csvorganizationName?, csvorganizationID? )>
+
+<!ATTLIST csvPartDocDescribes  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfAssignedActivityTemplateEnd  EMPTY >
+<!ATTLIST csvWfAssignedActivityTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvConfigurationItem ( csvname, csvdescription, csveffectivityType, csvfolder, csvlifecycle, csvteamTemplate, csvlifecyclestate )>
+
+<!ATTLIST csvConfigurationItem  handler CDATA #IMPLIED>
+<!ELEMENT csveffectivityType (#PCDATA) >
+
+
+<!ELEMENT csvWfBlockTemplateBegin ( csvxCoordinate, csvyCoordinate, csvrouterType, csvroutingEvents, csvautoRoutingExpression, csvuniqueId, csvname, csvdescription, csvcategory, csvinstructions, csviconName, csvduration, csvprocessDuration, csvstartDelay, csvstartProcessDelay, csvnotifyBeforeDeadline, csvtimeToDeadline, csvnotifyAfterDeadline, csvtimePastDeadline, csvresponsibleRole )>
+
+<!ATTLIST csvWfBlockTemplateBegin  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvWfTimerTemplateEnd  EMPTY >
+<!ATTLIST csvWfTimerTemplateEnd  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvIndexPolicyRule ( csvuser, csvdomain, csvtype, csvevent, csvstate, csvcollection )>
+
+<!ATTLIST csvIndexPolicyRule  handler CDATA #IMPLIED>
+<!ELEMENT csvcollection (#PCDATA) >
+
+
+<!ELEMENT csvCriterion ( csvassertion, csvsatisfied )>
+
+<!ATTLIST csvCriterion  handler CDATA #IMPLIED>
+<!ELEMENT csvassertion (#PCDATA) >
+<!ELEMENT csvsatisfied (#PCDATA) >
+
+
+<!ELEMENT csvWfNotificationBegin ( csvsubject, csvbody, csvxCoordinate, csvyCoordinate )>
+
+<!ATTLIST csvWfNotificationBegin  handler CDATA #IMPLIED>
+<!ELEMENT csvsubject (#PCDATA) >
+<!ELEMENT csvbody (#PCDATA) >
+
+
+<!ELEMENT csvGroup ( csvuser, csvgroupName, csvdescription, csvDirectoryService? )>
+
+<!ATTLIST csvGroup  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvESITarget ( csvname, csvdescription, csvsystem )>
+
+<!ATTLIST csvESITarget  handler CDATA #IMPLIED>
+<!ELEMENT csvsystem (#PCDATA) >
+
+<!ELEMENT csvESITargetAssignment ( csvpartNumber, csvversion, csviteration, csvparentContainerPath, csvsystem )>
+
+<!ATTLIST csvESITargetAssignment  handler CDATA #IMPLIED>
+
+
+<!ELEMENT csvEPMAuthoringAppVersion (csvauthoringApp, csvversionNumber, csvversionName) >
+<!ATTLIST csvEPMAuthoringAppVersion handler CDATA #IMPLIED>
+<!ELEMENT csvauthoringApp (#PCDATA) >
+<!ELEMENT csvversionNumber (#PCDATA) >
+<!ELEMENT csvversionName (#PCDATA) >
+
+<!ELEMENT csvCreateWTOrganization (csvname, csvcodingSystem, csvorganizationId, csvdescription, csvaddress, csvconferencingURL, csvconferencingId, csvdomain, csvinternetDomain, csvclassification, csvdirectoryService)>
+<!ATTLIST csvCreateWTOrganization handler CDATA #IMPLIED>
+<!ELEMENT csvcodingSystem (#PCDATA)>
+<!ELEMENT csvconferencingId (#PCDATA)>
+<!ELEMENT csvclassification (#PCDATA)>
+<!ELEMENT csvorganizationId (#PCDATA)>
+<!ELEMENT csvaddress (#PCDATA)>
+<!ELEMENT csvdirectoryService (#PCDATA)>
+
+<!ELEMENT csvCreateSupplier (csvSupplierType, csvorganization, csvdomain, csvlifecycletemplate, csvlifecyclestate, csvteamTemplate, csvtype)>
+<!ATTLIST csvCreateSupplier handler CDATA #IMPLIED>
+
+<!ELEMENT csvEndSupplier EMPTY>
+<!ATTLIST csvEndSupplier handler CDATA #IMPLIED>
+
+<!ELEMENT csvSupplierType (#PCDATA)>
+<!ELEMENT csvAddContactToSupplier (csvSupplierType, csvorganization, csvuser, csvname, csvdescription, csvEmail, csvphone)>
+<!ATTLIST csvAddContactToSupplier handler CDATA #IMPLIED>
+<!ELEMENT csvphone (#PCDATA)>
+<!ELEMENT csvAddDocumentToSupplier (csvSupplierType, csvorganization, csvdocNumber, csvdocContainerPath)>
+<!ATTLIST csvAddDocumentToSupplier handler CDATA #IMPLIED>
+<!ELEMENT csvdocContainerPath (#PCDATA)>
+
+<!ELEMENT csvManufacturerPart ( csvuser, csvpartName, csvpartNumber, csvtype, csvsource, csvfolder, csvlifecycle, csvview, csvteamTemplate, csvlifecyclestate, csvtypedef, csvversion, csviteration, csvparentContainerPath, csvmanufacturerID, csvmanufacturerName, csvorganizationName?, csvorganizationID? )>
+<!ATTLIST csvManufacturerPart  handler CDATA #IMPLIED>
+
+<!ELEMENT csvBeginManufacturerPart ( csvpartName, csvpartNumber, csvtype, csvsource, csvfolder, csvlifecycle, csvview, csvteamTemplate, csvlifecyclestate, csvtypedef, csvversion, csviteration, csvmanufacturerID, csvmanufacturerName, csvorganizationName?, csvorganizationID? )>
+<!ATTLIST csvBeginManufacturerPart  handler CDATA #IMPLIED>
+
+<!ELEMENT csvEndManufacturerPart ( csvpublishFlag, csvparentContainerPath )>
+<!ATTLIST csvEndManufacturerPart  handler CDATA #IMPLIED>
+
+<!ELEMENT csvVendorPart ( csvuser, csvpartName, csvpartNumber, csvtype, csvsource, csvfolder, csvlifecycle, csvview, csvteamTemplate, csvlifecyclestate, csvtypedef, csvversion, csviteration, csvparentContainerPath, csvvendorID, csvvendorName )>
+<!ATTLIST csvVendorPart  handler CDATA #IMPLIED>
+
+<!ELEMENT csvBeginVendorPart ( csvpartName, csvpartNumber, csvtype, csvsource, csvfolder, csvlifecycle, csvview, csvteamTemplate, csvlifecyclestate, csvtypedef, csvversion, csviteration, csvvendorID, csvvendorName )>
+<!ATTLIST csvBeginVendorPart  handler CDATA #IMPLIED>
+
+<!ELEMENT csvEndVendorPart ( csvpublishFlag, csvparentContainerPath )>
+<!ATTLIST csvEndVendorPart  handler CDATA #IMPLIED>
+
+<!ELEMENT csvAddAML ( csvOEMPartNumber, csvOEMVersion, csvOEMIteration, csvOEMView, csvOEMOrganizationID, csvOEMOrganizationName, csvsourcingContext, csvmanufacturerPartNumber, csvmanufacturerName, csvmanufacturerID, csvmanufacturerPartContainer, csvmanufacturerSourcingStatus )>
+<!ATTLIST csvAddAML  handler CDATA #IMPLIED>
+
+<!ELEMENT csvAddAVL ( csvOEMPartNumber, csvOEMVersion, csvOEMIteration, csvOEMView, csvOEMOrganizationID, csvOEMOrganizationName, csvsourcingContext, csvvendorPartNumber, csvvendorName, csvvendorID, csvvendorPartContainer, csvvendorSourcingStatus, csvmanufacturerPartNumber, csvmanufacturerName, csvmanufacturerID, csvmanufacturerPartContainer )>
+<!ATTLIST csvAddAVL  handler CDATA #IMPLIED>
+
+<!ELEMENT csvRemoveAML ( csvOEMPartNumber, csvOEMVersion, csvOEMIteration, csvOEMView, csvOEMOrganizationID, csvOEMOrganizationName, csvsourcingContext, csvmanufacturerPartNumber, csvmanufacturerName, csvmanufacturerID, csvmanufacturerPartContainer )>
+<!ATTLIST csvRemoveAML  handler CDATA #IMPLIED>
+
+<!ELEMENT csvRemoveAVL ( csvOEMPartNumber, csvOEMVersion, csvOEMIteration, csvOEMView, csvOEMOrganizationID, csvOEMOrganizationName, csvsourcingContext, csvvendorPartNumber, csvvendorName, csvvendorID, csvvendorPartContainer )>
+<!ATTLIST csvRemoveAVL  handler CDATA #IMPLIED>
+
+<!ELEMENT csvSetAMLPreference ( csvOEMPartNumber, csvOEMVersion, csvOEMIteration, csvOEMView, csvOEMOrganizationID, csvOEMOrganizationName, csvsourcingContext, csvmanufacturerPartNumber, csvmanufacturerName, csvmanufacturerID, csvmanufacturerPartContainer, csvmanufacturerSourcingStatus )>
+<!ATTLIST csvSetAMLPreference  handler CDATA #IMPLIED>
+
+<!ELEMENT csvSetAVLPreference ( csvOEMPartNumber, csvOEMVersion, csvOEMIteration, csvOEMView, csvOEMOrganizationID, csvOEMOrganizationName, csvsourcingContext, csvvendorPartNumber, csvvendorName, csvvendorID, csvvendorPartContainer, csvvendorSourcingStatus )>
+<!ATTLIST csvSetAVLPreference  handler CDATA #IMPLIED>
+
+<!ELEMENT csvSourcingContext ( csvname, csvtypedef )>
+<!ATTLIST csvSourcingContext  handler CDATA #IMPLIED>
+
+<!ELEMENT csvEndSourcingContext EMPTY>
+<!ATTLIST csvEndSourcingContext  handler CDATA #IMPLIED>
+
+<!ELEMENT csvOEMPartNumber (#PCDATA) >
+<!ELEMENT csvOEMVersion (#PCDATA) >
+<!ELEMENT csvOEMIteration (#PCDATA) >
+<!ELEMENT csvOEMView (#PCDATA) >
+<!ELEMENT csvOEMOrganizationID (#PCDATA) >
+<!ELEMENT csvOEMOrganizationName (#PCDATA) >
+<!ELEMENT csvsourcingContext (#PCDATA) >
+<!ELEMENT csvvendorPartNumber (#PCDATA) >
+<!ELEMENT csvvendorPartContainer (#PCDATA) >
+<!ELEMENT csvmanufacturerPartNumber (#PCDATA) >
+<!ELEMENT csvmanufacturerName (#PCDATA) >
+<!ELEMENT csvmanufacturerID (#PCDATA) >
+<!ELEMENT csvmanufacturerPartContainer (#PCDATA) >
+<!ELEMENT csvmanufacturerSourcingStatus (#PCDATA) >
+<!ELEMENT csvvendorSourcingStatus (#PCDATA) >
+<!ELEMENT csvvendorID (#PCDATA) >
+<!ELEMENT csvvendorName (#PCDATA) >
+<!-- Standard information objects -->
+<!ELEMENT folderName (#PCDATA)>
+<!-- This ufid is the reference to the cabinet that the folder resides in -->
+<!ELEMENT cabinetReference (ObjectReference)>
+<!-- Administrative domains only have two attributes, domain and
+     description. For import/export purposes we are not concerned
+     with the persist info, because if a domain does not exist on
+     the recipient system this is a conflict, the conflict resolution
+     component will allow the importer actor to either create the 
+     specified domain, or to abort the import process.
+-->
+<!-- Macro to flatten to domainNam -->
+<!ELEMENT domainDescription (#PCDATA)>
+<!ELEMENT ownerDomain (#PCDATA)>
+<!-- lifecycleTemplateName and lifeCycleState are defined in coreobjects.dtd-->
+<!-- A project is unique by name and domain -->
+<!ELEMENT projectDomain (#PCDATA)>
+<!ELEMENT projectName (#PCDATA)>
+<!-- Utility tags. -->
+<!-- localID changed to contextId -->
+<!-- We could possibly have an attribute to describe when to use site or not-->
+<!-- This is the object id of the object for its particular site. 
+     Example wt.part.WTPart-0323-->
+<!ELEMENT objectid (#PCDATA)>
+<!ATTLIST objectid
+    autogenerate (true | false) "true"
+>
+<!-- WIll need to allow for special cases by the wildId tag. Will keep updated in regards
+     to special strategies employed by IX personnel.
+-->
+<!-- This is a globally unique identifier, generatble from GUIDGen or some 
+     other generator which can generate a DCE-RPC UUID
+-->
+<!ELEMENT guid (#PCDATA)>
+<!--AnyData-->
+<!-- Anydata is used to store information about an object
+     which Windchill does not know how to deal with. A reference
+     to the object the data is associated with is stored, and the
+     data inside could be anything. If it is convenient to structure
+     the unknownData, you may add as many children to the unknownData as
+     you desire. The children are associated with the same object as the 
+     unknownData element.
+     
+     This needs more thought.
+-->
+<!-- XML Schema hooks -->
+<!-- In a DTD we cannot enforce typing on an element, in XML Schema we will 
+     be able to. For this reason, any tag which has limited typing is modeled 
+     StringValue integerValue ect. 
+-->
+<!--BEGIN_XML_SCHEMA_HOOKS-->
+<!-- Hook for XML Schema. Need to use a date type -->
+<!ELEMENT dateValue (#PCDATA)>
+<!ELEMENT string (#PCDATA)>
+<!ELEMENT booleanValue (#PCDATA)>
+<!ELEMENT longValue (#PCDATA)>
+<!ELEMENT intValue (#PCDATA)>
+<!ELEMENT doubleValue (#PCDATA)>
+<!ELEMENT timeString (#PCDATA)>
+<!--END_OF_XML_SCHEMA_HOOKS-->
+<!-- NCA/LWC types -->
+<!ELEMENT timespan (#PCDATA)>
+<!--In real life it is a longValue -->
+<!-- End workflow proprietary data. -->
+<!-- Various Administrative objects -->
+<!ELEMENT roleVector (Role*)>
+<!ELEMENT Role (customType?, uiComponent*)>
+<!ATTLIST Role
+    roleType CDATA #REQUIRED
+>
+<!--
+<!ATTLIST Role
+    roleType (APPROVER | ASSIGNEE | AUDITOR | AUTHOR | CHANGE_MANAGER | CHANGE_OWNER | 
+              CHEMICAL_ENGINEER | CONSULTANT | CONTRACTOR | CONTROLLER | CUSTOMER | 
+              DESIGN_ENGINEER | DESIGNER | DETAILER | ENGINEER | FIELD_ENGINEER | GROUP_LEADER | 
+              HYDRAULIC_ENGINEER | IMPLEMENTOR | INDUSTRIAL_ENGINEER | LOGIC_ENGINEER | 
+              MANUFACTURER | MANUFACTURING_ENGINEER | MANUFACTURING_MANAGER | MATERIAL_ENGINEER | 
+              MEMBERS | NC_PROGRAMMER | OBSERVER | OEM | ORGANIZATION_LEADER | OWNER | PLANNER | 
+              PRODUCT_MANAGER | PRODUCTION_PLANNER | PROGRAM_DIRECTOR | PROGRAM_MANAGER | 
+              PROJECT_ACCOUNTANT | PROJECT_ADMINISTRATOR | PROJECT_ENGINEER | PROJECT_MANAGER | 
+              PROJECT_SPONSOR | PROMOTER | PURCHASING_AGENT | QUALITY_ENGINEER | QUALITY_MANAGER | 
+              RESOURCE_MANAGER | REVIEWER | SOFTWARE_ENGINEER | SUBMITTER | SUGGESTOR | SUPPLIER | 
+              SUPPORT_ENGINEER | TEAM_LEADER | TESTER | TOOL_DESIGNER | VENDOR | EXPORTER | IMPORTER | 
+              PUBLISHER | SUBSCRIBER | CUSTOM) #REQUIRED
+>
+-->
+<!-- Utility tags -->
+<!-- A generic object is modeled as a set of name value pairs-->
+<!-- Project objects -->
+<!-- Execution objects are things that can go into a project managed project.
+     This is the top level object, many attributes are optional
+-->
+<!-- 
+     Normally the content model should be empty unless the value of 
+     executionStatus is CUSTOM, in which case it should contain the resource name
+     of the customized type.
+-->
+<!ELEMENT healthStatus (#PCDATA)>
+<!ELEMENT customType (#PCDATA)>
+<!ATTLIST healthStatus
+    status (GREEN | YELLOW | RED | UNAVAILABLE | CUSTOM) #REQUIRED
+>
+<!--
+    Normally the content model would be empty unless there has been a 
+    customization performed by the customer. In this case we set the type to 
+    CUSTOM and then specify its enumeration constant in customType
+-->
+<!ELEMENT riskValue (#PCDATA)>
+<!ATTLIST riskValue
+    value (VERYLOW | LOW | MEDIUM | HIGH | VERYHIGH | UNAVAILABLE | CUSTOM) #REQUIRED
+>
+<!ELEMENT executionCategory (projectCategory)>
+<!ELEMENT projectCategory (#PCDATA)>
+<!-- in PJL 6.2 project category can now have any value-->
+<!--category (DEFAULT | CUSTOM) #REQUIRED-->
+<!ATTLIST projectCategory
+    category CDATA #REQUIRED
+>
+<!--
+    Normally the content model would be empty unless there has been a 
+    customization performed by the customer. In this case we set the 
+    type to CUSTOM and then specify its enumeration constant in customType
+-->
+<!ELEMENT projectState (#PCDATA)>
+<!ATTLIST projectState
+    state (DEFINED | RUNNING | COMPLETED | SUSPENDED | CANCELLED | CUSTOM) #REQUIRED
+>
+<!--
+    The implementation of executionConfiguration is not yet defined. 
+    Ultimately it will be a set of bit flags. Execution configuration
+    is not supported on import.
+-->
+<!ELEMENT executionDescription (#PCDATA)>
+<!ELEMENT riskDescription (#PCDATA)>
+<!ELEMENT statusDescription (#PCDATA)>
+<!ELEMENT percentComplete (#PCDATA)>
+<!-- End of Execution object type descriptions -->
+<!-- Removed presistInfo since we are not exporting projects this release-->
+<!-- removed containerName and containerDescription-->
+<!ELEMENT projectBaseInfo (ObjectID?, name, description?)>
+<!ELEMENT Organization (projectBaseInfo, subscriber, autoPopulateCreators)>
+<!ELEMENT subscriber (#PCDATA)>
+<!ELEMENT autoPopulateCreators (#PCDATA)>
+<!ELEMENT orgName (#PCDATA)>
+<!ELEMENT templateReference (ObjectID | (templateName, templateIdentifier))>
+<!ELEMENT templateName (#PCDATA)>
+<!ELEMENT templateIdentifier (#PCDATA)>
+
+<!-- folderLocation is no longer utilized since ProjectTemplates are no long foldered. The use of this tag is
+     deprecated. The ContainerTemplate tag should be used instead.There is also now a capability to designate
+     a locale for the template.
+-->
+<!ELEMENT ProjectTemplate ((name, description?), ObjectID?, locale?, folderLocation?, enabled, (xmlText | loadPath | zipEntry)?)>
+<!ELEMENT ContainerTemplate (name, description?,  containerClassName , defaultValuesRule?, locale? , enabled?, (xmlText | loadPath | zipEntry)?)>
+<!ELEMENT defaultValuesRule (#PCDATA)>
+<!ELEMENT containerClassName (#PCDATA)>
+
+<!ELEMENT zipEntry (#PCDATA)>
+<!ELEMENT folderLocation (#PCDATA)>
+<!ELEMENT enabled (#PCDATA)>
+<!-- The contents of this tag should either be wraped in data section or encoded. -->
+<!ELEMENT xmlText (#PCDATA)>
+<!-- loadPath is relative to the wt property wt.ixb.defaultLoadPath-->
+<!-- This directory defaults to $(wt.home)/loadXMLFiles -->
+<!-- So if you want to specify a site specific ProjectConfig and
+     put it into file $(wt.home)/loadXMLFiles/siteSpecificProjectTemplate.xml
+     the entry would be 
+     <loadPath>siteSpecificProjectTemplate.xml</loadPath>
+-->
+<!ELEMENT loadPath (#PCDATA)>
+<!-- Load another XML file.  After that XML file has been loaded return to -->
+<!-- this file and complete the import. -->
+<!ELEMENT loadXMLFile (#PCDATA)>
+<!ELEMENT projectPhase (#PCDATA)>
+<!ATTLIST projectPhase
+    phase (KICKOFF | SCOPING | PLANNING | ASSIGNMENT | DEVELOPMENT | WRAPUP | COMPLETED | POST_MORTEM | CANCELLED | CUSTOM) #REQUIRED
+>
+<!ELEMENT projectScope (#PCDATA)>
+<!-- Project Plan objects -->
+
+<!ELEMENT projectSponsor (#PCDATA)>
+<!ELEMENT completionStatus (#PCDATA)>
+<!-- Net Markets specific. This will cover the load only administrative objects
+     which will not be supported by generic import/export. This would include such
+     things as users, domains, teams, project notebooks, discussion forums and 
+     meeting center objects.
+-->
+<!-- Forum templates are needed to initialize the default project forums
+     in NetMarkets. Forums have their own XML loader, which use the XML
+     Lobstring. On import, the handler will extract this string and use
+     the service to instantiate the forum, and on export, the lobstring
+     will be extracted.
+     
+     It is undecided whether we will be exporting forum instances.
+-->
+<!ELEMENT DiscussionForumTemplate (name, description, xmlLobString)>
+<!ELEMENT NotebookTemplate (name, description, xmlLobString)>
+<!--
+<!ELEMENT forumName (#PCDATA)>
+<!ELEMENT forumDescription (#PCDATA)>
+-->
+<!-- This MUST be a CDATA section, or fully escaped XML-->
+<!ELEMENT xmlLobString (#PCDATA)>
+<!ELEMENT ACLRule ((domainName, ownerDomain?, description?), aclClassName, aclOn, aclPrincipalName, aclPermissionList?, lifecycleState?)>
+<!-- Turn the permission on/off-->
+<!ELEMENT aclOn (#PCDATA)>
+<!ELEMENT aclClassName (#PCDATA)>
+<!ELEMENT aclPrincipalName (#PCDATA)>
+<!-- 
+In 7.0 revisePerm,and newViewVersionPerm, and customPerm are no longer ignored.
+These values are present to allow for interoperability with DDL and SupplyLink
+-->
+<!ELEMENT aclPermissionList (revisePerm?, newViewVersionPerm? , customPerm*)>
+<!ATTLIST aclPermissionList
+    delete (true | false) #IMPLIED
+    create (true | false) #IMPLIED
+    modify (true | false) #IMPLIED
+    read (true | false) #IMPLIED
+    attach (true | false) #IMPLIED
+    administrative (true | false) #IMPLIED
+    use (true | false) #IMPLIED
+    ALL (true | false) #IMPLIED
+>
+<!ELEMENT revisePerm EMPTY>
+<!ATTLIST revisePerm 
+    enabled (true | false) #REQUIRED
+>
+<!ELEMENT newViewVersionPerm EMPTY>
+<!ATTLIST newViewVersionPerm
+    enabled (true | false) #REQUIRED
+>
+<!-- customMask must be an integer less than 63 or an exception will be thrown-->
+<!-- 
+    significant customMask values for 7.0 are 
+    REVISE=7
+    NEW_VIEW_VERSION=8
+    CHANGE_PERMISSIONS=9
+
+-->
+<!ELEMENT customPerm EMPTY>
+<!ATTLIST customPerm
+    customMask CDATA #REQUIRED
+    enabled (true | false) #REQUIRED
+>
+<!-- This tag is used for AdHoc acls of exported objects.-->
+<!-- This is strictly Role based acl-->
+<!-- In 7.0 an applicationKey is required. -->
+<!-- It is being kept optional so that files exported prior to 7.0 will not fail on import-->
+<!ELEMENT AdHocAclSpec (ObjectID, Role, applicationKey?, aclPermissionList)>
+<!ELEMENT applicationKey (#PCDATA)>
+
+<!ELEMENT AdHocAclEntrySet (AdHocAclSpec*)>
+<!--Folder structure -->
+<!-- May specify many rootPath subFolder combinations as you would like-->
+<!-- The order of folder creation is the order specified in the xml file. -->
+<!-- The whole transaction will be rolled back if any of the rootpaths 
+     rely on the creation of a subfolder later in the file.
+     
+     See FolderStructureTest.xml for a legal example.
+     
+-->
+<!ELEMENT FolderStructure (cabinet, domainName?, rootPath, (subFolder | nestedFolder | folderLink | folderContentObjectReference)*, folderAcl*)>
+<!ELEMENT folderContentObjectReference (folderPath, ((referenceName, referenceNumber) | ObjectID))>
+<!-- A folderACL is an optional element that is used to specify changes in the acl list for the current folder-->
+<!-- If there is no change in the AdHoc rules for the role from its parent it is empty.-->
+<!-- In PJL 6.2 only role based acls are supported for ProjectConfig. The folderAcl is not included in the folder structure
+       when contents of a folder or project are being exported. On import, the Role is resolved to the roleMemberMap
+       and the appropriate permissions are applied. This functionality is only exposed on ProjectLink based systems.
+ -->
+<!ELEMENT folderAcl (subFolder, Role, applicationKey? , aclPermissionList)>
+<!ELEMENT referenceName (#PCDATA)>
+<!ELEMENT referenceNumber (#PCDATA)>
+<!-- The cabinet where the folder structure lives. Cabinet must exist, and principal running import
+    must have access to it.
+    Does this need to be relaxed?
+-->
+<!ELEMENT cabinet (#PCDATA)>
+<!-- rootPath includes the cabinet. Root path must already exist in the system. 
+     For the test example the cabinet is SYSTEM, and a hierarchy is developed
+     underneath it called xmlTest. So rootpath is System, and rootPath is also System.
+     This does support the notion of two domains, where a user may not know that they
+     are working in a subdomain.
+-->
+<!ELEMENT rootPath (#PCDATA)>
+<!-- A subfolders must be expressed in order of creation. -->
+<!ELEMENT subFolder (#PCDATA)>
+<!ELEMENT nestedFolder ( name, domainName?, nestedFolder*)>
+<!-- Allows for specification of an URL folder it may point to 
+     a site outside of the object. The folderPath specified in
+     urlFolder must exist or an exception will be thrown. The url
+     must be properly encoded.
+-->
+<!ELEMENT folderLink (domainName?, folderPath, name, urlString, description?)>
+<!-- If the domain does not exit create it, otherwise emit a warning message and do nothing.-->
+<!-- This tag is interpreted as a request to create a domain within an organization-->
+<!-- This tag is removed in 6.2-->
+<!--<!ELEMENT OrgDomain (domainName, OwnerDomain?)>-->
+<!--<!ELEMENT OwnerDomain (#PCDATA)>-->
+<!--Domain structure for import into a container. It is only possible to specify a 2 level hierarchy of domains -->
+<!ELEMENT DomainStructure (domainLevel*)>
+<!-- rootDomain is the domain root for this hierarchy.-->
+<!-- There are two default domains in a WTContainer as well as the domain that the WTContainer is assigned to
+      The domains created by this structure must branch down from one of these three top level domains
+-->
+<!ELEMENT domainLevel (parentDomain?, domainName, description?, domainLevel*)>
+<!ELEMENT parentDomain (#PCDATA)>
+<!-- OrgGroup only creates the group and nothing but the group, users only come from LDAP-->
+<!ELEMENT OrgGroup (groupName, description?)>
+<!-- Name of a group within an organization -->
+<!ELEMENT groupName (#PCDATA)>
+<!-- FolderStructure, and ProjectTemplate are already defined. -->
+<!-- This is a team that is associated with a Project object. -->
+<!ELEMENT Team (name, (domainName, ownerDomain?, domainDescription?), description, enabled, template, roleActorMap, rolePrincipalMap, folderPath)>
+<!ELEMENT template (#PCDATA)>
+<!ELEMENT roleActorMap (Role, Actor)*>
+<!ATTLIST Actor
+    type (CREATOR | CUSTOM) #REQUIRED
+>
+<!ELEMENT rolePrincipalMap (Role, principalName)*>
+<!ELEMENT Actor (customType?)>
+<!ELEMENT principalName (#PCDATA)>
+<!-- The projectId is optional. Semantics is that if there is no
+     projectId that the projectId will be made available by the
+     application 
+-->
+<!ELEMENT ProjectEnumType (typeName, projectId?, typeValues)>
+<!-- In 7.0 the handling of dynamic types has been changed. This attribute
+     defines what to do if the current typeName has no excluded values specified
+     yet in the target container. If there are excluded values already present
+     for the type in the target container this value is ignored.Otherwise a value
+     of true tells the system to exclude any static types not specified in the list.
+     This is the default since that mimics the behavior of the 6.2.6 version of this
+     product.
+     A value of false tells the system that no static values are to be included.
+     The net effect is that if any static values, (a static value is one defined in
+     the rbInfo file for the enumerated type), are added to this tag they will be 
+     ignored
+-->
+<!ATTLIST ProjectEnumType
+   excludeByDefault (true | false) "true"
+>
+<!-- Reference to the project that this container belongs to-->
+<!ELEMENT typeName (#PCDATA)>
+<!ELEMENT projectId (ObjectID)>
+<!ELEMENT typeValues (typeEntry*)>
+<!ELEMENT typeEntry (#PCDATA)>
+<!-- Project Role Map specification, the projectId can be specified, or implied.-->
+<!-- In a future release it will be possible to specify groups as well as WTUser.
+     The tag is defined here for the sake of forward compatibility
+-->
+<!ELEMENT projectMember (Role?, (memberUserId* , memberGroupId*)*)>
+<!-- memberUserId is the web name of the prospective member, this is guaranteed to be unique for an installation-->
+<!ELEMENT memberUserId (#PCDATA)>
+<!ELEMENT memberGroupId (#PCDATA)>
+<!ELEMENT roleAccess (Role*)>
+<!ELEMENT uiComponent (#PCDATA)>
+<!ATTLIST uiComponent
+        name CDATA #REQUIRED
+        value (true | false) #REQUIRED
+>
+<!-- 
+The following attributes are used if the web name cannot be found.
+The order is userEmail and then userName. These are not guaranteed to be unique within an LDAP, so mis-assignments
+are possible
+-->
+<!ATTLIST memberUserId
+    userName CDATA #IMPLIED
+    userEmail CDATA #IMPLIED
+>
+<!-- principal of the member-->
+<!ELEMENT EngineRule (ruleName, ruleSpecification?, ruleType)>
+<!ATTLIST EngineRule
+    isDefault (true | false) "false"
+    enabled (true | false) "true"
+>
+<!ELEMENT ruleType EMPTY>
+<!ATTLIST ruleType
+    type (INIT | COPY | TYPE) #REQUIRED
+>
+<!-- ruleSpecification can be escaped XML, or a CDATA section with no embedded CDATA sections-->
+<!ELEMENT ruleSpecification (#PCDATA)>
+<!-- TypeBasedRule specifies rules on the basis of class -->
+<!ELEMENT TypeBasedRule (EngineRule, className)>
+<!-- default values for a container, this can be mapped to a template -->
+<!ELEMENT ContainerDefaults (ruleName, ruleSpecification?, className)>
+
+<!ELEMENT ruleName (#PCDATA)>
+<!-- This is for creating seed objects. -->
+<!ELEMENT SeedObjectRuleSet (SeedObject?, InstanceBasedRule+)>
+<!-- The object that is referred to by the rule. THis is a reference back to the seed object-->
+<!-- On load we create the assocaition based on the local-ID of the newly created seed object-->
+<!ELEMENT InstanceBasedRule (EngineRule, ObjectID?)>
+<!ELEMENT SeedObject (WTDocument | WTPart)>
+
+<!ELEMENT createFromRule (ruleName, name?, number?, description?, domainName?, folderPath?, contentItem?)>
+
+<!ELEMENT ProjectConfig (BaseProjectData?, (ExportedRoleMemberMap | projectMember*)?,ExportedGuestMembers?, OrgStructure?, 
+      NmLoader*, (TypeBasedRule | SeedObjectRuleSet)*, createFromRule*, ProductStructure?, 
+      DocumentTemplate*, TemplateDocument*, sandboxBaseline?, shareMapSet?, projectPlan*, ProjectEnumType*, 
+      DiscussionForumTemplate*, ForumSpec*, NotebookTemplate? , NotebookSpec?)>
+
+<!-- Used for transport of DocumentTemplate objects -->
+<!-- If this is a hand-configured tag, and you know that ruleName is in your system, you may omit
+      the TypeBasedRule or SeedObjectRuleSet tags. See the documentation for the 
+     conflict resolution rules that applied in the case of rule resolution.
+-->
+<!ELEMENT DocumentTemplate (ruleName, WTDocument)>
+<!-- 
+This element is used to seed a project. The optional initRuleName and a copyRuleName parameters are the init or copy rules to use to create the document. The rules are also transported. Normally this tag would only appear in ExportAsTemplate scenarios. The init and copy rules are transported, but if they are equivalent to the init and copy rules that already exist on the host system they are not imported. If there is a conflict in the init and copy rules they are automatically resolved by the system.
+If the document was not initially created from a rule, the parameters in the WTDocument are treated normally, otherwise the parameters are ignored in favor of the init/copy rule defined parameters.
+ -->
+<!ELEMENT TemplateDocument (ruleName?, WTDocument, AdHocAclEntrySet?)>
+<!-- Base project data provides the opportunity to fill in some default values for projects created from this template-->
+<!ELEMENT BaseProjectData (projectCategory?, businessUnit?, site?)>
+<!ELEMENT businessUnit (#PCDATA)>
+<!ELEMENT site (#PCDATA)>
+<!-- Permissions are policies and ad-hocs-->
+<!-- removed NotebookSPec-->
+<!-- Removed projectPlan -->
+<!ELEMENT OrganizationConfig (OrgStructure?, ContainerDefaults* , ProductTemplate*, LibraryTemplate*, ProjectTemplate*, ContainerTemplate* , loadXMLFile*, NmLoader*, WTTypeDefinitions*, TypeBasedRule*, SeedObjectRuleSet*, createFromRule*, ProductStructure?, DocumentTemplate*, ProjectEnumType*, DiscussionForumTemplate?, NotebookTemplate?)>
+<!-- The autoPopulateCreaotrs attribute is an optional attribute that specifies whether to auto-populate the Creator's group. If it is unspecified
+    the system wide default specified in wt.projmgmt.admin.autoPopulateCreatorsGroup is used.
+-->
+<!ATTLIST OrganizationConfig
+    autoPopulateCreators (true | false) #IMPLIED
+>
+<!ELEMENT ProductStructure ((WTTypeDefinitions | ibaDefinitions
+      | EPMDocument | EPMBuildLinksRule | EPMContainedIn | EPMDescribeLink | EPMMemberLink | EPMReferenceLink | EPMVariantLink | EPMBuildHistory | EPMSepFamilyTable 
+      | WTPart | WTPartReferenceLink | WTPartUsageLink | WTPartDescribeLink)*, AdHocAclEntrySet?)>
+<!-- templateName is the name of the appropriate template objects -->
+<!-- name is the name to call the appropraite DiscussionForum or Notebook object
+     a sensible default is provided by the loader
+-->
+<!ELEMENT ForumSpec (templateName, name?)>
+<!ELEMENT NotebookSpec (ObjectID, templateId?, name, description?, subjectOfNotebook*, NotebookFolder*, Bookmark*)>
+<!ELEMENT templateId (ObjectID)>
+<!ELEMENT subjectOfNotebook (ObjectID)>
+<!ELEMENT NotebookFolder (notebookFolderPath, name, description?, NotebookFolder*, Bookmark*)>
+<!ELEMENT notebookFolderPath (#PCDATA)>
+<!ELEMENT Bookmark (name, description?, urlString, ObjectReference?)>
+<!-- Removed Permissions-->
+<!--Organizational Structure -->
+<!-- An organizational structure corresponds to what an organizatin needs
+     to run an organization.
+     
+     This includes....
+     folderstructure, and ONLY FOR DDL, AclRules.
+     It is an error to use ACLRule for a PJL project.
+     PJL project templates should set folder acls, or object acls.
+-->
+<!ELEMENT OrgStructure (DomainStructure?, FolderStructure?, (OrgGroup?, ACLRule*)*)>
+<!ELEMENT ixbHandlersRegistry ((elementImporter | classExporter)*)>
+<!ELEMENT elementImporter (tag, dtd, handler)>
+<!ELEMENT tag (#PCDATA)>
+<!ELEMENT handler (#PCDATA)>
+<!ELEMENT classExporter (class, dtd, targetTag, handler)>
+<!ELEMENT class (#PCDATA)>
+<!ELEMENT targetTag (#PCDATA)>
+<!-- =================================================================================== -->
+<!-- manager only matters outside the context of a Project2 object, not needed for demo. -->
+<!ELEMENT projectPlan ((manager | managerInfo)*, subscriptionPolicy?, planMode?, creator?, projectId?, projectPlanId, executionInfo, (Activity | Milestone | Summary | SubProject)*, dependencyLink*, containmentLink*, Deliverable*, Resource*, resourceLink*, duration?, projectVariable*)>
+<!-- subscrptionPolicy allows for the configuration of the subscription policies-->
+<!-- They may be specified for a SubProject, Milestone, or a subProject.-->
+<!ELEMENT subscriptionPolicy (ManagerSubscriptionPolicy?, OwnerSubscriptionPolicy?)>
+<!ELEMENT ManagerSubscriptionPolicy (EventSubscription*)>
+<!ATTLIST ManagerSubscriptionPolicy
+    statusRed (true | false) "false"
+    onCompletion (true | false) "false"
+>
+<!-- planMode supports the following levels.
+   staticPlan - no workflow integration
+   activityDriven - An active plan but no workitems
+   taskDriven - An active plan with workitems
+-->
+<!ELEMENT planMode EMPTY>
+<!ATTLIST planMode
+    mode (staticPlan | activityDriven | taskDriven) "staticPlan"
+>
+<!ELEMENT OwnerSubscriptionPolicy (EventSubscription*)>
+<!ELEMENT EventSubscription EMPTY>
+<!ATTLIST EventSubscription
+    event (DEADLINE | DEADLINE_CHANGE | FINISH_CHANGE | OBJECT_DELETION | 
+    OWNER_CHANGE | PERCENT_CHANGE | STATE_CHANGE | STATUS_CHANGE | 
+    TIME_PAST_DEADLINE | TIME_TO_DEADLINE | RISK_CHANGE | NODE_CREATION) #REQUIRED
+    subscribe (true | false) #REQUIRED
+>
+<!ELEMENT manager (#PCDATA)>
+<!ELEMENT managerInfo (name, ObjectReference?)>
+<!ELEMENT creator (name, ObjectReference?)>
+<!ELEMENT projectPlanId (ObjectID)>
+<!ELEMENT dependencyLink (predecessorID, successorID, nodeLinkType?)>
+<!ELEMENT predecessorID (ObjectID)>
+<!ELEMENT successorID (ObjectID)>
+<!ELEMENT nodeLinkType (customType?)>
+<!ATTLIST nodeLinkType
+    linkType (FINISH_START | FINISH_FINISH | START_FINISH | START_START | CUSTOM) #REQUIRED
+>
+<!ELEMENT containmentLink (summaryID, nodeID*)>
+<!ELEMENT summaryID (ObjectID)>
+<!ELEMENT nodeID (ObjectID)>
+<!ELEMENT resourceLink (resourceHolderID, resourceID, totalResources?)>
+<!ELEMENT resourceHolderID (ObjectID)>
+<!ELEMENT resourceID (ObjectID)>
+<!ELEMENT totalResources (#PCDATA)>
+<!ELEMENT executionInfo (name, healthStatus?, statusDescription?, riskValue?, projectCategory?, projectState?, projectPhase?, executionDescription?, percentComplete?, riskDescription?, startDate?, finishDate?, timeToStart?, estimatedFinish?, deadline?, inheritedDeadline?, projectConfiguration?, workflowConfiguration?, timeToDeadline?, timePastDeadline?, totalWork?, performedWork?, totalWorkCost?, currentWorkCost?, priority?, responsibleRole?)>
+<!ATTLIST executionInfo
+    enabled (true | false) "true"
+>
+<!ELEMENT startDate (#PCDATA)>
+<!ELEMENT finishDate (#PCDATA)>
+<!ELEMENT duration (#PCDATA)>
+<!ATTLIST duration
+    unit (day | hour | second | millisecond) #IMPLIED
+>
+<!ELEMENT timeToStart (#PCDATA)>
+<!ELEMENT estimatedFinish (#PCDATA)>
+<!ELEMENT deadline (#PCDATA)>
+<!ELEMENT inheritedDeadline (#PCDATA)>
+<!ELEMENT projectConfiguration (#PCDATA)>
+<!ELEMENT workflowConfiguration (#PCDATA)>
+<!ELEMENT timeToDeadline (#PCDATA)>
+<!ATTLIST timeToDeadline
+    unit (day | hour | minute | second | millisecond) #IMPLIED
+>
+<!ELEMENT timePastDeadline (#PCDATA)>
+<!ATTLIST timePastDeadline
+    unit (day | hour | second | millisecond) #IMPLIED
+>
+<!ELEMENT totalWork (#PCDATA)>
+<!ATTLIST totalWork
+    unit (day | hour) #IMPLIED
+>
+<!ELEMENT performedWork (#PCDATA)>
+<!ATTLIST performedWork
+    unit (day | hour) #IMPLIED
+>
+<!ELEMENT totalWorkCost (#PCDATA)>
+<!ATTLIST totalWorkCost
+    currencyLocale CDATA #IMPLIED
+>
+<!ELEMENT currentWorkCost (#PCDATA)>
+<!ATTLIST currentWorkCost
+    currencyLocale CDATA #IMPLIED
+>
+<!ELEMENT priority (#PCDATA)>
+<!ELEMENT responsibleRole (#PCDATA)>
+<!ELEMENT projectVariable (name, initializeFrom?, copyInto*, variableValue?)>
+<!ATTLIST projectVariable
+    type CDATA #REQUIRED
+>
+<!ELEMENT initializeFrom (#PCDATA)>
+<!ELEMENT copyInto (#PCDATA)>
+<!ELEMENT variableValue (#PCDATA)>
+<!ELEMENT Activity (ObjectID, projectPlanId, (owner | ownerInfo)?, subscriptionPolicy?, activityInfo, resourceAssignee*, duration?, projectVariable*, riskValue?, riskDescription?)>
+<!ELEMENT activityInfo (executionInfo, nodeNumber?)>
+<!ELEMENT nodeNumber (#PCDATA)>
+<!ELEMENT owner (#PCDATA)>
+<!ELEMENT ownerInfo (name, ObjectReference?)>
+<!-- The ObjectID points to one of the Resource object ids.-->
+<!ELEMENT resourceAssignee (ObjectID, maxPercentAvailable?)>
+<!ELEMENT maxPercentAvailable (#PCDATA)>
+<!ELEMENT Milestone (ObjectID, subscriptionPolicy?, projectPlanId, (owner | ownerInfo)?, activityInfo, duration? , projectVariable*)>
+<!ELEMENT Summary (ObjectID, projectPlanId, (owner | ownerInfo)?, subscriptionPolicy?, activityInfo, duration?, projectVariable*)>
+<!ELEMENT SubProject (ObjectID, projectPlanId, (owner | ownerInfo)?, subscriptionPolicy?, activityInfo, projectRef?, duration?, projectVariable*)>
+<!ELEMENT projectRef (ObjectReference)>
+<!-- The ObjectID is used in assignment tags-->
+<!ELEMENT Resource (ObjectID?, projectPlanId, resourceInfo)>
+<!ATTLIST Resource
+    resourceType (PERSON | ROLE | EQUIPMENT | MATERIAL | INFORMATION | FACILITY) #REQUIRED
+>
+<!ELEMENT resourceInfo (name, description?, resourceCategory?, label?, maxUnits?, resourceReference?, standardRate?, costPerUse?, overtimeRate?, maxPercentUtilization?)>
+<!ELEMENT resourceCategory (#PCDATA)>
+<!ATTLIST resourceCategory
+    category (DEFAULT | CUSTOM) #REQUIRED
+>
+<!ELEMENT resourceReference (userInfo | ObjectReference)>
+<!ELEMENT userInfo (name | ObjectReference)>
+<!ELEMENT label (#PCDATA)>
+<!ELEMENT maxUnits (#PCDATA)>
+<!ELEMENT standardRate (#PCDATA)>
+<!ATTLIST standardRate
+    currencyLocale CDATA #IMPLIED
+    unit CDATA #IMPLIED
+>
+<!ELEMENT costPerUse (#PCDATA)>
+<!ATTLIST costPerUse
+    currencyLocale CDATA #IMPLIED
+>
+<!ELEMENT overtimeRate (#PCDATA)>
+<!ATTLIST overtimeRate
+    currencyLocale CDATA #IMPLIED
+    unit CDATA #IMPLIED
+>
+<!ELEMENT maxPercentUtilization (#PCDATA)>
+<!-- projectPlanId is no longer a required attribute. This is to support orphan deliverables-->
+<!ELEMENT Deliverable (ObjectID?, subscriptionPolicy?, projectPlanId?, activityID?, mileStoneId*, (owner | ownerInfo)?, executionInfo, targetConfig?, targetReference? , duration?, riskValue?, riskDescription?)>
+<!-- If a deliverable is an orphan deliverable, then the following attributes are ignored.
+     projecPlanId, activityID, and mileStoneId
+     If a user selects Export Deliverables, all deliverables will be exported as orphans.
+-->
+<!ATTLIST Deliverable
+    orphan (true | false) #IMPLIED
+>
+<!ELEMENT mileStoneId (ObjectID)>
+<!ELEMENT activityID (ObjectID)>
+<!ELEMENT targetReference (ObjectID | createFromRule)>
+<!-- Description of how the deliverable should be.-->
+<!ELEMENT targetConfig (#PCDATA)>
+<!ELEMENT attrValueMap (mapEntry*)>
+<!ELEMENT mapEntry (attributeName, attributeValue)>
+<!ELEMENT attributeName (#PCDATA)>
+<!ELEMENT attributeValue (#PCDATA)>
+<!--The following tag does not belong in ProjectConfig -->
+<!--It is used to enable mass import of teams after a project 
+    has been created. When a project->Export Team, or project->Export Roles
+    is performed, an XML file consisting of this tag is created.
+    This file may be imported into the addTeams element or added to a project
+    via the Project import-file option.
+    
+    If Export Team is selected the full role member map is exported.
+    Otherwise only the roles are exported.
+-->
+<!ELEMENT ExportedRoleMemberMap (roleAccess?, projectMember*)>
+<!ELEMENT ExportedGuestMembers ((memberUserId*, memberGroupId*)*)>
+<!ELEMENT ProjectContainer (name, number, description?, containerTemplate, startDate?, deadline?, duration?)>
+<!ATTLIST ProjectContainer
+        startProject (true|false) #IMPLIED
+        executionMode (manual|automatic|autotask) #IMPLIED
+        linkDeliverables (true|false) #IMPLIED
+        rollUpDeliverables (true|false) #IMPLIED
+        recordActualDates (true|false) #IMPLIED>
+
+<!ELEMENT TeamTemplate (name, description?, folderPath, RoleGroupMap*,RoleActorMap*)>
+<!ATTLIST TeamTemplate
+    enabled (true | false) #REQUIRED
+>
+
+<!ELEMENT RoleGroupMap (Role,GroupName*)>
+<!ELEMENT GroupName (#PCDATA)>
+
+<!ELEMENT RoleActorMap (Role, ActorName*)>
+<!ELEMENT ActorName (#PCDATA)>
+
+<!ELEMENT IndexPolicyRule ((domainName, ownerDomain?, description?), aclClassName, lifecycleState?, aclGroups)>
+<!ELEMENT aclGroups (#PCDATA)>
+
+<!ELEMENT ProductTemplate ((name, description), ObjectID?, folderLocation, enabled, (xmlText | loadPath | zipEntry)?)>
+
+<!ELEMENT ProductConfig (projectMember*, OrgStructure?, DiscussionForumTemplate?, ExportedRoleMemberMap?, ExportedGuestMembers?, TeamTemplate*, NmLoader*, ACLRule*, IndexPolicyRule*, TypeBasedRule*, TemplateDocument*, DocumentTemplate*, NotebookTemplate?, ProductContainer*)>
+
+<!ELEMENT LibraryTemplate ((name, description), ObjectID?, folderLocation, enabled, (xmlText | loadPath | zipEntry)?)>
+
+<!ELEMENT LibraryConfig (projectMember*, OrgStructure?, DiscussionForumTemplate?, ExportedRoleMemberMap?, ExportedGuestMembers?, TeamTemplate*, NmLoader*, ACLRule*, IndexPolicyRule*, TypeBasedRule*, TemplateDocument*, DocumentTemplate*, NotebookTemplate?)>
+
+<!ELEMENT ProductContainer (name, number, description?, view?, source?, defaultUnit?, type?, containerTemplate, organizationName?, organizationID? )>
+<!--<!ELEMENT name (#PCDATA)>-->
+<!--<!ELEMENT number (#PCDATA)>-->
+<!--<!ELEMENT description (#PCDATA)>-->
+<!--<!ELEMENT view (#PCDATA)>-->
+<!ELEMENT source (#PCDATA)>
+<!--<!ELEMENT defaultUnit (#PCDATA)>-->
+<!ELEMENT type (#PCDATA)>
+<!ELEMENT containerTemplate (#PCDATA)>
+<!ELEMENT organizationName (#PCDATA) >
+<!ELEMENT organizationID (#PCDATA) >

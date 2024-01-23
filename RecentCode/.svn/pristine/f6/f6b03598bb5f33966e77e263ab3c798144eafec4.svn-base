@@ -1,0 +1,560 @@
+package com.e3ps.common.service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import com.e3ps.approval.service.MultiApprovalHelper;
+import com.e3ps.common.bean.FolderData;
+import com.e3ps.common.bean.RevisionData;
+import com.e3ps.common.code.NumberCode;
+import com.e3ps.common.code.bean.NumberCodeData;
+import com.e3ps.common.code.service.CodeHelper;
+import com.e3ps.common.history.DownloadHistory;
+import com.e3ps.common.history.bean.DownloadHistoryData;
+import com.e3ps.common.iba.IBAUtil;
+import com.e3ps.common.log4j.Log4jPackages;
+import com.e3ps.common.util.CommonUtil;
+import com.e3ps.common.util.FolderUtil;
+import com.e3ps.common.util.SearchUtil;
+import com.e3ps.common.util.SequenceDao;
+import com.e3ps.common.util.StringUtil;
+import com.e3ps.common.util.WCUtil;
+import com.e3ps.doc.E3PSDocument;
+import com.e3ps.doc.service.DocHelper;
+import com.e3ps.epm.bean.EpmData;
+import com.e3ps.epm.service.EpmHelper;
+import com.e3ps.part.service.PartHelper;
+
+import wt.doc.WTDocument;
+import wt.enterprise.RevisionControlled;
+import wt.epm.EPMDocument;
+import wt.fc.PersistenceHelper;
+import wt.fc.QueryResult;
+import wt.folder.Cabinet;
+import wt.folder.Folder;
+import wt.folder.FolderHelper;
+import wt.iba.value.IBAHolder;
+import wt.inf.container.WTContainerRef;
+import wt.inf.library.WTLibrary;
+import wt.part.WTPart;
+import wt.pdmlink.PDMLinkProduct;
+import wt.pds.StatementSpec;
+import wt.query.ClassAttribute;
+import wt.query.OrderBy;
+import wt.query.QuerySpec;
+import wt.query.SearchCondition;
+import wt.query.SubSelectExpression;
+import wt.services.ServiceFactory;
+import wt.util.WTAttributeNameIfc;
+import wt.vc.VersionControlHelper;
+
+public class CommonHelper {
+	
+	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Log4jPackages.COMMON.getName());
+	
+	public static final CommonHelper manager = new CommonHelper();
+	
+	public static final CommonService service = ServiceFactory.getService(CommonService.class);
+	
+	public static final String PARM_LOCATION_="location";
+	public static final String PARM_LIFECYCLE_="lifecycle";
+	public static final String PARM_CONTAINER_="container";
+	
+	/**
+	 * @desc	: 버전 이력 가져오기
+	 * @author	: sangylee
+	 * @date	: 2019. 7. 18.
+	 * @method	: getVersionHistory
+	 * @param reqMap
+	 * @return List<RevisionData>
+	 * @throws Exception
+	 */
+	public List<RevisionData> getVersionHistory(Map<String, Object> reqMap) throws Exception {
+		
+		List<RevisionData> list = new ArrayList<>();
+		
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		
+		RevisionControlled rc = (RevisionControlled) CommonUtil.getObject(oid);
+		
+		QueryResult result = VersionControlHelper.service.allIterationsOf(rc.getMaster());
+		
+		while(result.hasMoreElements()){
+			RevisionControlled obj = (RevisionControlled) result.nextElement();
+			
+			RevisionData data = new RevisionData(obj);
+			
+			list.add(data);
+		}
+		
+		return list;
+	}
+	
+	/**
+	 * @desc	: include object 리스트 가져오기(part, doc, epm)
+	 * @author	: sangylee
+	 * @date	: 2019. 7. 18.
+	 * @method	: getObjectAction
+	 * @param reqMap
+	 * @return List<RevisionData>
+	 * @throws Exception
+	 */
+	public List<RevisionData> searchObjectAction(Map<String, Object> reqMap) throws Exception {
+		
+		List<RevisionData> list = new ArrayList<>();
+		
+		String objType = StringUtil.checkNull((String) reqMap.get("objType"));
+		String moduleType = StringUtil.checkNull((String) reqMap.get("moduleType"));
+		
+		QuerySpec qs = null;
+		if("doc".equals(objType)) {
+			qs = DocHelper.manager.getDocListQuery(reqMap);
+		} else if("part".equals(objType)) {
+			qs = PartHelper.manager.getPartListQuery(reqMap);
+		} else if("epm".equals(objType)) {
+			qs = EpmHelper.manager.getEpmListQuery(reqMap);
+		}
+		
+		if(qs != null) {
+			QueryResult qr = PersistenceHelper.manager.find(qs);
+			
+			while(qr.hasMoreElements()){
+				Object[] obj = (Object[]) qr.nextElement();
+				RevisionControlled rc = (RevisionControlled) obj[0];
+				String number ="";
+				if(rc instanceof WTPart) {
+					number = ((WTPart) rc).getNumber();
+					if("multiApproval".equals(moduleType)) {
+						WTPart part = (WTPart) rc;
+
+						String checkoutState = part.getCheckoutInfo().getState().toString();
+						
+						if("c/o".equals(checkoutState) || "wrk".equals(checkoutState)) {
+							continue;
+						}
+					}
+				} else if(rc instanceof E3PSDocument) {
+					number = ((E3PSDocument) rc).getNumber();
+					
+				} else if(rc instanceof EPMDocument) {
+					number = ((EPMDocument) rc).getNumber();
+					if("multiApproval".equals(moduleType)) {
+						EPMDocument epm = (EPMDocument) rc;
+						/*if(EpmUtil.isWGM(epm)) {	//사용 안함
+							continue;
+						} else {
+							WTPart ownerPart = PartHelper.manager.getWTPart((EPMDocument) rc);
+							if(ownerPart != null) {
+								continue;
+							}
+						}*/
+						/*WTPart ownerPart = PartHelper.manager.getWTPart((EPMDocument) rc);	//추후 복구
+						if(ownerPart != null) {
+							continue;
+						}*/
+						
+						String checkoutState = epm.getCheckoutInfo().getState().toString();
+						
+						if("c/o".equals(checkoutState) || "wrk".equals(checkoutState)) {
+							continue;
+						}
+					}else if("distribute".equals(moduleType)){
+						EpmData data = new EpmData((EPMDocument)rc);
+						if(!data.isDis()){
+							continue;
+						}
+					}
+				}
+				RevisionData data = new RevisionData(rc);
+				data.setNumber(number);
+				list.add(data);
+			}
+		}
+		
+		return list;
+	}
+	
+	/**
+	 * 
+	 * @desc	:
+	 * @author	: tsuam
+	 * @date	: 2019. 8. 7.
+	 * @method	: getObjectList
+	 * @return	: List<RevisionData>
+	 * @param reqMap
+	 * @return pageName 에 따라 관련 객체 가지고 오는 
+	 * @throws Exception
+	 */
+	public List<RevisionData> getObjectList(Map<String, Object> reqMap) throws Exception {
+		
+		List<RevisionData> list = new ArrayList<>();
+		
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		String objType = StringUtil.checkNull((String) reqMap.get("objType"));
+		String pageName = StringUtil.checkNull((String) reqMap.get("pageName"));
+		
+		if("relatedPart".equals(pageName)) {
+			list = PartHelper.manager.getRelatedPartRevisionData(reqMap);
+		}else if("multiAppDoc".equals(pageName) || "multiAppPart".equals(pageName) || "multiAppEpm".equals(pageName)) {
+			list = MultiApprovalHelper.manager.getRelatedObject(reqMap);
+		}else if("relatedDoc".equals(pageName)){
+			list = DocHelper.manager.getRelatedDocRevisionData(reqMap);
+		}else if("relatedEpm".equals(pageName)){
+			list = EpmHelper.manager.getRelatedEpmRevisionData(reqMap);
+		}
+		
+		return list;
+	}
+
+	/**
+	 * @desc	:
+	 * @author	: mnyu
+	 * @date	: 2019. 9. 4.
+	 * @method	: getSearchRelatedObject
+	 * @return	: List<String>
+	 * @param reqMap
+	 * @return
+	 */
+	public List<RevisionData> getSearchRelatedObject(Map<String, Object> reqMap) throws Exception {
+		List<RevisionData> list = new ArrayList<RevisionData>();
+		String number = StringUtil.checkNull((String) reqMap.get("number"));
+		String object = StringUtil.checkNull((String) reqMap.get("object"));
+		
+		System.out.println("object ::: " + object);
+		
+		QuerySpec qs = new QuerySpec();
+		Class cls = null;
+		if("part".equals(object)){
+			cls = WTPart.class;
+		}else if("doc".equals(object)){
+			cls = E3PSDocument.class;
+		}else if("epm".equals(object)){
+			cls = EPMDocument.class;
+		}
+		
+		int idx = qs.appendClassList(cls, true);
+		qs.appendWhere(VersionControlHelper.getSearchCondition(cls, true), new int[]{idx});
+		SearchUtil.addLastVersionCondition(qs, cls, idx);
+		qs.appendAnd();
+		qs.appendOpenParen();
+		qs.appendWhere(new SearchCondition(cls, "master>number", SearchCondition.LIKE, "%"+number.toUpperCase()+"%", false), new int[]{idx});
+		qs.appendOr();
+		qs.appendWhere(new SearchCondition(cls, "master>name", SearchCondition.LIKE, "%"+number.toUpperCase()+"%", false), new int[]{idx});
+		qs.appendCloseParen();
+		qs.appendOrderBy(new OrderBy(new ClassAttribute(cls, "master>number"), false), new int[] { idx });
+		
+		QueryResult qr = PersistenceHelper.manager.find(qs);
+		
+		System.out.println("qr searchDoc :::: " + qr);
+		System.out.println("qs searchDoc :::: " + qs);
+		System.out.println("qs searchDoc :::: " + qr.size());
+		
+		while(qr.hasMoreElements()) {
+			Object[] obj = (Object[]) qr.nextElement();
+			RevisionControlled rc = (RevisionControlled) obj[0];
+			
+			String num ="";
+			if(rc instanceof WTPart) {
+				num = ((WTPart) rc).getNumber();
+			} else if(rc instanceof E3PSDocument) {
+				num = ((E3PSDocument) rc).getNumber();
+			} else if(rc instanceof EPMDocument) {
+				num = ((EPMDocument) rc).getNumber();
+			}
+			RevisionData data = new RevisionData(rc);
+			data.setNumber(num);
+			
+			list.add(data);
+			System.out.println("data :: " + data);
+		}
+		return list;
+	}
+	
+	public Map<String, Object> getAttributes(String oid) throws Exception {
+		
+		IBAHolder iba = (IBAHolder)CommonUtil.getObject(oid);
+		
+		Map<String, Object> attributes = IBAUtil.getAttributes(iba);
+		
+		Iterator<String> it = attributes.keySet().iterator();
+		
+		while(it.hasNext()){
+			
+			String key = it.next();
+			
+			attributes.put(key, (String)attributes.get(key));
+			
+		}
+		
+		return attributes;
+	}
+	
+	/**
+	 * 코드가 아닌 Display 용
+	 * @methodName : getAttributesDisplay
+	 * @author : tsuam
+	 * @date : 2021.11.04
+	 * @return : Map<String,Object>
+	 * @description :
+	 */
+	public Map<String, Object> getAttributesDisplay(String oid) throws Exception {
+
+		IBAHolder iba = (IBAHolder) CommonUtil.getObject(oid);
+
+		Map<String, Object> attributes = IBAUtil.getAttributes(iba);
+
+		Iterator<String> it = attributes.keySet().iterator();
+		
+		
+		while (it.hasNext()) {
+
+			String key = it.next();
+			String value = StringUtil.checkNull((String)attributes.get(key)) ;
+			
+			//Part 채번 시 채번속성 IBA
+			if(key.startsWith("P_")) {
+				value = CodeHelper.manager.getNumberCode("PARTNUMBERPROP", value).getName();
+			}
+			
+			
+			attributes.put(key, value);
+		}
+
+		return attributes;
+	}
+	
+	public Map<String, Object> getFolderTree(Map<String, Object> reqMap){
+		Map<String, Object> map = new HashMap<>();
+		
+		String container = StringUtil.checkNull((String) reqMap.get("container"));
+		String rootLocation = StringUtil.checkNull((String) reqMap.get("rootLocation")); 
+		
+		try {
+			if(rootLocation.length() > 0) {
+				PDMLinkProduct pdmProduct = null;
+				Folder folder = null;
+				WTContainerRef wtContainerRef = null;
+				if(container.length() > 0) {
+					pdmProduct = WCUtil.getPDMLinkProduct(container);
+				} else {
+					pdmProduct = WCUtil.getPDMLinkProduct();
+				}
+				
+				if(pdmProduct == null){
+					WTLibrary wtLibrary= WCUtil.getLibrary(container);
+					wtContainerRef = WTContainerRef.newWTContainerRef(wtLibrary);
+				}else{
+					wtContainerRef = WTContainerRef.newWTContainerRef(pdmProduct);
+				}
+				
+				folder = FolderHelper.service.getFolder(rootLocation, wtContainerRef);
+				
+				List<FolderData> list = new ArrayList<>();
+				if(folder != null) {
+					
+					if(folder instanceof Cabinet){
+						List<Folder> subFolderList = FolderUtil.getCabinetSubFolder(folder);
+						
+						for(Folder suFolder : subFolderList){
+							FolderUtil.getFolderTree(suFolder, list);
+						}
+						
+					}else{
+						list = FolderUtil.getFolderTree(folder, list);
+					}
+					map.put("list", list);
+					map.put("result", true);
+				} else {
+					map.put("result", false);
+					map.put("msg", "폴더를 생성해야 합니다. 관리자에게 문의하세요.");
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			map.put("result", false);
+			map.put("msg", "ERROR = " + e.getLocalizedMessage());
+		}
+		
+		return map;
+	}
+
+	public List<DownloadHistoryData> getDownloadHistory(String oid) throws Exception{
+		
+		List<DownloadHistoryData> list = new ArrayList<DownloadHistoryData>();
+		
+		QuerySpec query = getDownloadHistoryQuery(oid);
+		
+		QueryResult result = PersistenceHelper.manager.find((StatementSpec)query);
+		while(result.hasMoreElements()){
+			Object[] obj = (Object[]) result.nextElement();
+			DownloadHistory history = (DownloadHistory) obj[0];
+			DownloadHistoryData data = new DownloadHistoryData(history);
+			list.add(data);
+		}
+		return list;
+	}
+	
+	public QuerySpec getDownloadHistoryQuery(String oid) throws Exception {
+		if(oid.indexOf("EChangeOrder2") > -1 || oid.indexOf("EChangeRequest2") > -1) {
+			if(oid.contains("OR:")) { oid = oid.split("OR:")[1]; }
+		}
+		QuerySpec qs = new QuerySpec();
+		int idx = qs.addClassList(DownloadHistory.class, true);
+		
+		SearchCondition sc = null;
+		
+		if(oid.length() > 0) {
+			if(qs.getConditionCount() > 0) {
+				qs.appendAnd();
+			}
+			sc = new SearchCondition(DownloadHistory.class, DownloadHistory.D_OID, SearchCondition.LIKE, "%" + oid + "%", false);
+			qs.appendWhere(sc, new int[] { idx });
+		}
+		return qs;
+	}
+	
+	public String getSequenceNo(Map<String, Object> reqMap) throws Exception{
+		String partNumber = StringUtil.checkNull((String) reqMap.get("partNumber"));
+		String tableName = StringUtil.checkNull((String) reqMap.get("tableName"));
+		String columnName = StringUtil.checkNull((String) reqMap.get("columnName"));
+		String format = StringUtil.checkNull((String) reqMap.get("format"));
+		
+		String seq = SequenceDao.manager.getSeqNo(partNumber, format, tableName, columnName);
+				
+		return seq;
+	}
+	
+	public static void main(String[] args) {
+		
+		try{
+			Map<String, Object> map = new HashMap<>();
+			
+			//String container = StringUtil.checkNull((String) reqMap.get("container"));
+			//String rootLocation = StringUtil.checkNull((String) reqMap.get("rootLocation")); 
+			
+			map.put("container", "LIBRARY");
+			map.put("rootLocation", "/Default");
+			map = CommonHelper.manager.getFolderTree(map);
+			
+			List<FolderData> list = (List)map.get("list");
+			
+			for(FolderData data : list){
+				
+				LOGGER.info("data =" + data.getName());
+			}
+			
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * @desc : 고객사 전체 검색
+	 * @author : hgkang
+	 * @date : 2027. 7. 28.
+	 * @method : getSearchCustomerListAction
+	 * @return : List<NumberCodeData>
+	 * @param reqMap
+	 * @return
+	 * @throws Exception
+	 */
+
+	public List<NumberCodeData> getSearchCustomerListAction(Map<String, Object> reqMap) throws Exception {
+
+		List<NumberCodeData> list = new ArrayList<>();
+
+		String name = StringUtil.checkNull((String) reqMap.get("name"));
+		QuerySpec qs = new QuerySpec();
+
+		int idx = qs.addClassList(NumberCode.class, true);
+		qs.setAdvancedQueryEnabled(true);
+		SearchCondition sc = null;
+		
+		QuerySpec subQs = new QuerySpec();
+		int subIdx = subQs.addClassList(NumberCode.class, false);
+		subQs.appendSelect(new ClassAttribute(NumberCode.class,WTAttributeNameIfc.ID_NAME), false);
+		sc = new SearchCondition(NumberCode.class, "codeType" , SearchCondition.EQUAL, "PARTNUMBERPROP" , false);
+		subQs.appendWhere(sc, new int[] { subIdx });
+		subQs.appendAnd();
+		sc = new SearchCondition(NumberCode.class, "name" , SearchCondition.EQUAL, "CUSTOMER" , false);
+		subQs.appendWhere(sc, new int[] { subIdx });
+		subQs.setAdvancedQueryEnabled(true);
+		
+		if (name.length() > 0) {
+			qs.appendOpenParen();
+			sc = new SearchCondition(NumberCode.class, "name" , SearchCondition.LIKE, name+"%" , false);
+			qs.appendWhere(sc, new int[] { idx });
+			qs.appendOr();
+			sc = new SearchCondition(NumberCode.class, "engName" , SearchCondition.LIKE, name+"%" , false);
+			qs.appendWhere(sc, new int[] { idx });
+			qs.appendCloseParen();
+		}
+		qs.appendAnd();
+		sc = new SearchCondition(NumberCode.class, "codeType" , SearchCondition.EQUAL, "PARTNUMBERPROP" , false);
+		qs.appendWhere(sc, new int[] { idx });
+		qs.appendAnd();
+		qs.appendWhere(new SearchCondition(new ClassAttribute(NumberCode.class, "parentReference.key.id") , SearchCondition.EQUAL, new SubSelectExpression(subQs)), new int[] { idx });
+
+		qs.appendOrderBy(new OrderBy(new ClassAttribute(NumberCode.class, NumberCode.SORT), false), new int[] { idx });
+//		System.out.println("searchCustomerQS :: " + qs);
+		
+		QueryResult qr = PersistenceHelper.manager.find(qs);
+		
+		while(qr.hasMoreElements()) {
+			Object[] o = (Object[])qr.nextElement();
+			NumberCode code = (NumberCode)o[0];
+			NumberCodeData data = new NumberCodeData(code);
+			list.add(data);
+		}
+
+		return list;
+	}
+	
+	/**
+	 * 최신 유무 체크
+	 * @methodName : isLastRevision
+	 * @author : tsuam
+	 * @date : 2021.12.21
+	 * @return : boolean
+	 * @description :
+	 */
+	public boolean isLastestRevision(RevisionControlled rc){
+		
+		try{
+			
+			if(rc == null)return false; 
+			QuerySpec qs = new QuerySpec();
+			Class cls = WTPart.class;
+			
+			if(rc instanceof EPMDocument) {
+				cls = EPMDocument.class;
+			}else if(rc instanceof WTDocument) {
+				cls = WTDocument.class;
+			}
+			
+			int idx = qs.appendClassList(cls, true);
+			
+			//최신 이터레이션
+			qs.appendWhere(VersionControlHelper.getSearchCondition(cls, true), new int[] { idx });
+			 
+			// 최신 버젼
+			SearchUtil.addLastVersionCondition(qs, cls, idx);
+			
+			qs.appendAnd();
+			qs.appendWhere(new SearchCondition(cls,"thePersistInfo.theObjectIdentifier.id",SearchCondition.EQUAL,CommonUtil.getOIDLongValue(rc)),new int[] {idx});
+			QueryResult rt = PersistenceHelper.manager.find(qs);
+			
+			if(rt.size() >0 )  return true;
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
+}

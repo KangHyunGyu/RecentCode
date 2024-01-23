@@ -1,0 +1,362 @@
+package com.e3ps.distribute.bean;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import com.e3ps.common.bean.AccessControlData;
+import com.e3ps.common.message.util.MessageUtil;
+import com.e3ps.common.util.CommonUtil;
+import com.e3ps.common.util.DateUtil;
+import com.e3ps.common.util.StringUtil;
+import com.e3ps.distribute.DistributeDocument;
+import com.e3ps.distribute.DistributeRegToPartLink;
+import com.e3ps.distribute.DistributeRegistration;
+import com.e3ps.distribute.DistributeToPartLink;
+import com.e3ps.distribute.service.DistributeHelper;
+import com.e3ps.interfaces.cpc.service.CPCHelper;
+import com.e3ps.org.Department;
+import com.e3ps.org.bean.PeopleData;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import wt.org.WTUser;
+import wt.part.WTPart;
+import wt.session.SessionHelper;
+
+public class DistributeRegistrationData  extends AccessControlData{
+//	private String distType;             //배포 타입 코드
+//	private String distTypeName;         //배포 타입 명
+	private String distName;             //배포 이름		*
+	private String distNumber;           //배포 번호
+	private String state;                      //배포 상태
+	private String stateName;                  //배포 상태(번역)
+//	private String companyId;                  //배포 업체 코드
+//	private String companyName;                //배포 업체 명
+	private String distributeDocOid;
+	private String purpose;                	   //배포 용도
+	private String purposeDisplay;             
+	private String markingConfirm;             //배포 표기 확인
+	private String fileType;                   //배포 파일 형식
+	private String withdraw;                   //배포 회수
+	private String description;                //배포 기타 기입 사항
+	private String creator;                    //배포 등록자
+	private String creator_deft;               //배포 등록자 부서
+	private String downloadDate;       		   //배포 다운로드 기한(년월일)
+	private String downloadCount;          	   //배포 다운로드 횟수
+	private String distDate;       	   		   //배포 배포일(년월일) 
+	private String createDate;                 //배포 등록일(년월일)
+	private String createFullDate;             //배포 등록일(년월일, 시분초)
+	private String updateDate;                 //배포 수정일(년월일)
+	private String updateFullDate;             //배포 수정일(년월일, 시분초)
+	
+	private String descriptionDRF;
+	private String distributeTarget;
+	private String distributeTargetName;
+	private String distributeCompany;
+	private String distributeCompanyName;
+
+	private String oid; 
+
+	private DistributeRegistration distributeReg;   
+	private DistributeDocument distribute;   
+	
+	public DistributeRegistrationData(DistributeRegistration distributeReg) throws Exception {
+		super(distributeReg);
+		
+		//배포요청 데이타
+		this.distributeReg = distributeReg;
+		this.oid = CommonUtil.getOIDString(distributeReg);
+		this.distribute = distributeReg.getDistribute();
+		this.descriptionDRF = StringUtil.checkNull(distributeReg.getDescriptionDRF());
+		this.distributeTarget = StringUtil.checkNull(distributeReg.getDistributeTarget());
+		this.distributeCompany = StringUtil.checkNull(distributeReg.getDistributeCompany());
+		this.distributeTargetName = CPCHelper.manager.getCompanyUserName(this.distributeTarget);
+		this.distributeCompanyName = CPCHelper.manager.getCompanyName(this.distributeCompany);
+		this.state = StringUtil.checkNull(distributeReg.getLifeCycleState().toString());
+		this.stateName = StringUtil.checkNull(distributeReg.getLifeCycleState().getDisplay(MessageUtil.getLocale()));
+		WTUser crUser = (WTUser) distributeReg.getCreator().getObject();
+		this.creator = StringUtil.checkNull(crUser.getFullName());
+		PeopleData pd = new PeopleData(crUser);
+		String deptOid = pd.getDepartmentOID();
+		Department crUserDept = (Department)CommonUtil.getObject(deptOid);
+		if(crUserDept != null) {
+			this.creator_deft = StringUtil.checkNull(crUserDept.getName());
+		}
+		this.createDate = DateUtil.getDateString(distributeReg.getCreateTimestamp(),"d");
+		this.createFullDate =DateUtil.getDateString(distributeReg.getCreateTimestamp(), "all"); 
+		this.updateDate = DateUtil.getDateString(distributeReg.getModifyTimestamp(),"d");
+		this.updateFullDate =DateUtil.getDateString(distributeReg.getModifyTimestamp(), "all");
+		
+		
+		//출도의뢰서 데이타
+		this.distributeDocOid = StringUtil.checkNull(CommonUtil.getOIDString(distribute));
+		this.distNumber = StringUtil.checkNull(distribute.getDistributeNumber());
+		this.distName = StringUtil.checkNull(distribute.getDistributeName());
+		this.description = StringUtil.checkNull(distribute.getDescription());
+		this.purpose = StringUtil.checkNull(distribute.getPurpose());
+		this.purposeDisplay = this.purpose.contains("inside")?"사내":"사외";
+		this.markingConfirm = StringUtil.checkNull(distribute.getMarkingConfirm());
+		this.fileType = StringUtil.checkNull(distribute.getFileType());
+		this.withdraw = StringUtil.checkNull(distribute.getWithdraw());
+		this.downloadCount = StringUtil.checkNull(String.valueOf(distribute.getDownloadCount()));
+		this.distDate = DateUtil.getDateString(distribute.getDistributeDate(), "d");
+		this.downloadDate = DateUtil.getDateString(distribute.getDownloadDeadline(), "d");
+		
+
+	}
+	
+	@JsonIgnore
+	public List<DistributeRegToPartData> getDistributePartList() throws Exception {
+		
+		List<DistributeRegToPartLink> list = DistributeHelper.manager.getDistributePartListByDistributeReg(this.distributeReg);
+		List<DistributeRegToPartData> returnList = new ArrayList<DistributeRegToPartData>();
+		
+		for(DistributeRegToPartLink link : list) {
+			returnList.add(new DistributeRegToPartData(link));
+		}
+		
+		Collections.sort(returnList, (a, b) -> a.getDistPartNumber().compareToIgnoreCase(b.getDistPartNumber()));
+		
+		return returnList;
+		
+	}
+	
+	//수정 : 작업중 ,반려됨
+	public boolean modifyBtn() throws Exception{
+		String sessionID = SessionHelper.manager.getPrincipal().getName();
+		String creatorID = this.distributeReg.getCreatorName();
+		boolean isModify = (super.isModify() && creatorID.equals(sessionID)) ;
+			
+		return isModify;
+		
+	}
+	//삭제 : 작업중 ,반려됨,
+	public boolean deleteBtn() throws Exception{
+		String sessionID = SessionHelper.manager.getPrincipal().getName();
+		String creatorID = this.distributeReg.getCreatorName();
+		boolean isDelete = (super.isDelete() && creatorID.equals(sessionID)) ;
+		
+		return isDelete;
+			
+	}
+
+	public String getDistName() {
+		return distName;
+	}
+
+	public void setDistName(String distName) {
+		this.distName = distName;
+	}
+
+	public String getDistNumber() {
+		return distNumber;
+	}
+
+	public void setDistNumber(String distNumber) {
+		this.distNumber = distNumber;
+	}
+
+	public String getState() {
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
+	}
+
+	public String getStateName() {
+		return stateName;
+	}
+
+	public void setStateName(String stateName) {
+		this.stateName = stateName;
+	}
+
+	public String getDistributeDocOid() {
+		return distributeDocOid;
+	}
+
+	public void setDistributeDocOid(String distributeDocOid) {
+		this.distributeDocOid = distributeDocOid;
+	}
+
+	public String getPurpose() {
+		return purpose;
+	}
+
+	public void setPurpose(String purpose) {
+		this.purpose = purpose;
+	}
+
+	public String getPurposeDisplay() {
+		return purposeDisplay;
+	}
+
+	public void setPurposeDisplay(String purposeDisplay) {
+		this.purposeDisplay = purposeDisplay;
+	}
+
+	public String getMarkingConfirm() {
+		return markingConfirm;
+	}
+
+	public void setMarkingConfirm(String markingConfirm) {
+		this.markingConfirm = markingConfirm;
+	}
+
+	public String getFileType() {
+		return fileType;
+	}
+
+	public void setFileType(String fileType) {
+		this.fileType = fileType;
+	}
+
+	public String getWithdraw() {
+		return withdraw;
+	}
+
+	public void setWithdraw(String withdraw) {
+		this.withdraw = withdraw;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getCreator() {
+		return creator;
+	}
+
+	public void setCreator(String creator) {
+		this.creator = creator;
+	}
+
+	public String getCreator_deft() {
+		return creator_deft;
+	}
+
+	public void setCreator_deft(String creator_deft) {
+		this.creator_deft = creator_deft;
+	}
+
+	public String getDownloadDate() {
+		return downloadDate;
+	}
+
+	public void setDownloadDate(String downloadDate) {
+		this.downloadDate = downloadDate;
+	}
+
+	public String getDownloadCount() {
+		return downloadCount;
+	}
+
+	public void setDownloadCount(String downloadCount) {
+		this.downloadCount = downloadCount;
+	}
+
+	public String getDistDate() {
+		return distDate;
+	}
+
+	public void setDistDate(String distDate) {
+		this.distDate = distDate;
+	}
+
+	public String getCreateDate() {
+		return createDate;
+	}
+
+	public void setCreateDate(String createDate) {
+		this.createDate = createDate;
+	}
+
+	public String getCreateFullDate() {
+		return createFullDate;
+	}
+
+	public void setCreateFullDate(String createFullDate) {
+		this.createFullDate = createFullDate;
+	}
+
+	public String getUpdateDate() {
+		return updateDate;
+	}
+
+	public void setUpdateDate(String updateDate) {
+		this.updateDate = updateDate;
+	}
+
+	public String getUpdateFullDate() {
+		return updateFullDate;
+	}
+
+	public void setUpdateFullDate(String updateFullDate) {
+		this.updateFullDate = updateFullDate;
+	}
+
+	public String getDescriptionDRF() {
+		return descriptionDRF;
+	}
+
+	public void setDescriptionDRF(String descriptionDRF) {
+		this.descriptionDRF = descriptionDRF;
+	}
+
+	public String getDistributeTarget() {
+		return distributeTarget;
+	}
+
+	public void setDistributeTarget(String distributeTarget) {
+		this.distributeTarget = distributeTarget;
+	}
+
+	public String getDistributeCompany() {
+		return distributeCompany;
+	}
+
+	public void setDistributeCompany(String distributeCompany) {
+		this.distributeCompany = distributeCompany;
+	}
+
+	public String getOid() {
+		return oid;
+	}
+
+	public void setOid(String oid) {
+		this.oid = oid;
+	}
+	
+	@JsonIgnore
+	public DistributeDocument getDistribute() {
+		return distribute;
+	}
+
+	public void setDistribute(DistributeDocument distribute) {
+		this.distribute = distribute;
+	}
+
+	public String getDistributeTargetName() {
+		return distributeTargetName;
+	}
+
+	public void setDistributeTargetName(String distributeTargetName) {
+		this.distributeTargetName = distributeTargetName;
+	}
+
+	public String getDistributeCompanyName() {
+		return distributeCompanyName;
+	}
+
+	public void setDistributeCompanyName(String distributeCompanyName) {
+		this.distributeCompanyName = distributeCompanyName;
+	}
+
+
+	
+}

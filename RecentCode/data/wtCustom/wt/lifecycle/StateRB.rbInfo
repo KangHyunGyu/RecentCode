@@ -1,0 +1,58 @@
+ResourceInfo.class=wt.tools.resource.EnumResourceInfo
+ResourceInfo.customizable=true
+ResourceInfo.deprecated=false
+ResourceInfo.UUID=48de8535-78c4-4872-bb60-fa3b4042c6ec
+
+# Entry Format (values equal to default value are not included)
+# <key>.value=
+# <key>.category=
+# <key>.comment=
+# <key>.argComment<n>=
+# <key>.constant=
+# <key>.customizable=
+# <key>.deprecated=
+# <key>.abbreviatedDisplay=
+# <key>.fullDisplay=
+# <key>.shortDescription=
+# <key>.longDescription=
+# <key>.order=
+# <key>.defaultValue=
+# <key>.selectable=
+
+# Entry Contents
+
+#LC_Default(작업 중-승인중-승인됨-반려됨-취소됨-폐기)
+
+APPROVING.value=APPROVING
+RETURN.value=RETURN
+
+#Project
+READY.value=READY
+READY.shortDescription=READY
+
+SIGN.value=SIGN
+SIGN.shortDescription=SIGN
+
+REPORTWRITE.value=REPORTWRITE
+REPORTWRITE.shortDescription=REPORTWRITE
+
+PROGRESS.value=PROGRESS
+PROGRESS.shortDescription=PROGRESS
+
+MODIFY.value=MODIFY
+MODIFY.shortDescription=MODIFY
+
+STOP.value=STOP
+STOP.shortDescription=STOP
+
+BEFOREAPPROVING.value=BEFOREAPPROVING
+BEFOREAPPROVING.shortDescription=BEFOREAPPROVING
+
+ECAWORKING.value=ECAWORKING
+ECAWORKING.shortDescription=ECAWORKING
+
+ECACOMPLETE.value=ECACOMPLETE
+ECACOMPLETE.shortDescription=ECACOMPLETE
+
+AFTERAPPROVING.value=AFTERAPPROVING
+AFTERAPPROVING.shortDescription=AFTERAPPROVING

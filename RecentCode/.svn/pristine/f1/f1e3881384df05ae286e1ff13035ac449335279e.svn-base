@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<base href="../..">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>C_Stop</title>
+
+	<link rel="stylesheet" href="./css/style.css">
+	<link rel="stylesheet" href="./css/custom.css">
+</head>
+
+<body>
+
+	<!-- pop -->
+	<div class="pop">
+
+		<!-- top -->
+		<div class="top">
+			<h2>
+				Stage-Gate Dashboard – PSO Project 001
+			</h2>
+
+			<span class="close">
+				<a>
+					<img src="./images/colse_bt.png" alt="닫기">
+				</a>
+			</span>
+		</div>
+		<!-- //top -->
+
+		<div class="pop_nav">
+			▶ 관련 프로젝트: PSO Project 2/관련 부품번호(부품명): SHPART001(SHPartName001)
+		</div>
+
+		<!--tap -->
+		<div class="tap pt15">
+			<ul>
+				<li data-module="summary">Summary</li>
+				<li data-module="timing">Timing</li>
+				<li data-module="quality">Quality</li>
+				<li class="on" data-module="c_stop">C_Stop</li>
+				<li data-module="risk">Risk</li>
+				<li data-module="deliverable">Deliverable Status</li>
+				<li data-module="gateReviews">Gate Reviews</li>
+				<li data-module="productDev">Product Dev.</li>
+				<li data-module="inchanges">ECR</li>
+				<!-- <li data-module="">MM</li>
+			<li data-module="">Action</li> -->
+			</ul>
+
+			<div class="tapbutton">
+				<button type="button" class="s_bt03">1</button>
+				<button type="button" class="s_bt03">2</button>
+				<button type="button" class="s_bt03">3</button>
+				<button type="button" class="s_bt03">4</button>
+				<button type="button" class="s_bt09">5</button>
+				<button type="button" class="s_bt03">6</button>
+				<button type="button" class="s_bt010">7</button>
+			</div>
+		</div>
+		<!--//tap -->
+		<div class="seach_arm3 pl25 pt5 pr25">
+			<div class="leftbt">
+				<img class="pointer content--toggle" src="./images/minus_icon.png" data-target="c_stop">
+				C_Stop
+				<button class="s_bt03 property_update" data-target="c_stop"></button>
+			</div>
+			<div class="rightbt">
+				<button class="s_bt03 cstop_excel_import" data-target="c_stop"></button>
+			</div>
+		</div>
+
+		<div class="pro_table pt5 pl25 pr25 ">
+			<table class="mainTable c_stop" summary="c_stop">
+				<caption>
+					기본 정보
+				</caption>
+				<colgroup>
+					<col style="width:auto">
+					<col style="width:7%">
+					<col style="width:5%">
+					<col style="width:7%">
+					<col style="width:5%">
+					<col style="width:7%">
+					<col style="width:5%">
+					<col style="width:7%">
+					<col style="width:5%">
+					<col style="width:7%">
+					<col style="width:5%">
+					<col style="width:7%">
+					<col style="width:5%">
+					<col style="width:7%">
+				</colgroup>
+				<tbody>
+					<tr>
+						<th scope="col">KRW</th>
+						<th scope="col" class="tac">GR1</th>
+						<th scope="col" class="tac"></th>
+						<th scope="col" class="tac">GR2</th>
+						<th scope="col" class="tac"></th>
+						<th scope="col" class="tac">GR3</th>
+						<th scope="col" class="tac"></th>
+						<th scope="col" class="tac">GR4</th>
+						<th scope="col" class="tac"></th>
+						<th scope="col" class="tac">GR5</th>
+						<th scope="col" class="tac"></th>
+						<th scope="col" class="tac">GR6</th>
+						<th scope="col" class="tac"></th>
+						<th scope="col" class="tac">Target</th>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+	</div>
+	<script src="./index.js"></script>
+	<script src="./modules/c_stop/data.js"></script>
+	<script src="./modules/c_stop/c_stop.js"></script>
+</body>
+
+</html>

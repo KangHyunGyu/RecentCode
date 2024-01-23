@@ -1,0 +1,34 @@
+﻿ResourceInfo.class=wt.tools.resource.EnumResourceInfo
+ResourceInfo.customizable=true
+ResourceInfo.deprecated=false
+
+
+# Entry Format (values equal to default value are not included)
+# <key>.value=
+# <key>.category=
+# <key>.comment=
+# <key>.argComment<n>=
+# <key>.constant=
+# <key>.customizable=
+# <key>.deprecated=
+# <key>.abbreviatedDisplay=true는 계층 구조 (Tree)
+# <key>.fullDisplay=General(공통)-10 ,Project(프로젝트) - 20 ,Doc(문서) -30 ,Part(품목)-40 ,Change(설계변경)-50, Disabled(미사용), PRODUCTION(생산요청) - 100
+# <key>.shortDescription= Code 생성시 : 자동 true (longDescription에서 정해진 key값으로 code 자동 생성) 수동 false(사용자가 입력 하는 방식))
+# <key>.longDescription=seq - XX001
+# <key>.order=
+# <key>.defaultValue=
+# <key>.selectable= 
+
+# Entry Contents
+
+#PERMISSION
+PERMISSION.value=All Permission
+PERMISSION.order=1
+PERMISSION.abbreviatedDisplay=false
+PERMISSION.fullDisplay=PERMISSION
+
+#READ
+READ.value=Read, Download
+READ.order=2
+READ.abbreviatedDisplay=false
+READ.fullDisplay=READ

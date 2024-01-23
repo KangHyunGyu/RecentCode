@@ -1,0 +1,156 @@
+package com.e3ps.queue;
+
+import java.util.Hashtable;
+
+import com.e3ps.common.log4j.Log4jPackages;
+
+import wt.fc.PersistenceHelper;
+import wt.org.OrganizationServicesHelper;
+import wt.org.WTPrincipal;
+import wt.queue.ProcessingQueue;
+import wt.queue.QueueHelper;
+import wt.session.SessionHelper;
+import wt.util.WTException;
+
+public class E3PSQueueHelper {
+	
+	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Log4jPackages.QUEUE.getName());
+	
+	public static final E3PSQueueHelper manager = new E3PSQueueHelper();
+	
+	//param
+	public static final String queueName="queueName";
+	public static final String className="className";
+	public static final String methodName="methodName";
+	
+	//이메일 큐
+	public static final String QueueName_Mail = "E3PSEmailProcessQueue";
+	public static final String ClassName_Mail = "com.e3ps.common.mail.EmailProcessQueue";
+	
+	public static final String MethodName_Approval_Mail = "sendMailApproval"; //전자 결재 메일
+	public static final String MethodName_EO_Department_Mail = "sendMailEODepartment"; //EO 부설 할당 메일
+	public static final String MethodName_EO_Assign_Mail = "sendMailEOAssaign";		   //담당자 업무 할당 메일
+	public static final String MethodName_EO_Complete_Mail = "sendMailEOComplete";	 // EO 완료 메일 ,ECN 자동 생서
+	public static final String MethodName_Approval_Complete_Mail = "sendMailApprovalComplete";	 // 결재 완료시 
+	public static final String MethodName_Approval_Reject_Mail = "sendMailReject";	 // 반려 메일
+	public static final String MethodName_Approval_Delegate_Mail = "sendMailDelegate";	 // 위임메일
+	public static final String MethodName_Approval_Drop_Mail = "sendMailDrop";	 //drp임메일
+
+	public static final String MethodName_Issue_Assign_Mail = "sendMailIssueAssaign"; //이슈 담당자 업무 할당 메일
+	public static final String MethodName_Issue_Solution_Mail = "sendMailIssueSolution"; //이슈 해결방안 등록 메일
+	public static final String MethodName_Issue_Complete_Mail = "sendMailIssueComplete"; //이슈 검토 완료 메일
+	public static final String MethodName_Issue_Reject_Mail = "sendMailIssueReject"; //이슈 검토 반려 메일
+	
+	public static final String MethodName_Task_Delay_Mail = "sendMailTaskDelay"; //프로젝트 테스크 지연 메일
+	public static final String MethodName_EO_Delay_Mail = "sendMailEODelay"; //설계변경업무 지연 메일
+	
+	
+	//배포 큐
+	public static final String QueueName_Distribute = "E3PSDistributeQueue";
+	public static final String ClassName_Distribute = "com.e3ps.queue.E3PSQueueHelper";
+	public static final String MethodName_Distribute = "completeDistribute";
+	
+	//ECR 큐
+	public static final String QueueName_ECR = "E3PSECRQueue";
+	public static final String ClassName_ECR = "com.e3ps.queue.E3PSQueueHelper";
+	public static final String MethodName_ECR = "approvedECR";
+	
+	//ECO
+	public static final String QueueName_ECO = "E3PSECOQueue";
+	public static final String ClassName_ECO = "com.e3ps.queue.E3PSQueueHelper";
+	public static final String MethodName_ECO = "completeECO";
+	
+	//ECNECCB RunTask
+	public static final String QueueName_ECNECCB = "E3PSECOQueue";
+	public static final String ClassName_ECNECCB = "com.e3ps.queue.E3PSQueueHelper";
+	public static final String MethodName_ECNECCB = "completeECNECCB";
+	
+	//ECNECCB Approved
+	public static final String QueueName_APPROVED_ECNECCB = "E3PSECOQueue";
+	public static final String ClassName_APPROVED_ECNECCB = "com.e3ps.queue.E3PSQueueHelper";
+	public static final String MethodName_APPROVED_ECNECCB = "approvedECNECCB";
+	
+	//E3PSEChangeActivity 구매 발주
+	public static final String QueueName_NOTICEECHANGE = "E3PSECOQueue";
+	public static final String ClassName_NOTICEECHANGE = "com.e3ps.queue.E3PSQueueHelper";
+	public static final String MethodName_NOTICEECHANGE = "approvedNOTICEECHANGE";
+	
+	//ERP PART Send
+	public static final String QueueName_ERP_PART = "E3PSECOQueue";
+	public static final String ClassName_ERP_PART = "com.e3ps.queue.E3PSQueueHelper";
+	public static final String MethodName_ERP_PART = "sendERPPart";
+
+	private static Object put;
+	
+	/**
+	 * 
+	 * @desc	: Queue 생성및 Queue에 추가
+	 * @author	: tsuam
+	 * @date	: 2019. 9. 18.
+	 * @method	: createQueue
+	 * @return	: void
+	 * @param ht: 모듈별 필요데이터,queueName,methodName,className,
+	 * Hashtable 에는 객체는 불가 
+	 * @throws WTException
+	 */
+	public void createQueue(Hashtable ht) throws WTException {
+		
+		LOGGER.info("StandardE3PSQueueService createQueue ==========");
+		
+		String queueName = (String)ht.get("queueName");
+		String methodName = (String)ht.get("methodName");
+		String className = (String)ht.get("className");
+		
+		String ownerName = SessionHelper.manager.getPrincipal().getName();
+		
+		WTPrincipal principal = OrganizationServicesHelper.manager.getUser("wcadmin");    
+		
+		SessionHelper.manager.setAdministrator();
+	    ProcessingQueue queue = (ProcessingQueue)QueueHelper.manager.getQueue(queueName, ProcessingQueue.class);        
+	    
+	    
+	     if( queue == null) {
+	    	 //queue = QueueHelper.manager.createQueue(queueName);
+	    	 queue = ProcessingQueue.newProcessingQueue (queueName);
+	    	
+	    	 PersistenceHelper.manager.store(queue);
+	    	
+	    	 LOGGER.info("==========createQueue queue = "  +queue.getName() + "::"+queue.getQueueState());
+	    } 
+	    
+	    Class [] argClasses = { Hashtable.class};
+		Object [] argObjects = { ht };      
+	    LOGGER.info("createQueue queueName= "+ queueName);
+	    LOGGER.info("createQueue methodName= "+ methodName);
+	    LOGGER.info("createQueue className= "+ className);
+	    queue.addEntry(principal, methodName,className,  argClasses, argObjects);
+	    
+		SessionHelper.manager.setPrincipal(ownerName);
+	}
+	
+	
+	
+	/**
+	 * 
+	 * @desc	: 배포 완료시 CPC 
+	 * @author	: tsuam
+	 * @date	: 2019. 9. 18.
+	 * @method	: sendPLMToCPC
+	 * @return	: void
+	 * @param ht
+	 */
+	public static void completeDistribute(Hashtable ht){
+		LOGGER.info("==========E3PSQueueHelper completeDistribute START");
+		LOGGER.info("========== ht = "+ ht);
+		try{
+			String oid = (String)ht.get("oid");
+			
+//			StandardCPCService service = new StandardCPCService();
+//			service.completeDistribute(null, oid);
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		LOGGER.info("==========E3PSQueueHelper completeDistribute END");
+	}
+}

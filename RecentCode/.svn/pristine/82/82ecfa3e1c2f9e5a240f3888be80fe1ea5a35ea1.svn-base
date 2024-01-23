@@ -1,0 +1,77 @@
+﻿ResourceInfo.class=wt.tools.resource.EnumResourceInfo
+ResourceInfo.abbreviatedDisplay=true
+ResourceInfo.deprecated=false
+
+
+# Entry Format (values equal to default value are not included)
+# <key>.value=
+# <key>.category=
+# <key>.comment=
+# <key>.argComment<n>=
+# <key>.constant=
+# <key>.customizable=
+# <key>.deprecated=
+# <key>.abbreviatedDisplay=
+# <key>.fullDisplay=
+# <key>.shortDescription=
+# <key>.longDescription=
+# <key>.order=
+# <key>.defaultValue=
+# <key>.selectable= 
+
+# Entry Contents
+STANDING.value=STANDING
+STANDING.order=0
+STANDING.shortDescription=LINE
+
+ONGOING.value=ONGOING
+ONGOING.order=0
+ONGOING.shortDescription=LINE
+
+COMPLETE.value=COMPLETE
+COMPLETE.order=0
+COMPLETE.shortDescription=LINE
+
+REJECT.value=REJECT
+REJECT.order=0
+REJECT.shortDescription=LINE
+
+AGREEMENT.value=AGREEMENT
+AGREEMENT.order=0
+AGREEMENT.shortDescription=LINE
+
+APPEAL.value=APPEAL
+APPEAL.order=0
+APPEAL.shortDescription=LINE
+
+DELEGATE.value=DELEGATE
+DELEGATE.order=0
+DELEGATE.shortDescription=LINE
+
+CANCEL.value=CANCEL
+CANCEL.order=0
+CANCEL.shortDescription=LINE
+
+TEMP_STORAGE.value=TEMP STORAGE
+TEMP_STORAGE.order=0
+TEMP_STORAGE.shortDescription=MASTER
+
+DISCUSSING.value=DISCUSSEING
+DISCUSSING.order=0
+DISCUSSING.shortDescription=MASTER
+
+APPROVING.value=APPROVEING
+APPROVING.order=0
+APPROVING.shortDescription=MASTER
+
+REJECTED.value=REJECTED
+REJECTED.order=0
+REJECTED.shortDescription=MASTER
+
+COMPLETED.value=COMPLETED
+COMPLETED.order=0
+COMPLETED.shortDescription=MASTER
+
+DISCARD.value=DISCARD
+DISCARD.order=0
+DISCARD.shortDescription=MASTER

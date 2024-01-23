@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<rules evaluate-rules-on-republish="true" xsi:schemaLocation="http://www.ptc.com PublishRulesSchema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.ptc.com">
+	
+	<authoring-application name="INVENTOR">
+
+		<additional-files name="noneAdditionalFiles">
+		</additional-files>
+
+		<additional-files name="IvtAddtionalFiles">
+				<file display-label="PDF" type="pdf" default="true" output-prefix="pdf">
+					<option name="ExportPDFInColor" value="No"/>
+					<option name="Colors" value="BlackOnWhite"/>
+					<option name="OutputTextOption" value="BlackOnWhite"/>
+				</file>
+				<file display-label="DWG" type="dwg" default="true" output-prefix="dwg">
+				<option name="Export_Acad_IniFile" value="D:\ptc\creo_view_adapters_90\etc\inventortools\DWGOutOpt.ini"/>
+				</file>
+		</additional-files>
+
+		<condition name="is_ivt_part">
+			<attribute name="epmdoc_CADName" regex=".*\.(ipt|IPT)$"/>
+		</condition>
+		<condition name="is_ivt_asm">
+			<attribute name="epmdoc_CADName" regex=".*\.(iam|IAM)$"/>
+		</condition>
+		<condition name="is_ivt_drw">
+			<attribute name="epmdoc_CADName" regex=".*\.(idw|IDW)$" />
+		</condition>
+		
+		<if condition="is_ivt_part">
+			<publish on="checkin" display-label="E3ps Publish 20210225 part - checkin" additional-files="noneAdditionalFiles"/>
+			<publish on="create-representation" display-label="E3ps Publish 20210225 part representation"  additional-files="noneAdditionalFiles"/>
+			<publish on="schedule" display-label="E3ps Publish 20210225 part schedule"  additional-files="noneAdditionalFiles"/>
+			<!--<publish on="unknown-source" display-label="E3ps Publish 20210225 part unknown-source" />-->
+		</if>
+		<if condition="is_ivt_asm">
+			<publish on="checkin" display-label="E3ps Publish 20210225 assembly - checkin"  additional-files="noneAdditionalFiles"/>
+			<publish on="create-representation" display-label="E3ps Publish 20210225 assembly representation"  additional-files="noneAdditionalFiles"/>
+			<publish on="schedule" display-label="E3ps Publish 20210225 part schedule"  additional-files="noneAdditionalFiles"/>
+			<!--<publish on="unknown-source" display-label="E3ps Publish 20210225 assembly unknown-source" />-->
+		</if>
+		<if condition="is_ivt_drw">
+		
+			<publish on="checkin" display-label="E3ps Publish 20210225 DRW - checkin" additional-files="IvtAddtionalFiles"/>
+			<publish on="create-representation" display-label="E3ps Publish 20210225 DRW representation" additional-files="IvtAddtionalFiles"/>
+			<publish on="schedule" display-label="E3ps Publish 20210225 DRW schedule" additional-files="IvtAddtionalFiles"/>
+			<!--<publish on="unknown-source" display-label="E3ps Publish 20210225 DRW unknown-source" additional-files="IvtAddtionalFiles"/>-->
+		
+			<!--<param-set name="dwgzip">
+				<post-publish name="additional-file-secondary">.*\.(dwg|zip)</post-publish>
+			</param-set>
+			<publish on="checkin" display-label="E3ps Publish 20210225 DRW - checkin" additional-files="DrawingEXT" >
+				<param-set-ref name="dwgzip"/>
+			</publish>
+			<publish on="create-representation" display-label="E3ps Publish 20210225 DRW representation" additional-files="DrawingEXT" >
+				<param-set-ref name="dwgzip"/>
+			</publish>
+			<publish on="schedule" display-label="E3ps Publish 20210225 DRW schedule" additional-files="DrawingEXT" >
+				<param-set-ref name="dwgzip"/>
+			</publish>
+			<publish on="unknown-source" display-label="E3ps Publish 20210225 DRW unknown-source" additional-files="DrawingEXT" >
+				<param-set-ref name="dwgzip"/>
+			</publish>-->
+		</if>
+	
+	</authoring-application>
+</rules>

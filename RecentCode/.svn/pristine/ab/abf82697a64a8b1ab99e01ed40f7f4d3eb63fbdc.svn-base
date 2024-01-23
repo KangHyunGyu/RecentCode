@@ -1,0 +1,316 @@
+package com.e3ps.admin.util;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+
+import com.e3ps.admin.AuthorityGroup;
+import com.e3ps.admin.EsolutionMenu;
+import com.e3ps.admin.bean.AuthorityGroupData;
+import com.e3ps.admin.bean.EsolutionMenuData;
+import com.e3ps.admin.service.AdminHelper;
+import com.e3ps.approval.ApproveStateType;
+import com.e3ps.change.EChangeActivityDefinition;
+import com.e3ps.change.EChangeActivityDefinitionRoot;
+import com.e3ps.change.service.ChangeECOHelper;
+import com.e3ps.common.jdf.config.ConfigImpl;
+import com.e3ps.common.log4j.Log4jPackages;
+import com.e3ps.common.message.util.MessageUtil;
+import com.e3ps.common.util.CommonUtil;
+import com.e3ps.common.util.DateUtil;
+import com.e3ps.common.util.StringUtil;
+import com.e3ps.org.bean.PeopleData;
+import com.e3ps.org.service.PeopleHelper;
+
+import wt.method.MethodContext;
+import wt.method.MethodServerException;
+import wt.method.RemoteMethodServer;
+import wt.org.OrganizationServicesHelper;
+import wt.org.WTPrincipal;
+import wt.session.SessionHelper;
+import wt.util.WTException;
+
+public class AdminUtil {
+	
+	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Log4jPackages.ADMIN.getName());
+		/**
+		 * @desc	: 모듈 종류에 대한 select option 값 가져오기
+		 * @author	: tsjeong
+		 * @date	: 2019. 11. 15.
+		 * @method	: getModuleTypeList
+		 * @return	: List<Map<String,String>>
+		 * @return
+		 */
+		public static List<Map<String,String>> getModuleTypeList(){
+			List<Map<String,String>> list = new ArrayList<Map<String,String>>();
+
+			Map<String,String> map = new HashMap<String,String>();
+			
+			map.put("key", "ECR");
+			map.put("value", "ECR");
+			list.add(map);
+			
+			map = new HashMap<String,String>();
+			
+			map.put("key", "ECO");
+			map.put("value", "ECO");
+			list.add(map);
+			
+			map = new HashMap<String,String>();
+			
+			map.put("key", "ECN");
+			map.put("value", "ECN");
+			list.add(map);
+			
+			map = new HashMap<String,String>();
+			map.put("key", "도면");
+			map.put("value", "도면");
+			list.add(map);
+			
+			map = new HashMap<String,String>();
+			
+			map.put("key", "부품");
+			map.put("value", "부품");
+			list.add(map);
+			
+			map = new HashMap<String,String>();
+			
+			map.put("key", "배포");
+			map.put("value", "배포");
+			list.add(map);
+			
+			
+			map = new HashMap<String,String>();
+			
+			map.put("key", "문서");
+			map.put("value", "문서");
+			map.put("selected", "selected");
+			list.add(map);
+			
+			return list;
+		}
+		
+		/**
+		 * 
+		 * @desc	: 설계변경 활동 단계 root 리스트
+		 * @author	: tsjeong
+		 * @date	: 2020. 9. 15.
+		 * @method	: getRoot
+		 * @return	: List<Map<String,String>>
+		 * @return
+		 */
+		public static List<Map<String,String>> getRoot(String changeType){
+			
+			List<EChangeActivityDefinitionRoot> roots = null;
+			
+			try {
+				roots = ChangeECOHelper.service.getActiveDefinitionRoot();
+			} catch (WTException e) {
+				e.printStackTrace();
+			}
+			
+			List<Map<String,String>> list = new ArrayList<Map<String,String>>();
+			Map<String,String> startMap = new HashMap<String,String>();
+			startMap.put("key", "");
+			startMap.put("value", "선택");
+			list.add(startMap);
+			
+			if (roots != null) {
+				for (EChangeActivityDefinitionRoot droot : roots) {
+					Map<String,String> map = new HashMap<String,String>();
+					String roid = CommonUtil.getOIDString(droot);
+					if("".equals(changeType)) {
+						map.put("key", roid);
+						map.put("value", droot.getName());
+						list.add(map);
+					}else {
+						if(droot.getName().startsWith(changeType)) {
+							map.put("key", roid);
+							map.put("value", droot.getName());
+							list.add(map);
+						}
+					}
+				}
+			}
+			return list;
+		}
+		
+		public static List<PeopleData> getAuthUser() {
+			Map<String, Object> map = new HashMap<>();
+			List<PeopleData> list = null;
+			try {
+				map.put("authUser", "search");
+				list = PeopleHelper.manager.getUserListAction(map);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return list;
+		}
+		
+		public static boolean hasMenuAuthority(String requestURI) throws Exception{
+			
+			WTPrincipal principal = SessionHelper.manager.getPrincipal();
+			List<EsolutionMenu> emData =  AdminHelper.manager.getEsolutionMenuAll();
+			
+			boolean hasAuth = true;
+			boolean hasModuleAuth = true;
+			boolean hasURL = true;
+			
+			String eSolutionModuleList = ConfigImpl.getInstance().getString("esolution.module.list");
+			String context = "/Windchill/" + ConfigImpl.getInstance().getString("product.context.name");
+			String[] uriArr = requestURI.split("/");
+			String moduleName = uriArr[3];
+			if(!eSolutionModuleList.contains(moduleName)) {
+				return hasAuth;
+			}
+			for (EsolutionMenu esolutionMenu : emData) {
+				int menuLevel = esolutionMenu.getMenuLevel();
+				String module = esolutionMenu.getAlias();
+				if(menuLevel == 1 && module.equals(moduleName)) {
+					boolean isMember = OrganizationServicesHelper.manager.isMember(esolutionMenu.getGroup(), principal);
+					if((!CommonUtil.isAdmin() && !isMember)) {
+						hasModuleAuth = false;
+						break;
+					}
+				}
+			}
+			
+			if(!hasModuleAuth) {
+				hasAuth = false;
+			}else {
+				
+				String hrefTarget = requestURI.substring(context.length());
+				for (EsolutionMenu esolutionMenu : emData) {
+					String href = esolutionMenu.getHref();
+					if(href.contains(hrefTarget)) {
+						boolean isMember = OrganizationServicesHelper.manager.isMember(esolutionMenu.getGroup(), principal);
+						if(!CommonUtil.isAdmin() && !isMember) {
+							hasURL =  false;
+						}
+					}
+					
+					if(href.contains("BomEditor")) {
+						href = "/bomEditor/editBom";
+						if(hrefTarget.contains(href)) {
+							boolean isMember = OrganizationServicesHelper.manager.isMember(esolutionMenu.getGroup(), principal);
+							if(!CommonUtil.isAdmin() && !isMember) {
+								hasURL =  false;
+							}
+						}
+					}
+				}
+			}
+			
+			if(!hasURL) {
+				hasAuth = false;
+			}
+			
+			
+			return hasAuth;
+		}
+		
+		public static File fileRename(String filePath, String fileName) {
+			String retFileNm = "";
+			File file = new File(filePath);
+			
+			//파일 존재 Check
+			if(file.exists() == false) {
+				return file;
+			}
+			String name = file.getName();
+			String body = null;	//파일명
+			String ext  = null;	//확장자
+			int dot = name.lastIndexOf(".");
+			if(dot != -1) {
+				body = name.substring(0,dot);
+				ext = name.substring(dot);
+			}
+			//ReName
+			int count = 0;
+			while(file.exists() && count < 99999) {
+				count++;
+				
+				if(StringUtil.isNullEmpty(fileName)) {
+					fileName = body;
+				}
+				retFileNm = fileName + "_" + DateUtil.getCurrentTimestamp().toString().replace(":", "").replace(".", "").replace("-", "").replace(" ", "") + ext;
+				file = new File(file.getParent(), retFileNm);
+				
+				
+			}
+			
+			return file;
+		}
+		
+		@SuppressWarnings("deprecation")
+		public static String getExcelData(Workbook workbook, Sheet sheet, Cell cell) {
+			String dataStr = "";
+			
+			//빈 셀이면 종료
+			if(cell == null) {
+				return dataStr;
+			}
+			
+			dataStr = cell.toString();
+			
+			List<CellRangeAddress> mergedList = sheet.getMergedRegions();
+			
+			//병합된 셀이면 첫번째로 셀 대체
+			for(CellRangeAddress range : mergedList) {
+				if(range.isInRange(cell)) {
+					Cell firstMergeCell = sheet.getRow(range.getFirstRow()).getCell(range.getFirstColumn());
+					cell = firstMergeCell;
+					dataStr = cell.toString();
+				}
+			}
+			
+//			switch (cell.getCellType()) {
+//			case Cell.CELL_TYPE_BLANK:
+//				dataStr = StringUtil.checkNull(cell.getStringCellValue());
+//				break;
+//			case XSSFCell.CELL_TYPE_BOOLEAN:
+//				dataStr = StringUtil.checkNull(String.valueOf(cell.getBooleanCellValue()));
+//				break;
+//			case XSSFCell.CELL_TYPE_ERROR:
+//				dataStr = StringUtil.checkNull(String.valueOf(cell.getErrorCellValue()));
+//				break;
+//			case XSSFCell.CELL_TYPE_FORMULA:
+//				final FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+//				final CellValue cellValue = evaluator.evaluate(cell);
+//				dataStr = StringUtil.checkNull(String.valueOf(cellValue.getNumberValue()));
+//				break;
+//			case XSSFCell.CELL_TYPE_NUMERIC:
+//				dataStr = StringUtil.checkNull(String.valueOf(cell.getNumericCellValue()));
+//				break;
+//			case XSSFCell.CELL_TYPE_STRING:
+//				dataStr = StringUtil.checkNull(String.valueOf(cell.getRichStringCellValue().toString()));
+//				break;
+//			}
+			
+			return dataStr.trim();
+		}
+		
+		public static int getSheetColumnFORXLSX(XSSFSheet sheet) {
+			int rowCount = sheet.getPhysicalNumberOfRows();
+			int maxCellNum = 0;
+			for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+				XSSFRow row = sheet.getRow(rowIndex);
+				if (row != null) {
+					maxCellNum = Math.max(maxCellNum, row.getLastCellNum());
+				}
+				
+			}
+			
+			return maxCellNum;
+		}
+}

@@ -1,0 +1,17 @@
+﻿/*login*/
+.login_arm{width:480px; margin:150px auto 0px; }
+.arm01{display:flex; }
+.arm01 .left{width:70%;font-size:16px; padding-top: 18px; color:#666666; font-family: 'Roboto', sans-serif;}
+.arm01 .right{width:30%; text-align:right;}
+.line{border-bottom:1px solid #d2d3d7; margin-top:10px; }
+
+.login .text_c{ font-family: 'Roboto', sans-serif; font-size:60px; color:#74AF2A; font-weight:300; margin-bottom:40px; margin-top:40px;}
+.login input[type='text']{width:97%; height:60px; padding:0 5px; border:1px solid #d6d7da; font-size:16px;  text-indent: 10px; border-radius:5px;}
+.login input[type='password']{width:97%; height:60px; padding:0 5px; border:1px solid #d6d7da; font-size:16px;  text-indent: 10px;border-radius:5px; }
+.ax-input{display: block; padding: 10px 0px;}
+.ax-funcs{width:100%;}
+.check_style{font-size:14px; font-family: 'Roboto', sans-serif; color:#74AF2A; margin-bottom:20px;}
+.check_style input[type='checkbox'] { float: left; margin: 2px 7px 0 0px;}
+.login_bt{display: block;  text-align: center;  padding: 0 20px;  border: 1px solid #74AF2A;   background: #74AF2A;	 color: #fff;   border-radius: 5px;   height: 65px;   line-height: 65px;   font-size: 16px; width:100%; }
+.copy{text-align: center;  padding-top:30px;  font-size: 12px; color:#666666;}
+.b_text{color:#74AF2A; font-weight:bold;}

@@ -1,0 +1,891 @@
+package com.e3ps.distribute.controller;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.json.simple.JSONArray;
+import org.json.simple.parser.JSONParser;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.e3ps.approval.bean.ApprovalListData;
+import com.e3ps.approval.service.ApprovalHelper;
+import com.e3ps.common.util.CommonUtil;
+import com.e3ps.common.util.DateUtil;
+import com.e3ps.common.util.FolderUtil;
+import com.e3ps.common.util.StringUtil;
+import com.e3ps.common.util.WCUtil;
+import com.e3ps.distribute.DistributeDocument;
+import com.e3ps.distribute.DistributeRegistration;
+import com.e3ps.distribute.bean.DistributeData;
+import com.e3ps.distribute.bean.DistributePartToEpmData;
+import com.e3ps.distribute.bean.DistributeRegPartToEpmData;
+import com.e3ps.distribute.bean.DistributeRegistrationData;
+import com.e3ps.distribute.bean.DistributeToPartData;
+import com.e3ps.distribute.service.DistributeHelper;
+import com.e3ps.distribute.util.DistributeUtil;
+import com.e3ps.doc.E3PSDocument;
+import com.e3ps.doc.bean.DocData;
+import com.e3ps.interfaces.cpc.controller.CPCController;
+import com.e3ps.interfaces.cpc.service.CPCHelper;
+import com.e3ps.part.bean.PartData;
+import com.e3ps.part.service.PartHelper;
+import com.google.gwt.user.client.Window;
+
+import wt.clients.folder.FolderTaskLogic;
+import wt.fc.PersistenceHelper;
+import wt.folder.Folder;
+import wt.folder.FolderEntry;
+import wt.folder.FolderHelper;
+import wt.folder.FolderNotFoundException;
+import wt.inf.container.WTContainerRef;
+import wt.lifecycle.LifeCycleHelper;
+import wt.org.WTUser;
+import wt.pom.Transaction;
+import wt.query.QuerySpec;
+import wt.query.SearchCondition;
+import wt.session.SessionHelper;
+import wt.util.WTAttributeNameIfc;
+
+@Controller
+@RequestMapping("/distribute")
+public class DistributeController {
+	/**
+	 * @desc : 배포요청 조회화면
+	 * @author : shjeong
+	 * @date : 2023. 07. 20.
+	 * @method : searchPurchase
+	 * @param reqMap
+	 * @return Map<String,Object>
+	 */
+	@RequestMapping("/searchDistribute")
+	public ModelAndView searchPurchase(@RequestParam Map<String,Object> reqMap) {
+		ModelAndView model = new ModelAndView();
+		model.setViewName("default:/distribute/searchDistribute");
+		
+		return model;
+	}
+	
+	/**
+	 * @desc : 배포요청 등록화면
+	 * @author : shjeong
+	 * @date : 2023. 07. 20.
+	 * @method : createPurchase
+	 * @param reqMap
+	 * @return ModelAndView
+	 */
+	@RequestMapping("/createDistribute")
+	public ModelAndView createDistribute(@RequestParam Map<String,Object> reqMap) {
+		ModelAndView model = new ModelAndView();
+		model.setViewName("default:/distribute/createDistribute");
+		return model;
+	}
+	
+	
+	/**
+	 * @desc : 배포요청 품목 include 화면
+	 * @author : shjeong
+	 * @date : 2023. 07. 20.
+	 * @method : 
+	 * @param reqMap
+	 * @return ModelAndView
+	 */
+	@RequestMapping("/include_distributePartList")
+	public ModelAndView include_distributePartList(@RequestParam Map<String,Object> reqMap) {
+		String title = StringUtil.checkNull((String) reqMap.get("title"));
+		String autoGridHeight = StringUtil.checkReplaceStr((String) reqMap.get("autoGridHeight"), "false");
+		String gridHeight = StringUtil.checkReplaceStr((String) reqMap.get("gridHeight"), "55");
+		
+		ModelAndView model = new ModelAndView();
+		
+		model.addObject("title", title);
+		model.addObject("autoGridHeight", autoGridHeight);
+		model.addObject("gridHeight", gridHeight);
+		model.setViewName("include:/distribute/include/distributePartList");
+		return model;
+	}
+	
+	
+	/**
+	 * @methodName : createDistributeAction
+	 * @author : shjeong
+	 * @date : 2023.07.20
+	 * @return : Map<String,Object>
+	 * @description : 배포요청서 등록 로직
+	 */
+	@ResponseBody
+	@RequestMapping("/createDistributeAction")
+	public Map<String, Object> createDistributeAction(@RequestBody Map<String, Object> reqMap,HttpServletRequest request) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		List<Map<String,Object>> itemList = (List<Map<String,Object>>)reqMap.get("itemList");
+		try {
+			itemList = DistributeHelper.service.createDistributeAction(reqMap);
+			map.put("itemList",itemList);
+			map.put("result", true);
+			map.put("msg", "등록이 완료되었습니다.");
+			map.put("redirectUrl", CommonUtil.getURLString("/distribute/searchDistribute"));
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			map.put("result", false);
+			map.put("msg", "ERROR = " + e.getLocalizedMessage());
+		}
+		return map;
+	}
+	
+	/**
+	 * @methodName : searchDistributeScrollAction
+	 * @author : shjeong
+	 * @date : 2023.07.20
+	 * @return : Map<String,Object>
+	 * @description : 배포요청서 조회
+	 */
+	@ResponseBody
+	@RequestMapping("/searchDistributeScrollAction")
+	public Map<String, Object> searchDistributeScrollAction(@RequestBody Map<String, Object> reqMap) {
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+
+		try {
+			map = DistributeHelper.manager.searchDistributeScroll(reqMap);
+			
+			map.put("result", true);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			map.put("result", false);
+			map.put("msg", "ERROR = " + e.getLocalizedMessage());
+		}
+
+		return map;
+	}
+	
+	
+	/**
+	 * @desc : 배포요청 번호 검색(자동완성)
+	 * @author : shjeong
+	 * @date : 2023. 07. 20.
+	 * @method : searchDistributeNumber
+	 * @param reqMap
+	 * @return Map<String,Object>
+	 */
+	@ResponseBody
+	@RequestMapping("/searchDistributeNumber")
+	public Map<String, Object> searchDistributeNumber(@RequestBody Map<String, Object> reqMap) {
+		
+		Map<String, Object> result = new HashMap<String, Object>();
+		
+		try {
+			List<DistributeData> list = DistributeHelper.service.searchDistributeList(reqMap);
+			result.put("result", true);
+			result.put("list", list);
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+			result.put("result", false);
+			result.put("msg", "ERROR = " + e.getLocalizedMessage());
+		}
+		
+		return result;
+	}
+	
+	
+	/**
+	 * @desc	: 배포요청 상세보기
+	 * @author	: shjeong
+	 * @date	: 2023. 07. 20.
+	 * @method	: viewDistribute
+	 * @param	: reqMap
+	 * @return	: ModelAndView
+	 */
+	@RequestMapping("/viewDistribute")
+	public ModelAndView viewDistribute(@RequestParam Map<String, Object> reqMap) {
+		
+		ModelAndView model = new ModelAndView();
+		
+		try {
+			String oid = StringUtil.checkNull((String) reqMap.get("oid")); 
+			DistributeDocument distribute = (DistributeDocument) CommonUtil.getObject(oid);
+			DistributeData data = new DistributeData(distribute);
+			
+			model.addObject("oid", oid);
+			model.addObject("distribute",data);
+			model.setViewName("popup:/distribute/viewDistribute");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return model;
+	}
+	
+	/**
+	 * @desc	: 배포요청 삭제 Action
+	 * @author	: shjeong
+	 * @date	: 2023. 07. 20.
+	 * @method	: deleteDistributeAction
+	 * @param	: reqMap
+	 * @return	: Map<String, Object>
+	 */
+	@ResponseBody
+	@RequestMapping("/deleteDistributeAction")
+	public Map<String, Object> deleteDistributeAction(@RequestBody Map<String, Object> reqMap) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		
+		try {
+			
+			DistributeHelper.service.deleteDistributeAction(reqMap);
+			
+			map.put("msg", "삭제되었습니다.");
+			map.put("result", true);
+			map.put("redirectUrl", "close");
+		} catch (Exception e) {
+			e.printStackTrace();
+			map.put("result", false);
+			map.put("msg", "ERROR = " + e.getLocalizedMessage());
+			map.put("msg","삭제가 불가능한 항목입니다.\n관리자에게 문의 하시기 바랍니다.");
+		}
+		
+		return map;
+	}
+	
+	/**
+	 * @desc	: 구매요청 include 상세화면
+	 * @author	: shjeong
+	 * @date	: 2022. 11. 12.
+	 * @method	: include_detailDistribute
+	 * @param	: reqMap
+	 * @return	: ModelAndView
+	 */
+	@RequestMapping("/include_detailDistribute")
+	public ModelAndView include_detailDistribute(@RequestParam Map<String, Object> reqMap) {
+		ModelAndView model = new ModelAndView();
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		
+		try {
+			DistributeDocument distribute = (DistributeDocument) CommonUtil.getObject(oid);
+			DistributeData distributeData = new DistributeData(distribute);
+			
+			model.addObject("distribute", distributeData);
+		
+			model.setViewName("include:/distribute/include/detailDistribute");
+		
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return model;
+	}
+	
+	/**
+	 * @desc	: 배포요청 관련객체 include
+	 * @author	: shjeong
+	 * @date	: 2023. 07. 20.
+	 * @method	: include_relatedObject
+	 * @param	: reqMap
+	 * @return	: ModelAndView
+	 */
+	@RequestMapping("/include_relatedObject")
+	public ModelAndView include_relatedObject(@RequestParam Map<String, Object> reqMap) {
+		
+		ModelAndView model = new ModelAndView();
+		
+		try {
+			String oid = StringUtil.checkNull((String) reqMap.get("oid")); 
+			
+			model.addObject("oid", oid);
+			model.setViewName("include:/distribute/include/relatedObject");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return model;
+	}
+	
+	
+	/**
+	 * @desc	: 배포 부품 include 
+	 * @author	: shjeong
+	 * @date	: 2023. 07. 20.
+	 * @method	: include_refPurchasePartList
+	 * @param	: reqMap
+	 * @return	: ModelAndView
+	 */
+	@RequestMapping("/include_refDistributePartList")
+	public ModelAndView include_refDistributePartList(@RequestParam Map<String, Object> reqMap) {
+		ModelAndView model = new ModelAndView();
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		String gridHeight = StringUtil.checkNull((String) reqMap.get("gridHeight"));
+		
+		try {
+			//DistributeDocument distribute = (DistributeDocument) CommonUtil.getObject(oid);
+			
+			model.addObject("oid", oid);
+			model.addObject("gridHeight", gridHeight);
+			model.setViewName("include:/distribute/include/refDistributePartList");
+		
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return model;
+	}
+	
+	
+	
+	/**
+	 * @desc : distribute oid로 구매부품 리스트 가져오기
+	 * @author : shjeong
+	 * @date : 2022. 11. 15.
+	 * @method : getPurchasePartListByPurchase
+	 * @param reqMap
+	 * @return Map<String,Object>
+	 */
+	@ResponseBody
+	@RequestMapping("/getDistributePartListByDistribute")
+	public Map<String,Object> getDistributePartListByDistribute(@RequestBody Map<String,Object> reqMap) {
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		Map<String,Object> result = new HashMap<String,Object>();
+		List<DistributeToPartData> returnList = new ArrayList<DistributeToPartData>();
+		try {
+			
+			
+			DistributeData data = new DistributeData((DistributeDocument) CommonUtil.getObject(oid));
+			returnList = data.getDistributePartList();
+			
+			result.put("result", true);
+			result.put("list", returnList);
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+			result.put("result", false);
+			result.put("msg", "ERROR = " + e.getLocalizedMessage());
+		}
+		
+		return result;
+	}
+	
+	
+	
+	/**
+	 * @desc : 배포요청 수정화면
+	 * @author : shjeong
+	 * @date : 2023. 07. 20.
+	 * @method : modifyDistribute
+	 * @param reqMap
+	 * @return ModelAndView
+	 */
+	@RequestMapping("/modifyDistribute")
+	public ModelAndView modifyDistribute(@RequestParam Map<String,Object> reqMap) {
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		ModelAndView model = new ModelAndView();
+		try {
+			DistributeDocument distribute = (DistributeDocument) CommonUtil.getObject(oid);
+			DistributeData data = new DistributeData(distribute);
+			model.addObject("distribute", data);
+			model.setViewName("popup:/distribute/modifyDistribute");
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		return model;
+	}
+	
+	
+	/**
+	 * @desc	: 배포 요청 품목 수정  include 
+	 * @author	: shjeong
+	 * @date	: 2023. 07. 20.
+	 * @method	: include_modifyDistributePartList
+	 * @param	: reqMap
+	 * @return	: ModelAndView
+	 */
+	@RequestMapping("/include_modifyDistributePartList")
+	public ModelAndView include_modifyDistributePartList(@RequestParam Map<String, Object> reqMap) {
+		ModelAndView model = new ModelAndView();
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		String gridHeight = StringUtil.checkNull((String) reqMap.get("gridHeight"));
+		try {
+			
+			model.addObject("oid", oid);
+			model.addObject("gridHeight", gridHeight);
+		
+			model.setViewName("include:/distribute/include/modifyDistributePartList");
+		
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return model;
+	}
+	
+	/**
+	 * @methodName : modifyDistributeDocumentAction
+	 * @author : shjeong
+	 * @date : 2022.11.16
+	 * @return : Map<String,Object>
+	 * @description : 구매요청서 수정
+	 */
+	@ResponseBody
+	@RequestMapping("/modifyDistributeDocumentAction")
+	public Map<String, Object> modifyDistributeDocumentAction(@RequestBody Map<String, Object> reqMap,HttpServletRequest request) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		try {
+			
+			String oid = StringUtil.checkNull((String)reqMap.get("oid"));
+			DistributeHelper.service.modifyDistributeAction(reqMap);
+			
+			map.put("result", true);
+			map.put("msg", "수정이 완료되었습니다.");
+			map.put("redirectUrl", CommonUtil.getURLString("/distribute/viewDistribute") + "?oid=" + oid);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			map.put("result", false);
+			map.put("msg", "ERROR = " + e.getLocalizedMessage());
+		}
+		return map;
+	}
+	
+	/**
+	 * @desc	: 배포요청 도면 화면 include 
+	 * @author	: shjeong
+	 * @date	: 2023. 07. 20.
+	 * @method	: include_epmOfDistributePartList
+	 * @param	: reqMap
+	 * @return	: ModelAndView
+	 */
+	@RequestMapping("/include_epmOfDistributePartList")
+	public ModelAndView include_epmOfDistributePartList(@RequestParam Map<String, Object> reqMap) {
+		ModelAndView model = new ModelAndView();
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		
+		try {
+			
+			model.addObject("oid", oid);
+			model.setViewName("include:/distribute/include/epmOfDistributePartList");
+		
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return model;
+	}
+	
+	/**
+	 * @desc	: 구매요청 도면 다운로드 팝업 페이지
+	 * @author	: shjeong
+	 * @date	: 2022. 11. 28.
+	 * @method	: distributePartListEpmDown
+	 * @param	: Map<String, Object> reqMap
+	 * @return	: ModelAndView
+	 */
+	@RequestMapping("/distributePartListEpmDown")
+	public ModelAndView epmDown(@RequestParam Map<String, Object> reqMap) {
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		ModelAndView model = new ModelAndView();
+		try {
+			model.addObject("oid", oid);
+			model.setViewName("popup:/distribute/distributePartListEpmDown");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return model;
+	}
+	
+	/**
+	 * @desc	: 구매요청 도면 다운로드
+	 * @author	: shjeong
+	 * @date	: 2022. 11. 17.
+	 * @method	: distributePartListEpmDownAction
+	 * @param	: HttpServletRequest, HttpServletResponse
+	 * @return	: void
+	 */
+	@RequestMapping("/distributePartListEpmDownAction")
+	public void distributePartListEpmDownAction(HttpServletRequest request, HttpServletResponse response) {
+		try {
+			
+			DistributeHelper.manager.fileDownAction(request, response);
+			Cookie cookie = new Cookie("fileDownload", "TRUE");
+			response.addCookie(cookie);
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+//	/**
+//	 * @desc : 구매요청 부품의 배포 리스트 가져오기
+//	 * @author : shjeong
+//	 * @date : 2022. 12. 15.
+//	 * @method : getDistributePartToEpmList
+//	 * @param reqMap
+//	 * @return Map<String,Object>
+//	 */
+//	@ResponseBody
+//	@RequestMapping("/getDistributePartToEpmList")
+//	public Map<String,Object> getPurchasePartDistributeList(@RequestBody Map<String,Object> reqMap) {
+//		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+//		Map<String,Object> result = new HashMap<String,Object>();
+//		List<DistributePartToEpmData> distributeList = new ArrayList<DistributePartToEpmData>();
+//		try {
+//			
+//			distributeList = DistributeHelper.manager.getPurchasePartDistributeDataList(oid);
+//			
+//			result.put("result", true);
+//			result.put("list", distributeList);
+//			
+//		} catch(Exception e) {
+//			e.printStackTrace();
+//			result.put("result", false);
+//			result.put("msg", "ERROR = " + e.getLocalizedMessage());
+//		}
+//		
+//		return result;
+//	}
+	
+//	/**
+//	 * @desc : 구매요청 부품의 배포 리스트 가져오기
+//	 * @author : shjeong - hgkang
+//	 * @date : 2022. 12. 15.
+//	 * @method : getDistributeRegPartToEpmList
+//	 * @param reqMap
+//	 * @return Map<String,Object>
+//	 */
+//	@ResponseBody
+//	@RequestMapping("/getDistributeRegPartToEpmList")
+//	public Map<String,Object> getPartDistributeRegList(@RequestBody Map<String,Object> reqMap) {
+//		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+//		Map<String,Object> result = new HashMap<String,Object>();
+//		List<DistributeRegPartToEpmData> distributeList = new ArrayList<DistributeRegPartToEpmData>();
+//		try {
+//			
+//			distributeList = DistributeHelper.manager.getPartDistributeRegDataList(oid);
+//			
+//			result.put("result", true);
+//			result.put("list", distributeList);
+//			
+//		} catch(Exception e) {
+//			e.printStackTrace();
+//			result.put("result", false);
+//			result.put("msg", "ERROR = " + e.getLocalizedMessage());
+//		}
+//		
+//		return result;
+//	}
+	
+	
+	/**
+	 * @desc : 구매 품목 배포 목록 include 화면
+	 * @author : shjeong
+	 * @date : 2023. 02. 01.
+	 * @method : include_distributePartEpmList
+	 * @param reqMap
+	 * @return ModelAndView
+	 */
+	@RequestMapping("/include_distributePartEpmList")
+	public ModelAndView include_distributePartEpmList(@RequestParam Map<String,Object> reqMap) {
+		String title = StringUtil.checkNull((String) reqMap.get("title"));
+		String gridHeight = StringUtil.checkReplaceStr((String) reqMap.get("gridHeight"), "200");
+		
+		ModelAndView model = new ModelAndView();
+		
+		model.addObject("title", title);
+		model.addObject("gridHeight", gridHeight);
+		model.setViewName("include:/distribute/include/distributePartEpmList");
+		return model;
+	}
+	
+//	@ResponseBody
+//	@RequestMapping("/testAction")
+//	public Map<String,Object> testAction(@RequestParam Map<String, Object> reqMap, HttpServletRequest request) {
+//		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+//		Map<String,Object> result = new HashMap<String,Object>();
+//		Transaction trx = new Transaction();
+//		try {
+//			//방화벽 in out 80 포트 설정, CPC trustredHost 설정, 해당 URL web.xml 에서 로그인 제외
+//			SessionHelper.manager.setPrincipal("2015035");
+//			WTUser dratUser = (WTUser)SessionHelper.manager.getPrincipal();
+//			BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));
+//            StringBuilder sb = new StringBuilder();
+//            String line = "";
+//            while ((line = br.readLine()) != null) {
+//                sb.append(line);
+//            }
+//            
+//			DistributeDocument distribute = null;
+//			trx.start();
+//			
+//			distribute = DistributeDocument.newDistributeDocument();
+//			
+//			distribute.setDistributeNumber(DistributeUtil.createDistributeNumber());
+//			distribute.setDistributeName("TEST111111");
+//			distribute.setPurpose("11111");
+//			distribute.setMarkingConfirm("2222");
+//			distribute.setFileType("3333");
+//			distribute.setDistributeDate(DateUtil.convertDate("2023/09/11"));
+//			distribute.setDescription("11333444");
+//			
+//			
+//			
+//			// 제품 위치 설정
+//			WTContainerRef wtContainerRef = WTContainerRef.newWTContainerRef(WCUtil.getPDMLinkProduct());
+//			
+//			// 라이프 사이클 설정
+//			LifeCycleHelper.setLifeCycle(distribute, LifeCycleHelper.service.getLifeCycleTemplate("LC_Default", wtContainerRef));
+//			
+//			// 폴더 설정
+//			Folder parentfolder = FolderTaskLogic.getFolder("/Default/Distribute", wtContainerRef);
+//			Folder folder = null;
+//			try {
+//				folder = FolderTaskLogic.getFolder("/Default/Distribute" + "/" + LocalDate.now().getYear(), wtContainerRef);
+//			} catch(FolderNotFoundException e) {
+//				folder = FolderUtil.createFolder(parentfolder, String.valueOf(LocalDate.now().getYear()));
+//			}
+//			FolderHelper.assignLocation((FolderEntry) distribute, folder);
+//			
+//			distribute = (DistributeDocument) PersistenceHelper.manager.save(distribute);
+//			trx.commit();
+//			trx = null;
+//            
+//			result.put("result", true);
+//			result.put("list", oid + "::: return OID");
+//			
+//		} catch(Exception e) {
+//			e.printStackTrace();
+//			result.put("result", false);
+//			result.put("msg", "ERROR = " + e.getLocalizedMessage());
+//		} finally {
+//			if (trx != null) {
+//				trx.rollback();
+//			}
+//		}
+//		
+//		return result;
+//	}
+	
+	/**
+	 * @desc : 배포요청 등록화면
+	 * @author : shjeong
+	 * @date : 2023. 07. 20.
+	 * @method : requestFormDistribute
+	 * @param reqMap
+	 * @return ModelAndView
+	 */
+	@RequestMapping("/requestFormDistribute")
+	public ModelAndView requestFormDistribute(@RequestParam Map<String,Object> reqMap) {
+		ModelAndView model = new ModelAndView();
+		model.setViewName("default:/distribute/requestFormDistribute");
+		return model;
+	}
+	
+	/**
+	 * @methodName : requestFormDistributeAction
+	 * @author : shjeong
+	 * @date : 2023.07.20
+	 * @return : Map<String,Object>
+	 * @description : 도면출도 의뢰서 등록 로직
+	 */
+	@ResponseBody
+	@RequestMapping("/requestFormDistributeAction")
+	public Map<String, Object> requestFormDistributeAction(@RequestBody Map<String, Object> reqMap,HttpServletRequest request) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		List<Map<String,Object>> itemList = (List<Map<String,Object>>)reqMap.get("itemList");
+		try {
+			itemList = DistributeHelper.service.requestFormDistributeAction(reqMap);
+			map.put("itemList",itemList);
+			map.put("result", true);
+			map.put("msg", "등록이 완료되었습니다.");
+			map.put("redirectUrl", CommonUtil.getURLString("/distribute/searchDistribute"));
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			map.put("result", false);
+			map.put("msg", "ERROR = " + e.getLocalizedMessage());
+		}
+		return map;
+	}
+	
+	/**
+	 * @desc : 배포요청 등록
+	 * @author : hgkang
+	 * @date : 2023. 9. 22.
+	 * @method : distributeRegistration
+	 * @param reqMap
+	 * @return ModelAndView
+	 */
+
+	@RequestMapping("/distributeRegistration")
+	public ModelAndView distributeRegistration(@RequestParam Map<String, Object> reqMap) {
+		
+		ModelAndView model = new ModelAndView();
+//		String type = (String) reqMap.get("type"); //tempStorage 임시저장,approval 작업함
+		
+//		model.addObject("type", type);
+		model.setViewName("default:/distribute/distributeRegistration");
+		
+		return model;
+		
+	}
+	
+	@ResponseBody
+	@RequestMapping("/listRegistrationAction")
+	public Map<String, Object> listRegistrationAction(@RequestBody Map<String, Object> reqMap) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		
+		try {
+			map = DistributeHelper.manager.searchRegistrationApproval(reqMap);
+			map.put("result", true);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			map.put("result", false);
+			map.put("msg", "ERROR = " + e.getLocalizedMessage());
+		}
+		
+		return map;
+	}
+	
+	/**
+	 * @desc	: 배포요청 상세보기
+	 * @author	: shjeong
+	 * @date	: 2023. 07. 20.
+	 * @method	: viewDistribute
+	 * @param	: reqMap
+	 * @return	: ModelAndView
+	 */
+	@RequestMapping("/viewRegistrationDistribute")
+	public ModelAndView viewRegistrationDistribute(@RequestParam Map<String, Object> reqMap) {
+		
+		ModelAndView model = new ModelAndView();
+		
+		try {
+			String oid = StringUtil.checkNull((String) reqMap.get("oid")); 
+			DistributeDocument distribute = (DistributeDocument) CommonUtil.getObject(oid);
+			DistributeData data = new DistributeData(distribute);
+			
+			model.addObject("companyList", JSONArray.toJSONString(CPCHelper.manager.getCompanys()));
+			model.addObject("oid", oid);
+			model.addObject("distribute",data);
+			model.setViewName("popup:/distribute/viewRegistrationDistribute");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return model;
+	}
+	
+	/**
+	 * @methodName : createDistributeAction
+	 * @author : shjeong
+	 * @date : 2023.07.20
+	 * @return : Map<String,Object>
+	 * @description : 배포요청서 등록 로직
+	 */
+	@ResponseBody
+	@RequestMapping("/createRegistrationDistributeAction")
+	public Map<String, Object> createRegistrationDistributeAction(@RequestBody Map<String, Object> reqMap,HttpServletRequest request) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		List<Map<String,Object>> itemList = (List<Map<String,Object>>)reqMap.get("itemList");
+		try {
+			itemList = DistributeHelper.service.createRegistrationDistributeAction(reqMap);
+			
+			map.put("itemList",itemList);
+			map.put("result", true);
+			map.put("msg", "등록이 완료되었습니다.");
+			map.put("redirectUrl", "close");
+//			map.put("redirectUrl", CommonUtil.getURLString("/distribute/distributeRereption"));
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			map.put("result", false);
+			map.put("msg", "ERROR = " + e.getLocalizedMessage());
+		}
+		return map;
+	}
+	
+	/**
+	 * @desc : 배포요청 수신화면
+	 * @author : shjeong
+	 * @date : 2023. 07. 20.
+	 * @method : distributeRereption
+	 * @param reqMap
+	 * @return Map<String,Object>
+	 */
+	@RequestMapping("/distributeRereption")
+	public ModelAndView distributeRereption(@RequestParam Map<String,Object> reqMap) {
+		ModelAndView model = new ModelAndView();
+		model.setViewName("default:/distribute/distributeRereption");
+		
+		return model;
+	}
+	
+	/**
+	 * @methodName : distributeRereptionScrollAction
+	 * @author : shjeong
+	 * @date : 2023.07.20
+	 * @return : Map<String,Object>
+	 * @description : 배포요청서 조회
+	 */
+	@ResponseBody
+	@RequestMapping("/distributeRereptionScrollAction")
+	public Map<String, Object> distributeRereptionScrollAction(@RequestBody Map<String, Object> reqMap) {
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+
+		try {
+			map = DistributeHelper.manager.searchDistributeRereptionScroll(reqMap);
+			
+			map.put("result", true);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			map.put("result", false);
+			map.put("msg", "ERROR = " + e.getLocalizedMessage());
+		}
+
+		return map;
+	}
+	
+	/**
+	 * @desc	: 배포요청 상세보기
+	 * @author	: shjeong
+	 * @date	: 2023. 07. 20.
+	 * @method	: viewRereptionDistribute
+	 * @param	: reqMap
+	 * @return	: ModelAndView
+	 */
+	@RequestMapping("/viewRereptionDistribute")
+	public ModelAndView viewRereptionDistribute(@RequestParam Map<String, Object> reqMap) {
+		
+		ModelAndView model = new ModelAndView();
+		
+		try {
+			String oidSample = StringUtil.checkNull((String) reqMap.get("oid")); 
+			DistributeRegistration distributeRegis = (DistributeRegistration) CommonUtil.getObject(oidSample);
+			DistributeDocument dd = distributeRegis.getDistribute();
+			DistributeData data = new DistributeData(dd);
+			
+			model.addObject("oid", oidSample);
+			model.addObject("distribute",data);
+			model.setViewName("popup:/distribute/viewRereptionDistribute");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return model;
+	}
+}

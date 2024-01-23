@@ -1,0 +1,1010 @@
+package com.e3ps.project.service;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.e3ps.common.content.util.ContentUtil;
+import com.e3ps.common.log4j.Log4jPackages;
+import com.e3ps.common.util.CommonUtil;
+import com.e3ps.common.util.DateUtil;
+import com.e3ps.common.util.SequenceDao;
+import com.e3ps.common.util.StringUtil;
+import com.e3ps.common.util.WCUtil;
+import com.e3ps.common.web.ParamUtil;
+import com.e3ps.project.EOutput;
+import com.e3ps.project.EProjectNode;
+import com.e3ps.project.EProjectTemplate;
+import com.e3ps.project.ETask;
+import com.e3ps.project.ETaskNode;
+import com.e3ps.project.OutputType;
+import com.e3ps.project.PrePostLink;
+import com.e3ps.project.ProjectRole;
+import com.e3ps.project.ScheduleNode;
+import com.e3ps.project.TaskRoleLink;
+import com.e3ps.project.beans.TemplateOutputData;
+import com.e3ps.project.beans.TemplateTreeData;
+import com.e3ps.project.beans.TemplateTreeModel;
+import com.e3ps.project.key.ProjectKey.MESSAGEKEY;
+import com.e3ps.project.key.ProjectKey.STATEKEY;
+
+import wt.fc.PersistenceHelper;
+import wt.fc.ReferenceFactory;
+import wt.fv.uploadtocache.CachedContentDescriptor;
+import wt.method.RemoteAccess;
+import wt.pdmlink.PDMLinkProduct;
+import wt.pom.Transaction;
+import wt.services.StandardManager;
+import wt.session.SessionHelper;
+import wt.util.WTException;
+
+public class StandardTemplateService extends StandardManager implements RemoteAccess, Serializable, TemplateService {
+
+	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Log4jPackages.PROJECT.getName());
+	private static final long serialVersionUID = 1L;
+
+	public static StandardTemplateService newStandardTemplateService() throws WTException {
+		StandardTemplateService instance = new StandardTemplateService();
+		instance.initialize();
+		return instance;
+	}
+
+	/**
+	 * 템플릿 저장
+	 * 
+	 * @param hash
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public EProjectTemplate save(Map<String, Object> hash) throws Exception {
+
+		EProjectTemplate template = null;
+		
+		Transaction trx = new Transaction();
+
+		try {
+			trx.start();
+
+			String name = ParamUtil.get(hash, "name");
+			boolean enabled = ParamUtil.getBoolean(hash, "enabled");
+			String description = ParamUtil.get(hash, "description");
+//			String outputType = ParamUtil.get(hash, "outputType");
+			String outputType="GENERAL";
+			double manDay = ParamUtil.getDouble(hash, "manDay");
+			
+			template = EProjectTemplate.newEProjectTemplate();
+			
+			String number = "T-20" + DateUtil.getCurrentDateString("month");
+			String noFormat = "0000";
+			String seqNo = SequenceDao.manager.getSeqNo(number + "-", noFormat, "EProjectTemplate", "code");
+			number = number + "-" + seqNo;
+
+			template.setCode(number);
+			template.setName(name);
+			template.setDescription(description);
+			template.setEnabled(enabled);
+			template.setCreator(SessionHelper.manager.getPrincipalReference());
+			template.setPlanStartDate(getStartDate());
+			template.setPlanEndDate(getStartDate());
+			template.setSort(0);
+			template.setOutputType(OutputType.toOutputType(outputType));
+			
+			template.setManDay(manDay);
+
+			template.setProduct(WCUtil.getPDMLinkProduct());
+			
+			template = (EProjectTemplate) PersistenceHelper.manager.save(template);
+
+			trx.commit();
+			trx = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+		return template;
+	}
+	
+	
+
+	@Override
+	public EProjectTemplate upload(Map<String, Object> hash) throws Exception {
+		
+		EProjectTemplate ept = null;
+		try {
+			String uploadFile = ParamUtil.get(hash, "PRIMARY");
+						
+			String cacheId = uploadFile.split("/")[0];
+			
+		 	CachedContentDescriptor cacheDs = new CachedContentDescriptor(cacheId);
+			String uploadPath = ContentUtil.getUploadPath(cacheDs.getEncodedCCD());
+			
+			//WBS 엑셀 Import /Export 기능 210524
+			ept = TemplateHelper.manager.DncTemplateLoad(uploadPath);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		return ept;
+	}
+
+	@Override
+	public EProjectTemplate copyTemplate(Map<String, Object> hash) throws Exception {
+
+		EProjectTemplate template = null;
+		
+		try {
+			String oid = ParamUtil.get(hash, "oid");
+
+			EProjectTemplate orgTemp = (EProjectTemplate) CommonUtil.getObject(oid);
+			String outputType = orgTemp.getOutputType().toString();
+			hash.put("outputType", outputType);
+			hash.put("manDay", String.valueOf(orgTemp.getManDay()));
+			
+			template = TemplateHelper.service.save(hash);
+
+			TemplateHelper.service.copyTemplate(orgTemp, template);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return template;
+	}
+	
+	@Override
+    public void copyTemplate(EProjectNode orgTemp, EProjectNode newTemp)throws Exception{
+		
+		Transaction trx = new Transaction();
+		
+		try {
+			trx.start();
+			
+			//ProjectRole Copy
+			List<ProjectRole> roleList = TemplateHelper.manager.getProjectRoleList(orgTemp);
+			for(ProjectRole role : roleList) {
+				ProjectRole newRole = ProjectRole.newProjectRole();
+				newRole.setCode(role.getCode());
+				newRole.setDescription(role.getDescription());
+				newRole.setName(role.getName());
+				newRole.setProject(newTemp);
+				newRole.setSort(role.getSort());
+				newRole = (ProjectRole)PersistenceHelper.manager.save(newRole);
+			}
+			
+			//Task Copy
+			HashMap<String, Object> relationMap = new HashMap<>();
+			relationMap.put(CommonUtil.getOIDString(orgTemp), newTemp);
+			List<TemplateTreeData> childrenFlatList = TemplateHelper.manager.getTemplateChildrenFlatList(orgTemp);
+			for(TemplateTreeData data : childrenFlatList) {
+				ETask orgTask = (ETask) CommonUtil.getObject(data.getOid());
+				ETaskNode newTask = ETask.newETask();
+				
+				newTask.setCompletion(orgTask.getCompletion());
+				newTask.setCreator(orgTask.getCreator());
+				newTask.setDescription(orgTask.getDescription());
+				newTask.setEndDate(orgTask.getEndDate());
+				newTask.setManDay(orgTask.getManDay());
+				newTask.setName(orgTask.getName());
+				newTask.setPlanEndDate(orgTask.getPlanEndDate());
+				newTask.setPlanStartDate(orgTask.getPlanStartDate());
+				newTask.setSort(orgTask.getSort());
+				newTask.setStartDate(orgTask.getStartDate());
+				newTask.setStatus(orgTask.getStatus());
+				newTask.setProject(newTemp);
+				if(relationMap.containsKey(CommonUtil.getOIDString(orgTask.getParent()))) {
+					newTask.setParent((ScheduleNode) relationMap.get(CommonUtil.getOIDString(orgTask.getParent())));
+				}
+				
+				newTask = (ETaskNode)PersistenceHelper.manager.save(newTask);
+				
+				relationMap.put(CommonUtil.getOIDString(orgTask), newTask);
+			}
+			
+			
+			//TaskRoleLink Copy, 선후행 Copy, 산출물 Copy
+			for(TemplateTreeData data : childrenFlatList) {
+				ETask orgTask = (ETask) CommonUtil.getObject(data.getOid());
+				ETask newTask = (ETask) relationMap.get(CommonUtil.getOIDString(orgTask));
+				
+				//TaskRoleLink Copy
+				List<TaskRoleLink> roleLinkList = TemplateHelper.manager.getTaskRoleLinkList(orgTask);
+				for(TaskRoleLink link : roleLinkList) {
+					ProjectRole role = link.getRole();
+					
+					TaskRoleLink newLink = TaskRoleLink.newTaskRoleLink(role, newTask);
+					PersistenceHelper.manager.save(newLink);
+				}
+				
+				//선후행 Copy
+				List<PrePostLink> prePostLinkList =  TemplateHelper.manager.getPreTaskLinkList(orgTask);
+				for(PrePostLink link : prePostLinkList) {
+					ETaskNode orgPreTask = link.getPre();
+					
+					ETaskNode newPreTask = (ETaskNode) relationMap.get(CommonUtil.getOIDString(orgPreTask));
+					
+					PrePostLink newLink = PrePostLink.newPrePostLink(newPreTask, newTask);
+	 	    		PersistenceHelper.manager.save(newLink);
+				}
+				
+				//산출물 Copy
+				List<TemplateOutputData> outputList = TemplateHelper.manager.getTaskOutputList(orgTask);
+				for(TemplateOutputData outputData : outputList) {
+					EOutput output = (EOutput) CommonUtil.getObject(outputData.getOid());
+					
+					EOutput newOutput = EOutput.newEOutput();
+					newOutput.setName(output.getName());
+					newOutput.setDescription(output.getDescription());
+					newOutput.setLocation(output.getLocation());
+					newOutput.setDocType(output.getDocType());
+					newOutput.setStep(output.getStep());
+					newOutput.setTask((ETaskNode) newTask);
+					newOutput = (EOutput) PersistenceHelper.manager.save(newOutput);
+				}
+			}
+			
+			trx.commit();
+			trx = null;
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+	}
+	
+	/**
+	 * 템플릿 수정시
+	 * 
+	 * @param hash
+	 * @return
+	 * @throws Exception
+	 */
+
+	@Override
+	public String update(Map<String, Object> hash) throws Exception {
+
+		Transaction trx = new Transaction();
+
+		EProjectTemplate template = null;
+		String msg = MESSAGEKEY.UPDATE;
+
+		try {
+			trx.start();
+
+			String oid = ParamUtil.get(hash, "oid");
+			ReferenceFactory rf = new ReferenceFactory();
+			template = (EProjectTemplate) rf.getReference(oid).getObject();
+
+			String name = ParamUtil.get(hash, "name");
+			boolean enabled = ParamUtil.getBoolean(hash, "enabled");
+			String description = ParamUtil.get(hash, "description");
+			int sort = ParamUtil.getInt(hash, "sort");
+			String division = ParamUtil.get(hash, "division");
+			// String outputType = ProjectUtil.get(hash,"outputType");
+			template.setName(name);
+			template.setDescription(description);
+			template.setEnabled(enabled);
+			template.setCreator(SessionHelper.manager.getPrincipalReference());
+			template.setPlanStartDate(getStartDate());
+			template.setPlanEndDate(getStartDate());
+			template.setSort(sort);
+			// template.setOutputType(OutputType.toOutputType(outputType));
+
+			if (division != null && division.length() > 0) {
+				PDMLinkProduct ot = (PDMLinkProduct) rf.getReference(division).getObject();
+				template.setProduct(ot);
+			}
+
+			template = (EProjectTemplate) PersistenceHelper.manager.modify(template);
+
+			trx.commit();
+			trx = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			msg = e.getLocalizedMessage() + MESSAGEKEY.UPDATE_ERROR;
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+		return msg;
+	}
+
+	/**
+	 * 템플릿 삭제시
+	 * 
+	 * @param hash
+	 * @return
+	 * @throws Exception
+	 */
+
+	@Override
+	public String delete(Map<String, Object> reqMap) throws Exception {
+
+		Transaction trx = new Transaction();
+
+		String msg = MESSAGEKEY.DELETE;
+		try {
+			trx.start();
+
+			String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+
+			if (oid.length() > 0) {
+				EProjectTemplate template = (EProjectTemplate) CommonUtil.getObject(oid);
+
+				delete(template);
+			}
+
+			trx.commit();
+			trx = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			msg = e.getLocalizedMessage() + MESSAGEKEY.DELETE_ERROR;
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+		return msg;
+	}
+	
+	private void delete(ScheduleNode node) throws Exception {
+		
+		List<ETask> taskList = TemplateHelper.manager.getTemplateTaskChildren(CommonUtil.getOIDString(node));
+		
+		for(ETask task : taskList) {
+			delete(task);
+		}
+		
+		if(node instanceof ETaskNode){
+			List<TaskRoleLink> roleLinkList = TemplateHelper.manager.getTaskRoleLinkList((ETaskNode) node);
+			
+			//Task Role 링크 삭제
+			for(TaskRoleLink link : roleLinkList) {
+				PersistenceHelper.manager.delete(link);
+			}
+			
+			//산출물 정의 삭제
+			List<TemplateOutputData> outputList = TemplateHelper.manager.getTaskOutputList((ETaskNode) node);
+			for(TemplateOutputData outputData : outputList) {
+				EOutput output = (EOutput) CommonUtil.getObject(outputData.getOid());
+				PersistenceHelper.manager.delete(output);
+			}
+			
+			//선후행 링크 삭제
+			List<PrePostLink> prePostLinkList = TemplateHelper.manager.getPostTaskLinkList((ETaskNode) node);
+			for(PrePostLink link : prePostLinkList) {
+				PersistenceHelper.manager.delete(link);
+			}
+    	}
+		
+		if(node instanceof EProjectNode) {
+			//Tepmlate ProjectRole 삭제
+			List<ProjectRole> roleList = TemplateHelper.manager.getProjectRoleList((EProjectNode) node);
+			for(ProjectRole role : roleList) {
+				PersistenceHelper.manager.delete(role);
+			}
+		}
+		
+		PersistenceHelper.manager.delete(node);
+	}
+	
+	/**
+	 * 템플릿등록시
+	 * 
+	 * @param hash
+	 * @return
+	 * @throws Exception
+	 */
+
+	@Override
+	public ETask createTask(Map<String, Object> reqMap) throws Exception {
+
+		ETask newTask = null;
+
+		Transaction trx = new Transaction();
+
+		try {
+			trx.start();
+
+			String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+			String name = StringUtil.checkNull((String) reqMap.get("name"));
+			String description = StringUtil.checkNull((String) reqMap.get("description"));
+			String sort = StringUtil.checkNull((String) reqMap.get("sort"));
+			double manDay = ParamUtil.getDouble(reqMap, "manDay");
+
+			ScheduleNode parent = (ScheduleNode) CommonUtil.getObject(oid);
+
+			newTask = ETask.newETask();
+
+			newTask.setDescription(description);
+
+			Calendar ca = Calendar.getInstance();
+			ca.setTimeInMillis(getStartDate().getTime());
+			Timestamp start = new Timestamp(ca.getTime().getTime());
+
+			BigDecimal bd = new BigDecimal(manDay);
+			bd = bd.setScale(0, BigDecimal.ROUND_UP);
+
+			ca.add(Calendar.DATE, bd.intValue() - 1);
+			Timestamp end = new Timestamp(ca.getTime().getTime());
+
+			newTask.setPlanStartDate(start);
+			newTask.setPlanEndDate(end);
+			newTask.setCreator(SessionHelper.manager.getPrincipalReference());
+			newTask.setName(name);
+			newTask.setParent(parent);
+			newTask.setSort(Integer.parseInt(sort));
+			newTask.setManDay(manDay);
+			newTask.setStatus(STATEKEY.READY);
+
+			if (parent instanceof EProjectNode) {
+				newTask.setProject((EProjectNode) parent);
+			} else {
+				newTask.setProject(((ETaskNode) parent).getProject());
+			}
+
+			newTask = (ETask) PersistenceHelper.manager.save(newTask);
+
+			ScheduleNode root = (ScheduleNode) newTask.getProject();
+			TemplateTreeModel model = new TemplateTreeModel(root);
+			model.setSchedule();
+			
+			trx.commit();
+			trx = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WTException(e);
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+		return newTask;
+	}
+
+	/**
+	 * 템플릿 수정시
+	 * 
+	 * @param hash
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public ETask updateTask(Map<String, Object> hash) throws Exception {
+
+		ETask task = null;
+
+		Transaction trx = new Transaction();
+
+		try {
+			trx.start();
+			String oid = ParamUtil.get(hash, "oid");
+			String taskName = ParamUtil.get(hash, "taskName");
+			String description = StringUtil.checkNull(ParamUtil.get(hash, "description"));
+			double manDay = ParamUtil.getDouble(hash, "manDay");
+
+			task = (ETask) CommonUtil.getObject(oid);
+
+			task.setName(taskName);
+			task.setManDay(manDay);
+			task.setDescription(description);
+
+			task = (ETask) PersistenceHelper.manager.save(task);
+
+			//updateTemplateSchedule(task.getProject());
+			ScheduleNode root = (ScheduleNode) task.getProject();
+			TemplateTreeModel model = new TemplateTreeModel(root);
+			model.setSchedule();
+			
+			trx.commit();
+			trx = null;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+		return task;
+	}
+
+
+	/**
+	 * Role 수정 (TASK 담당자 수정)
+	 * 
+	 * @param hash
+	 * @throws Exception
+	 */
+
+	@Override
+	public String editRole(Map<String, Object> reqMap) throws Exception {
+
+		Transaction trx = new Transaction();
+		String msg = MESSAGEKEY.UPDATE;
+		try {
+			trx.start();
+
+			String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+			List<Map<String, Object>> items = (List<Map<String, Object>>) reqMap.get("items");
+
+			ETask task = (ETask) CommonUtil.getObject(oid);
+
+			List<TaskRoleLink> taskRoleLinkList = TemplateHelper.manager.getTaskRoleLinkList(task);
+
+			List<ProjectRole> tempRoleList = new ArrayList<ProjectRole>(); // 현재 링크에 있는 Role List
+			for (TaskRoleLink taskRoleLink : taskRoleLinkList) {
+				ProjectRole role = taskRoleLink.getRole();
+
+				tempRoleList.add(role);
+
+				PersistenceHelper.manager.delete(taskRoleLink);
+			}
+
+			for (Map<String, Object> item : items) {
+
+				ProjectRole role = TemplateHelper.manager.getProjectRole(task.getProject(), (String) item.get("key"));
+
+				if (role == null) {
+					role = ProjectRole.newProjectRole();
+
+					role.setName((String) item.get("value"));
+					role.setCode((String) item.get("key"));
+					role.setProject(task.getProject());
+					role = (ProjectRole) PersistenceHelper.manager.save(role);
+				} else {
+					if (tempRoleList.contains(role)) { // 새로바뀐 Role에 현재링크 Role 있으면 리스트에서 제거
+						tempRoleList.remove(role);
+					}
+				}
+
+				TaskRoleLink link = TaskRoleLink.newTaskRoleLink(role, task);
+				PersistenceHelper.manager.save(link);
+			}
+
+			// 남은 Role(어느 링크와도 연관되지 않음) 삭제
+			for (ProjectRole role : tempRoleList) {
+				PersistenceHelper.manager.delete(role);
+			}
+
+			trx.commit();
+			trx = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			msg = e.getLocalizedMessage() + MESSAGEKEY.UPDATE_ERROR;
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+		return msg;
+	}
+
+	/**
+	 * 선후행 맺기
+	 * 
+	 * @param hash
+	 * @throws Exception
+	 */
+
+	@Override
+	public void setPreTask(Map<String, Object> reqMap) throws Exception {
+
+		Transaction trx = new Transaction();
+
+		try {
+			trx.start();
+
+			String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+			List<Map<String, Object>> items = (List<Map<String, Object>>) reqMap.get("items");
+
+			ETask task = (ETask) CommonUtil.getObject(oid);
+
+			List<PrePostLink> preTaskLinkList = TemplateHelper.manager.getPreTaskLinkList(task);
+
+			for (PrePostLink preTaskLink : preTaskLinkList) {
+				PersistenceHelper.manager.delete(preTaskLink);
+			}
+
+			for (Map<String, Object> item : items) {
+				String preTaskOid = (String) item.get("oid");
+
+				ETask preTask = (ETask) CommonUtil.getObject(preTaskOid);
+
+				PrePostLink link = PrePostLink.newPrePostLink(preTask, task);
+				PersistenceHelper.manager.save(link);
+			}
+
+			ScheduleNode root = (ScheduleNode) task.getProject();
+			TemplateTreeModel model = new TemplateTreeModel(root);
+			model.setSchedule();
+
+			trx.commit();
+			trx = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WTException(e);
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+	}
+
+	public Timestamp getStartDate() {
+		try {
+			return DateUtil.getTimestampFormat("20000101", "yyyyMMdd");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+
+	}
+
+	// 템플릿 트리 노드 하위 추가
+	@Override
+	public Map<String, Object> addChildTask(Map<String, Object> reqMap) throws Exception {
+
+		Map<String, Object> returnMap = new HashMap<>();
+
+		Transaction trx = new Transaction();
+
+		try {
+			trx.start();
+
+			String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+
+			ScheduleNode sNode = (ScheduleNode) CommonUtil.getObject(oid);
+
+			EProjectTemplate template = null;
+			ETask task = null;
+
+			if (sNode instanceof EProjectNode) {
+				template = (EProjectTemplate) sNode;
+			} else if (sNode instanceof ETaskNode) {
+				task = (ETask) sNode;
+				template = (EProjectTemplate) task.getProject();
+			}
+
+			int sort = TemplateHelper.manager.getMaxSeq(sNode);
+			String name = "NewTask";
+
+			List<TemplateOutputData> outputList = new ArrayList<>();
+			if (task != null) {
+				outputList = TemplateHelper.manager.getTaskOutputList(task);
+			}
+
+			if (outputList.size() > 0) {
+				returnMap.put("msg", "Task의 산출물이 등록되어 있는 경우 하위 Task 추가가 불가능 합니다.");
+				return returnMap;
+			} else {
+				Map<String, Object> taskMap = new HashMap<String, Object>();
+
+				taskMap.put("name", name);
+				taskMap.put("sort", Integer.toString(sort));
+				taskMap.put("manDay", "1");
+				taskMap.put("oid", oid);
+
+				ETask newTask = TemplateHelper.service.createTask(taskMap);
+
+				returnMap.put("newTask", newTask);
+			}
+
+			// 선후행 관계 끊기
+			if (task != null) {
+				List<PrePostLink> preTaskLinkList = TemplateHelper.manager.getPreTaskLinkList(task);
+				for (PrePostLink link : preTaskLinkList) {
+					PersistenceHelper.manager.delete(link);
+				}
+				List<PrePostLink> postTaskLinkList = TemplateHelper.manager.getPostTaskLinkList(task);
+				for (PrePostLink link : postTaskLinkList) {
+					PersistenceHelper.manager.delete(link);
+				}
+			}
+
+			trx.commit();
+			trx = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WTException(e);
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+
+		return returnMap;
+	}
+	
+	// 템플릿 트리 Next 노드 추가
+	@Override
+	public Map<String, Object> addNextTask(Map<String, Object> reqMap) throws Exception {
+
+		Map<String, Object> returnMap = new HashMap<>();
+
+		Transaction trx = new Transaction();
+
+		try {
+			trx.start();
+
+			String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+
+			ScheduleNode sNode = (ScheduleNode) CommonUtil.getObject(oid);
+
+			EProjectTemplate template = null;
+			ETask task = null;
+
+			if (sNode instanceof EProjectNode) {
+				template = (EProjectTemplate) sNode;
+			} else if (sNode instanceof ETaskNode) {
+				task = (ETask) sNode;
+				template = (EProjectTemplate) task.getProject();
+			}
+
+			if(template == sNode) {
+				returnMap.put("msg", "최상위 Level의 다음 태스크 추가는 불가합니다.");
+				return returnMap;
+			}
+			
+			List<ETask> nextList = TemplateHelper.manager.getNextTaskList(task);
+			
+			for(ETask next : nextList) {
+				next.setSort(next.getSort() + 1);
+				next = (ETask) PersistenceHelper.manager.save(next);
+			}
+			
+			String name = "NewTask";
+
+			Map<String, Object> taskMap = new HashMap<String, Object>();
+
+			taskMap.put("name", name);
+			taskMap.put("sort", Integer.toString(sNode.getSort() + 1));
+			taskMap.put("manDay", "1");
+			taskMap.put("oid", CommonUtil.getOIDString(task.getParent()));
+
+			ETask newTask = TemplateHelper.service.createTask(taskMap);
+
+			returnMap.put("newTask", newTask);
+			returnMap.put("nextList", nextList);
+
+			trx.commit();
+			trx = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WTException(e);
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+
+		return returnMap;
+	}
+	
+	// 템플릿 트리 노드 삭제
+	@Override
+	public Map<String, Object> deleteTask(Map<String, Object> reqMap) throws Exception {
+
+		Map<String, Object> returnMap = new HashMap<>();
+
+		Transaction trx = new Transaction();
+
+		try {
+			trx.start();
+
+			String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+
+			ScheduleNode sNode = (ScheduleNode) CommonUtil.getObject(oid);
+
+			EProjectTemplate template = null;
+			ETask task = null;
+
+			if (sNode instanceof EProjectNode) {
+				template = (EProjectTemplate) sNode;
+			} else if (sNode instanceof ETaskNode) {
+				task = (ETask) sNode;
+				template = (EProjectTemplate) task.getProject();
+			}
+
+			if (template == sNode) {
+				returnMap.put("msg", "Task만 삭제 가능합니다.");
+				return returnMap;
+			}
+
+			List<ETask> children = TemplateHelper.manager.getTemplateTaskChildren(oid);
+			if(children.size() > 0) {
+				returnMap.put("msg", "하위 Task가 있는 경우 삭제할 수 없습니다.");
+				return returnMap;
+			}
+			
+			//삭제(선행, 후행, 산출물 정의, Role)
+			List<PrePostLink> preTaskLinkList = TemplateHelper.manager.getPreTaskLinkList(task);
+			for(PrePostLink link : preTaskLinkList) {
+				PersistenceHelper.manager.delete(link);
+			}
+			List<PrePostLink> postTaskLinkList = TemplateHelper.manager.getPostTaskLinkList(task);
+			for(PrePostLink link : postTaskLinkList) {
+				PersistenceHelper.manager.delete(link);
+			}
+			List<TemplateOutputData> outputList = TemplateHelper.manager.getTaskOutputList(task);
+			for(TemplateOutputData outputData : outputList) {
+				EOutput output = (EOutput) CommonUtil.getObject(outputData.getOid());
+				PersistenceHelper.manager.delete(output);
+			}
+			List<TaskRoleLink> taskRoleLinkList = TemplateHelper.manager.getTaskRoleLinkList(task);
+			for(TaskRoleLink link : taskRoleLinkList) {
+				ProjectRole role = link.getRole();
+
+				PersistenceHelper.manager.delete(link);
+				
+				List<TaskRoleLink> roleLink = TemplateHelper.manager.getTaskRoleLinkList(role);
+				if(roleLink.size() == 0) {
+					PersistenceHelper.manager.delete(role);
+				}
+			}
+			
+			PersistenceHelper.manager.delete(task);
+
+	    	ScheduleNode root = (ScheduleNode) template;
+	    	TemplateTreeModel model = new TemplateTreeModel(root);
+	    	model.setSchedule();
+	    	
+			trx.commit();
+			trx = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WTException(e);
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+
+		return returnMap;
+	}
+	
+	// 템플릿 트리 Up 이등
+	@Override
+	public Map<String, Object> moveUpTask(Map<String, Object> reqMap) throws Exception {
+
+		Map<String, Object> returnMap = new HashMap<>();
+
+		Transaction trx = new Transaction();
+
+		try {
+			trx.start();
+
+			String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+
+			ScheduleNode sNode = (ScheduleNode) CommonUtil.getObject(oid);
+
+			EProjectTemplate template = null;
+			ETask task = null;
+
+			if (sNode instanceof EProjectNode) {
+				template = (EProjectTemplate) sNode;
+			} else if (sNode instanceof ETaskNode) {
+				task = (ETask) sNode;
+				template = (EProjectTemplate) task.getProject();
+			}
+
+			if (template == sNode) {
+				returnMap.put("msg", "최상위 Level은 이동이 불가합니다.");
+				return returnMap;
+			}
+
+			ETask prevTask = TemplateHelper.manager.getPrevTask(task);
+
+			if(prevTask != null) {
+				int taskSort = task.getSort();
+				int prevSort = prevTask.getSort();
+				
+				task.setSort(prevSort);
+				prevTask.setSort(taskSort);
+				
+				task = (ETask) PersistenceHelper.manager.save(task);
+				prevTask = (ETask) PersistenceHelper.manager.save(prevTask);
+				
+				returnMap.put("task", task);
+				returnMap.put("prevTask", prevTask);
+			} else {
+				return returnMap;
+			}
+
+			trx.commit();
+			trx = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WTException(e);
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+
+		return returnMap;
+	}
+	
+	// 템플릿 트리 down 이등
+	@Override
+	public Map<String, Object> moveDownTask(Map<String, Object> reqMap) throws Exception {
+
+		Map<String, Object> returnMap = new HashMap<>();
+
+		Transaction trx = new Transaction();
+
+		try {
+			trx.start();
+
+			String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+
+			ScheduleNode sNode = (ScheduleNode) CommonUtil.getObject(oid);
+
+			EProjectTemplate template = null;
+			ETask task = null;
+
+			if (sNode instanceof EProjectNode) {
+				template = (EProjectTemplate) sNode;
+			} else if (sNode instanceof ETaskNode) {
+				task = (ETask) sNode;
+				template = (EProjectTemplate) task.getProject();
+			}
+
+			if (template == sNode) {
+				returnMap.put("msg", "최상위 Level은 이동이 불가합니다.");
+				return returnMap;
+			}
+
+			ETask nextTask = TemplateHelper.manager.getNextTask(task);
+
+			if (nextTask != null) {
+				int taskSort = task.getSort();
+				int nextSort = nextTask.getSort();
+
+				task.setSort(nextSort);
+				nextTask.setSort(taskSort);
+
+				task = (ETask) PersistenceHelper.manager.save(task);
+				nextTask = (ETask) PersistenceHelper.manager.save(nextTask);
+
+				returnMap.put("task", task);
+				returnMap.put("nextTask", nextTask);
+			} else {
+				return returnMap;
+			}
+
+			trx.commit();
+			trx = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WTException(e);
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+
+		return returnMap;
+	}
+}

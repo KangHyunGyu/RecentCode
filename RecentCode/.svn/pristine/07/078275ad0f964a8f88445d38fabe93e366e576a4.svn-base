@@ -1,0 +1,197 @@
+ <%@ page language="java" contentType="text/html; charset=utf-8"
+	pageEncoding="utf-8"%>
+<!-- 각 화면 개발시 Tag 복사해서 붙여넣고 사용할것 -->    
+<%@ taglib prefix="c"		uri="http://java.sun.com/jsp/jstl/core"			%>
+<%@ taglib prefix="e3ps" 	uri="/WEB-INF/tlds/e3ps-functions.tld"%>
+<div class="product">
+	<!-- button -->
+	<div class="seach_arm pt15 pb5">
+		<div class="leftbt">
+		</div>
+		<div class="rightbt">
+			<button type="button" class="m_read" id="searchBtn" onclick="search();">검색</button>
+			<button type="button" class="s_bt05" id="resetBtn" onclick="reset();">${e3ps:getMessage('초기화')}</button>
+		</div>
+	</div>
+	<!-- //button -->
+	
+	<div class="semi_content pl30 pr30">
+		<div class="semi_table1 pr20">
+			<jsp:include page="${e3ps:getIncludeURLString('/department/include_departmentTree')}" flush="true">
+				<jsp:param name="code" value="00000"/>
+				<jsp:param name="autoGridHeight" value="false"/>
+				<jsp:param name="gridHeight" value="600"/>
+			</jsp:include>
+		</div>
+		<div class="semi_content2">
+			<!-- pro_table -->
+			<div class="semi_table2">
+			<form name="searchForm" id="searchForm">
+				<input type="hidden" name="departmentOid" id="departmentOid" value="" />
+				<table summary="">
+					<caption></caption>
+					<colgroup>
+						<col style="width:10%">
+						<col style="width:20%">
+						<col style="width:10%">
+						<col style="width:20%">
+						<col style="width:10%">
+						<col style="width:20%">
+					</colgroup>
+					
+					<tbody>
+						<tr>
+							<th scope="col">${e3ps:getMessage('사번')}</th>
+							<td><input type="text" id="userId" name="userId" class="w100" /></td>
+							<th scope="col">${e3ps:getMessage('이름')}</th>
+							<td><input type="text" id="userName" name="userName" class="w100" /></td>
+							<th scope="col">${e3ps:getMessage('계정 사용 여부')}</th>
+							<td>
+								<select class="w80" id="isDisable" name="isDisable">
+									<option value="">${e3ps:getMessage('전체')}</option>
+									<option value="false">${e3ps:getMessage('사용중')}</option>
+									<option value="true">${e3ps:getMessage('미사용')}</option>
+								</select>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
+			</div>
+			<!-- //pro_table -->
+			<!-- table list-->
+			<div>
+				<!-- button -->
+				<div class="seach_arm2 pt10 pb5">
+					<div class="leftbt">검색결과 (<span id="total">0</span> 개)</div>
+					<div class="rightbt">
+						<img class="pointer mb5" id="favorite" data-type="false" data-oid="" onclick="add_favorite();" src="/Windchill/jsp/portal/images/favorites_icon_b.png" border="0"/>
+						<button type="button" class="m_read" id="excelDown" onclick="xlsxExport();">엑셀 다운로드</button>
+					</div>
+				</div>
+				<!-- //button -->
+				<div class="list" id="grid_wrap" style="height:500px;"></div>
+			</div>
+			<!-- //table list-->
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+if (!webix.env.touch && webix.env.scrollSize)
+	  webix.CustomScroll.init();
+webix.ready(function(){
+	var grid = webix.ui({
+		view:"datatable",
+		container:"grid_wrap",
+		id:"grid_wrap",
+		yCount: 13,
+		clipboard:"block",
+		multiselect:true,
+		select:"cell",
+		columns:[
+			{ id:"index",   header:"No.",     width:40,	tooltip:false,
+				css: "custom_webix_center",		
+			},
+			{ id:"userId", header:[{text:"${e3ps:getMessage('사번')}", content:"excelFilter", mode:"text"}] , sort:"string", width:150,
+				css: "custom_webix_ellipsis custom_webix_center",
+			},
+			{ id:"name", header:[{text:"${e3ps:getMessage('이름')}", content:"excelFilter", mode:"text"}] ,fillspace:true, sort:"string",
+				css: "custom_webix_ellipsis custom_webix_center",
+			},
+			{ id:"duty", header:[{text:"${e3ps:getMessage('직위')}", content:"excelFilter", mode:"text"}] , sort:"string", width:150,
+				css: "custom_webix_ellipsis custom_webix_center",
+			},
+			{ id:"departmentName", header:[{text:"${e3ps:getMessage('부서')}", content:"excelFilter", mode:"text"}] , sort:"string", width:150,
+				css: "custom_webix_ellipsis custom_webix_center",
+			},
+			{ id:"email", header:"${e3ps:getMessage('이메일')}" , sort:"string", width:200,
+				css: "custom_webix_ellipsis custom_webix_center",
+			},
+			{ id:"disableKor", header:"${e3ps:getMessage('계정 사용 여부')}" , sort:"string", width:150,
+				css: "custom_webix_ellipsis custom_webix_center",
+			}
+		],
+		on:{
+			onHeaderClick:function(header, event, target) {
+				var column = $$("grid_wrap").getColumnConfig(header.column);
+				
+				if("server" === column.sort) {
+					$("#sessionId").val("");
+				}
+			},
+	        "data->onStoreUpdated":function(){
+	            this.data.each(function(obj, i){
+	                obj.index = i+1;
+	            });
+	        }
+	    },
+		scroll:"y",
+		sort:"multi"
+	});
+	webix.event(window, "resize", function(){ grid.adjust(); });
+	
+	$(".webix_excel_filter").click(function(){
+		 $$("grid_wrap").unselect(); 
+	});
+
+	preRequestData();
+});
+
+$(document).ready(function(){
+	//enter key pressed event
+	$("#searchForm").keypress(function(e){
+		if(e.keyCode==13){
+			preRequestData();
+		}
+	});
+	
+});
+
+//최초 데이터 요청
+function preRequestData() {
+	var param = new Object();
+	
+	var paramArray = $("#searchForm").serializeArray();
+	
+	$(paramArray).each(function(idx, obj){
+		param[obj.name] = obj.value;
+	});
+	
+	$$("grid_wrap").clearAll();
+	var url = getURLString("/admin/searchUserAction");
+	ajaxCallServer(url, param, function(data){
+
+		// 그리드 데이터
+		var gridData = data.list;
+		$("#total").html(gridData.length);
+		
+		$$("grid_wrap").parse(gridData);
+	});
+}
+
+
+//검색
+function search(){
+	$$("grid_wrap").clearAll();
+	preRequestData();
+}
+
+function xlsxExport() {
+	webix.toExcel($$("grid_wrap"), {
+	   	filename: "xlsxExport",
+	   	rawValues:true,
+	});
+}
+
+function reset(){
+	var locationDisplay = $("#locationDisplay").val();
+	$("#searchForm")[0].reset();
+	$("#locationDisplay").val(locationDisplay);
+	
+}
+
+function changePassword(id) {
+	var url = getURLString("/workspace/changePassword") + "?isPop=true&id=" + id;
+	openPopup(url, "passwordchange", 700, 200);
+}
+</script>

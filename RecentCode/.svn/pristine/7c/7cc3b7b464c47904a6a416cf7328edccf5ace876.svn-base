@@ -1,0 +1,25 @@
+<%@page import="com.e3ps.admin.service.AdminHelper"%>
+<%@page import="org.json.JSONObject"%>
+<%@page import="com.e3ps.common.util.LoginAuthUtil"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%
+
+JSONObject data = new JSONObject();
+JSONObject body = new JSONObject();
+String command = request.getParameter("command");
+
+String id = request.getParameter("id");
+String password = request.getParameter("password");
+
+request.setAttribute("j_username", id);
+request.setAttribute("j_password", password);
+
+if("login".equals(command)) {
+	AdminHelper.service.createLoginHistory(request);
+}
+
+data.put("body", body);
+response.setContentType("application/json");
+response.getWriter().write(data.toString());
+%>

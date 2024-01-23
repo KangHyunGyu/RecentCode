@@ -1,0 +1,41 @@
+ResourceInfo.class=wt.tools.resource.EnumResourceInfo
+
+# Entry Contents
+
+as_needed.value.translationSource.now=as needed
+as_needed.shortDescription.translationSource.now=as needed
+as_needed.value=as needed
+as_needed.shortDescription=as needed
+as_needed.order=20
+
+cu_m.value.translationSource.now=cubic meters
+cu_m.shortDescription.translationSource.now=m^3
+cu_m.value=cubic meters
+cu_m.shortDescription=m^3
+cu_m.order=70
+
+l.value.translationSource.now=liters
+l.shortDescription.translationSource.now=l
+l.value=liters
+l.shortDescription=l
+l.order=50
+
+sq_m.value.translationSource.now=square meters
+sq_m.shortDescription.translationSource.now=m^2
+sq_m.value=square meters
+sq_m.shortDescription=m^2
+sq_m.order=60
+
+m.value.translationSource.now=meters
+m.shortDescription.translationSource.now=m
+m.value=meters
+m.shortDescription=m
+m.order=40
+
+mt.value=\uBBF8\uD130
+mt.shortDescription=l
+mt.order=80
+
+bot.value=\uBCD1
+bot.shortDescription=l
+bot.order=90

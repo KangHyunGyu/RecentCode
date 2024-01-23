@@ -1,0 +1,107 @@
+<%@page import="java.sql.DriverManager"%>
+<%@page import="wt.query.SearchCondition"%>
+<%@page import="wt.query.QuerySpec"%>
+<%@page import="com.e3ps.distribute.DistributeRegistration"%>
+<%@page import="wt.fc.QueryResult"%>
+<%@page import="wt.fc.WTObject"%>
+<%@page import="wt.fc.Persistable"%>
+<%@page import="com.e3ps.admin.EsolutionMenu"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="wt.pom.WTConnection"%>
+<%@page import="java.sql.Connection"%>
+<%@page import="java.text.DecimalFormat"%>
+<%@page import="wt.pom.DBProperties"%>
+<%@page import="wt.method.MethodContext"%>
+<%@page import="com.e3ps.common.code.NumberCode"%>
+<%@page import="java.util.Date"%>
+<%@page import="java.util.Locale"%>
+<%@page import="java.util.TimeZone"%>
+<%@page import="org.apache.commons.lang3.time.FastDateFormat"%>
+<%@page import="com.e3ps.distribute.DistributeDocument"%>
+<%@page import="wt.admin.AdminDomainRef"%>
+<%@page import="wt.org.WTPrincipalReference"%>
+<%@page import="wt.access.AccessPermission"%>
+<%@page import="wt.access.AccessPermissionSet"%>
+<%@page import="wt.lifecycle.State"%>
+<%@page import="wt.admin.AdministrativeDomainHelper"%>
+<%@page import="wt.admin.AdministrativeDomain"%>
+<%@page import="wt.access.AccessControlHelper"%>
+<%@page import="com.e3ps.common.util.CommonUtil"%>
+<%@page import="com.e3ps.org.People"%>
+<%@page import="java.util.List"%>
+<%@page import="java.util.ArrayList"%>
+<%@page import="wt.session.SessionHelper"%>
+<%@page import="wt.org.WTPrincipal"%>
+<%@page import="com.e3ps.org.service.UserHelper"%>
+<%@page import="wt.org.WTUser"%>
+<%@page import="wt.fc.collections.WTArrayList"%>
+<%@page import="wt.fc.collections.WTCollection"%>
+<%@page import="wt.org.StandardOrganizationServicesManager"%>
+<%@page import="wt.org.DirectoryContextProvider"%>
+<%@page import="wt.inf.container.OrgContainer"%>
+<%@page import="wt.inf.container.WTContainerHelper"%>
+<%@page import="wt.inf.container.ExchangeContainer"%>
+<%@page import="wt.org.WTOrganization"%>
+<%@page import="java.util.Enumeration"%>
+<%@page import="wt.org.WTGroup"%>
+<%@page import="wt.org.OrganizationServicesHelper"%>
+<%@page import="wt.fc.PersistenceHelper"%>
+<%@page import="wt.lifecycle.LifeCycleManaged"%>
+<%@page import="wt.lifecycle.LifeCycleTemplate"%>
+<%@page import="wt.lifecycle.LifeCycleHelper"%>
+<%@page import="wt.clients.folder.FolderTaskLogic"%>
+<%@page import="wt.folder.FolderHelper"%>
+<%@page import="wt.folder.FolderEntry"%>
+<%@page import="wt.folder.Folder"%>
+<%@page import="wt.inf.container.WTContained"%>
+<%@page import="wt.inf.container.WTContainerRef"%>
+<%@page import="com.e3ps.common.util.WCUtil"%>
+<%@page import="wt.inf.container.WTContainer"%>
+<%@page import="com.e3ps.common.service.CommonHelper"%>
+<%@page import="wt.vc.views.ViewHelper"%>
+<%@page import="wt.part.Source"%>
+<%@page import="wt.part.PartType"%>
+<%@page import="wt.part.QuantityUnit"%>
+<%@page import="wt.part.WTPart"%>
+<%@page import="com.e3ps.common.util.StringUtil"%>
+<%@page import="java.util.Map"%>
+<%@page import="java.util.HashMap"%>
+<%@page import="com.e3ps.part.service.PartHelper"%>
+<%@page import="com.e3ps.part.service.PartService"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%
+/* String oid = "com.e3ps.distribute.DistributeDocument:2864307";
+DistributeDocument dist = (DistributeDocument)CommonUtil.getObject(oid);
+
+QueryResult result = PersistenceHelper.manager.navigate(dist, DistributeRegistration.DISTRIBUTE , DistributeRegistration.class, false);
+while(result.hasMoreElements()){
+	Object o[] = (Object[])result.nextElement();
+	System.out.println(o[0]);
+} */
+
+
+ /*
+QuerySpec qs = new QuerySpec();
+
+SearchCondition sc = null;
+
+int idx2 = qs.appendClassList(DistributeRegistration.class, true);
+sc = new SearchCondition(DistributeRegistration.class, DistributeRegistration.DISTRIBUTE_REFERENCE + ".key.id", SearchCondition.EQUAL, CommonUtil.getOIDLongValue(oid));
+qs.appendWhere(sc, new int[] {idx2});
+
+System.out.println(qs);
+
+QueryResult qr = PersistenceHelper.manager.find(qs);
+while(qr.hasMoreElements()){
+	Object o[] = (Object[])qr.nextElement();
+	System.out.println(o[0]);
+}*/
+
+
+Connection con = DriverManager.getConnection("jdbc:postgresql://cpc.worldex.com:5432/postgres", "postgres", "pgadmin");
+
+out.print("con=>"+con);
+
+%>
+

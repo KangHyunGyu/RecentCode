@@ -1,0 +1,111 @@
+﻿ResourceInfo.class=wt.tools.resource.EnumResourceInfo
+ResourceInfo.customizable=true
+ResourceInfo.deprecated=false
+
+
+# Entry Format (values equal to default value are not included)
+# <key>.value=
+# <key>.category=
+# <key>.comment=
+# <key>.argComment<n>=
+# <key>.constant=
+# <key>.customizable=
+# <key>.deprecated=
+# <key>.abbreviatedDisplay=true는 계층 구조 (Tree)
+# <key>.fullDisplay=General(공통)-10 ,Project(프로젝트) - 20 ,Doc(문서) -30 ,Part(품목)-40 ,Change(설계변경)-50, Disabled(미사용), PRODUCTION(생산요청) - 100
+# <key>.shortDescription=자동 true (longDescription에서 정해진 key값으로 code 자동 생성 ,수동 false(사용자가 입력 하는 방식))
+# <key>.longDescription=seq
+# <key>.order=
+# <key>.defaultValue=
+# <key>.selectable= 
+
+# Entry Contents
+
+#ISSUETYPE - ISSUETYPE
+#이슈 유형
+ISSUETYPE.value=이슈 유형
+ISSUETYPE.order=21
+ISSUETYPE.abbreviatedDisplay=false
+ISSUETYPE.fullDisplay=Project
+
+#PROJECTTYPE - PROJECTTYPE
+#프로젝트 타입
+PROJECTTYPE.value=프로젝트 타입
+PROJECTTYPE.order=22
+PROJECTTYPE.abbreviatedDisplay=false
+#PROJECTTYPE.fullDisplay=Project
+
+#DOCCODETYPE - DocCodeType
+#문서코드
+DOCCODETYPE.value=문서유형
+DOCCODETYPE.order=30
+DOCCODETYPE.abbreviatedDisplay=false
+DOCCODETYPE.fullDisplay=Doc
+
+#PARTTYPECODE - 	PARTTYPECODE
+#품목분류
+PARTTYPECODE.value=품목분류
+PARTTYPECODE.order=40
+PARTTYPECODE.abbreviatedDisplay=true
+PARTTYPECODE.fullDisplay=Part
+
+#ASSYLEVEL - 	ASSYLEVEL
+#ASSY LEVEL
+ASSYLEVEL.value=BOM Level
+ASSYLEVEL.order=42
+ASSYLEVEL.abbreviatedDisplay=false
+ASSYLEVEL.fullDisplay=Part
+
+#CHANGE_CATEGORY - 	changeCategory
+#설계 변경 유형
+CHANGECATEGORY.value=설계 변경 유형
+CHANGECATEGORY.order=50
+CHANGECATEGORY.abbreviatedDisplay=false
+CHANGECATEGORY.fullDisplay=EO
+
+#CHANGE_VIEW - 	changeView
+#설계 변경 시점
+CHANGE_VIEW.value=설계 변경 시점
+CHANGE_VIEW.order=51
+CHANGE_VIEW.abbreviatedDisplay=false
+CHANGE_VIEW.fullDisplay=EO
+
+#PROJECTROLE - PROJECTROLE
+#프로젝트 Role
+PROJECTROLE.value=프로젝트 Role
+PROJECTROLE.order=150
+PROJECTROLE.abbreviatedDisplay=false
+PROJECTROLE.fullDisplay=PROJECTROLE
+
+#PARTNUMBERPROP - 	PARTNUMBERPROP
+#부품 채번 속성
+PARTNUMBERPROP.value=부품 채번 속성
+PARTNUMBERPROP.order=52
+PARTNUMBERPROP.abbreviatedDisplay=true
+PARTNUMBERPROP.fullDisplay=PARTNUMBERPROP
+
+#PROJECTNUMBERPROP - 	PROJECTNUMBERPROP
+#프로젝트 채번 속성
+PROJECTNUMBERPROP.value=프로젝트 채번 속성
+PROJECTNUMBERPROP.order=53
+PROJECTNUMBERPROP.abbreviatedDisplay=true
+PROJECTNUMBERPROP.fullDisplay=PROJECTNUMBERPROP
+
+#DISTRIBUTEPROP - 	DISTRIBUTEPROP
+#배포 문서 속성
+DISTRIBUTEPROP.value=배포 문서 속성
+DISTRIBUTEPROP.order=54
+DISTRIBUTEPROP.abbreviatedDisplay=true
+DISTRIBUTEPROP.fullDisplay=DISTRIBUTEPROP
+
+#EOSTEP - 설변 단계
+EOSTEP.value=설계변경 단계
+EOSTEP.order=55
+EOSTEP.abbreviatedDisplay=false
+EOSTEP.fullDisplay=EOSTEP
+
+#EOACTIVETYPE - 활동 구분
+EOACTIVETYPE.value=활동 구분
+EOACTIVETYPE.order=55
+EOACTIVETYPE.abbreviatedDisplay=false
+EOACTIVETYPE.fullDisplay=EOACTIVETYPE

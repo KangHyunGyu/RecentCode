@@ -1,0 +1,38 @@
+﻿ResourceInfo.class=wt.tools.resource.EnumResourceInfo
+ResourceInfo.abbreviatedDisplay=true
+ResourceInfo.deprecated=false
+
+
+# Entry Format (values equal to default value are not included)
+# <key>.value=
+# <key>.category=
+# <key>.comment=
+# <key>.argComment<n>=
+# <key>.constant=
+# <key>.customizable=
+# <key>.deprecated=
+# <key>.abbreviatedDisplay=
+# <key>.fullDisplay=
+# <key>.shortDescription=
+# <key>.longDescription=
+# <key>.order=
+# <key>.defaultValue=
+# <key>.selectable= 
+
+# Entry Contents
+# Entry Contents
+#DRAFT - DRAFT
+DRAFT.value=DRAFT
+DRAFT.order=0
+
+#DISCUSS  - DISCUSS
+DISCUSS.value=DISCUSS
+DISCUSS.order=1
+
+#APPROVE  - APPROVE
+APPROVE.value=APPROVE
+APPROVE.order=2
+
+#RECEIVE  - RECEIVE
+RECEIVE.value=RECEIVE
+RECEIVE.order=3

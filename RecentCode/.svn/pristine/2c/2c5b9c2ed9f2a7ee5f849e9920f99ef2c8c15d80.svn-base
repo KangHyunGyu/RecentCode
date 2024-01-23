@@ -1,0 +1,410 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!-- 각 화면 개발시 Tag 복사해서 붙여넣고 사용할것 -->    
+<%@ taglib prefix="c"		uri="http://java.sun.com/jsp/jstl/core"			%>
+<%@ taglib prefix="e3ps" 	uri="/WEB-INF/tlds/e3ps-functions.tld"%>
+<script type="text/javascript">
+  $(document).ready(function () {
+    //enter key pressed event
+    $("#searchForm").keypress(function (e) {
+      if (e.keyCode == 13) {
+        search();
+      }
+    });
+    
+    //codeTypeList
+    getCodeTypeList();
+
+    //grid setting
+    createAUIGrid(columnLayout);
+    
+    //initial setting
+    changeCodeType($("#codeType"));
+
+    //get grid data
+    getGridData();
+  });
+
+  //AUIGrid 생성 후 반환 ID
+  var myGridID;
+
+  //AUIGrid 칼럼 설정
+  var columnLayout = [
+    {
+      dataField: "code",
+      headerText: "${e3ps:getMessage('코드')}",
+      width: "10%",
+      filter: {
+        showIcon: true,
+        iconWidth: 30,
+      },
+      styleFunction: function (
+        rowIndex,
+        columnIndex,
+        value,
+        headerText,
+        item,
+        dataField
+      ) {
+        if (item.oid != null) {
+          return "aui-grid-non-editable-cell";
+        }
+        return null;
+      },
+    },
+    {
+      dataField: "name",
+      headerText: "${e3ps:getMessage('이름')}",
+      width: "20%",
+      filter: {
+        showIcon: true,
+        iconWidth: 30,
+      },
+    },
+    {
+      dataField: "engName",
+      headerText: "${e3ps:getMessage('영문 명')}",
+      width: "20%",
+      filter: {
+        showIcon: true,
+        iconWidth: 30,
+      },
+    },
+    {
+      dataField: "description",
+      headerText: "${e3ps:getMessage('설명')}",
+      width: "*",
+      style: "AUIGrid_Left",
+      filter: {
+        showIcon: true,
+        iconWidth: 30,
+      },
+    },
+    {
+      dataField: "sort",
+      headerText: "${e3ps:getMessage('소트')}",
+      width: "5%",
+      editRenderer: {
+        type: "InputEditRenderer",
+        /* onlyNumeric : true, // 0~9만 입력가능
+			allowPoint : false, // 소수점( . ) 도 허용할지 여부
+			allowNegative : false, // 마이너스 부호(-) 허용 여부 */
+      },
+      labelFunction: function (rowIndex, columnIndex, value, headerText, item) {
+        //HTML 템플릿 작성
+        return String(value).padStart(3, "0");
+      },
+    },
+    {
+      dataField: "active",
+      headerText: "${e3ps:getMessage('사용 여부')}",
+      width: "10%",
+      filter: {
+        showIcon: true,
+        iconWidth: 30,
+      },
+      renderer: {
+        type: "CheckBoxEditRenderer",
+        editable: true, // 체크박스 편집 활성화 여부(기본값 : false)
+      },
+    },
+  ];
+
+  //AUIGrid 를 생성합니다.
+  function createAUIGrid(columnLayout) {
+    // 그리드 속성 설정
+    var gridPros = {
+      editable: true,
+
+      selectionMode: "multipleCells",
+
+      rowIdField: "_$uid",
+
+      showStateColumn: true,
+
+      showSelectionBorder: true,
+
+      noDataMessage: gridNoDataMessage,
+
+      showRowNumColumn: true,
+
+      showEditedCellMarker: true,
+
+      wrapSelectionMove: true,
+
+      showRowCheckColumn: true,
+
+      enableFilter: true,
+
+      enableMovingColumn: true,
+
+      headerHeight: gridHeaderHeight,
+
+      rowHeight: gridRowHeight,
+    };
+
+    // 실제로 #grid_wrap 에 그리드 생성
+    myGridID = AUIGrid.create("#grid_wrap", columnLayout, gridPros);
+
+    //에디팅 정상 종료 이벤트 바인딩
+    AUIGrid.bind(myGridID, "cellEditEnd", auiCellEditingHandler);
+
+    AUIGrid.bind(myGridID, "cellEditBegin", auiCellEditingHandler);
+
+    var gridData = new Array();
+    AUIGrid.setGridData(myGridID, gridData);
+    
+  }
+
+  function getGridData() {
+    $("#searchForm").attr("action", getURLString("/admin/getNumberCodeList"));
+
+    var param = new Object();
+
+    param["codeType"] = $("#codeType").val();
+    param["parentCode"] = $("#parentCode").val();
+
+    AUIGrid.showAjaxLoader(myGridID);
+    formSubmit("searchForm", param, null, function (data) {
+      // 그리드 데이터
+      var gridData = data.list;
+
+      $("#total").html(gridData.length);
+
+      // 그리드에 데이터 세팅
+      AUIGrid.setGridData(myGridID, gridData);
+
+      AUIGrid.setAllCheckedRows(myGridID, false);
+      AUIGrid.removeAjaxLoader(myGridID);
+    });
+  }
+
+  //편집 핸들러
+  function auiCellEditingHandler(event) {
+    var dataField = event.dataField;
+
+    if (event.type == "cellEditEnd") {
+    } else if (event.type == "cellEditBegin") {
+      if (event.dataField == "code") {
+        // 추가된 행 아이템인지 조사하여 추가된 행인 경우만 에디팅 진입 허용
+        if (AUIGrid.isAddedById(event.pid, event.item._$uid)) {
+          return true;
+        } else {
+          return false; // false 반환하면 기본 행위 안함(즉, cellEditBegin 의 기본행위는 에디팅 진입임)
+        }
+      }
+      return true; // 다른 필드들은 편집 허용
+    }
+  }
+
+  //검색
+  function search() {
+    getGridData();
+  }
+
+  function xlsxExport() {
+    AUIGrid.setProperty(
+      myGridID,
+      "exportURL",
+      getURLString("/common/xlsxExport")
+    );
+
+    // 엑셀 내보내기 속성
+    var exportProps = {
+      postToServer: true,
+    };
+    // 내보내기 실행
+    AUIGrid.exportToXlsx(myGridID, exportProps);
+  }
+
+  //Code Type 변경
+  function changeCodeType(selected) {
+    var isTree = $("option:selected", selected).data("istree");
+
+    if (isTree) {
+      $("#codeTypeTree").show();
+    } else {
+      $("#codeTypeTree").hide();
+    }
+
+    //tree grid reset
+    AUIGrid.destroy(tree_myGridID);
+
+    createCodeTypeTreeGrid(tree_columnLayout);
+
+    //
+    resizeGrid();
+
+    getCodeTypeTree();
+
+    $("#parentCode").val("");
+
+    getGridData();
+
+    $("#codeTypeValue").val($("#codeType").val());
+    
+  }
+
+  //추가 버튼
+  function addRow() {
+    var item = new Object();
+
+    var rowCount = AUIGrid.getRowCount(myGridID);
+    var lastItem = AUIGrid.getItemByRowIndex(myGridID, rowCount - 1);
+
+    if (lastItem != null) {
+      var count = lastItem["sort"];
+      item["sort"] = +lastItem["sort"] + 1;
+    } else {
+      item["sort"] = 1;
+    }
+
+    item["active"] = true;
+
+    console.log(item);
+
+    AUIGrid.addRow(myGridID, item, "last");
+  }
+
+  //삭제 버튼
+  function removeRow() {
+    var checkItemList = AUIGrid.getCheckedRowItems(myGridID);
+
+    for (var i = 0; i < checkItemList.length; i++) {
+      AUIGrid.removeRowByRowId(myGridID, checkItemList[i].item._$uid);
+    }
+
+    AUIGrid.setAllCheckedRows(myGridID, false);
+  }
+
+  //저장 버튼
+  function save() {
+    //유효성 검사
+    var isValid = AUIGrid.validateGridData(
+      myGridID,
+      ["code", "name"],
+      "${e3ps:getMessage('필수 필드는 반드시 값을 입력해야 합니다.')}"
+    );
+
+    if (!isValid) {
+      return;
+    }
+
+    //그리드 리스트
+    var gridList = AUIGrid.getGridData(myGridID);
+
+    //추가된 아이템들
+    var addedItemList = AUIGrid.getAddedRowItems(myGridID);
+
+    //수정된 아이템들
+    var editedItemList = AUIGrid.getEditedRowItems(myGridID);
+
+    //삭제된 아이템들
+    var removedItemList = AUIGrid.getRemovedItems(myGridID);
+
+    //중복 확인
+    for (var i = 0; i < gridList.length - 1; i++) {
+      for (var j = i + 1; j < gridList.length; j++) {
+        if (gridList[i].code == gridList[j].code) {
+          openNotice("중복되는 코드가 있습니다.");
+          return;
+        }
+      }
+    }
+
+    var param = new Object();
+
+    param["codeType"] = $("#codeType").val();
+    param["parentCode"] = $("#parentCode").val();
+    param["parentOid"] = $("#parentOid").val();
+
+    param["addedItemList"] = addedItemList;
+    param["editedItemList"] = editedItemList;
+    param["removedItemList"] = removedItemList;
+
+    var url = getURLString("/admin/saveNumberCodeAction");
+    ajaxCallServer(url, param, function (data) {
+      getCodeTypeTree();
+      getGridData();
+    });
+  }
+
+  //검색조건 초기화
+  function reset() {
+    $("#searchForm")[0].reset();
+  }
+  //필터 초기화
+  function resetFilter(){
+      AUIGrid.clearFilterAll(myGridID);
+  }
+</script>
+<div class="product">
+	<!-- button -->
+	<div class="seach_arm pt15 pb5">
+		<div class="leftbt">
+			<select id="codeType" name="codeType" onchange="changeCodeType(this);">
+			</select>
+		</div>
+		<div class="rightbt">
+			<button type="button" class="s_bt03" id="searchBtn" onclick="search();">${e3ps:getMessage('검색')}</button>
+			<button type="button" class="s_bt05" id="resetBtn" onclick="reset();">${e3ps:getMessage('초기화')}</button>
+		</div>
+	</div>
+	<!-- //button -->
+	
+	<div class="semi_content pl30 pr30">
+		<div class="semi_table1 pr20" id="codeTypeTree">
+			<jsp:include page="${e3ps:getIncludeURLString('/admin/include_codeTypeTree')}" flush="true">
+				<jsp:param name="autoGridHeight" value="false"/>
+				<jsp:param name="gridHeight" value="600"/>
+			</jsp:include>
+		</div>
+		<div class="semi_content2">
+			<!-- pro_table -->
+			<div class="semi_table2">
+			<form name="searchForm" id="searchForm">
+			<input type="hidden" name="codeTypeValue" id="codeTypeValue" value="">
+				<table summary="">
+					<caption></caption>
+					<colgroup>
+						<col style="width:11%">
+						<col style="width:22%">
+						<col style="width:11%">
+						<col style="width:22%">
+						<col style="width:11%">
+						<col style="width:23%">
+					</colgroup>
+					
+					<tbody>
+						<tr>
+							<th scope="col">${e3ps:getMessage('코드')}</th>
+							<td><input type="text" id="code" name="code" class="w100" /></td>
+							<th scope="col">${e3ps:getMessage('이름')}</th>
+							<td><input type="text" id="name" name="name" class="w100" /></td>
+							<th scope="col">${e3ps:getMessage('영문 명')}</th>
+							<td><input type="text" id="engName" name="engName" class="w100" /></td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
+			</div>
+			<!-- //pro_table -->
+			<!-- button -->
+			<div class="seach_arm2 pt10 pb5">
+				<div class="leftbt">${e3ps:getMessage('검색결과')} (<span id="total">0</span>)</div>
+				<div class="rightbt">
+					<button type="button" class="s_bt03" onclick="resetFilter();">${e3ps:getMessage('필터 초기화')}</button>
+					<button type="button" class="s_bt03" onclick="excelDown('searchForm', 'excelDownNumberCode');">${e3ps:getMessage('엑셀 다운로드')}</button>
+					<%--<img class="pointer mb5" onclick="excelDown('searchForm', 'excelDownNumberCode');" src="/Windchill/jsp/portal/icon/fileicon/xls.gif" border="0">
+					<button type="button" class="s_bt03" onclick="xlsxExport();">${e3ps:getMessage('엑셀 다운로드')}</button> --%>
+					<button type="button" class="s_bt03" onclick="addRow()">${e3ps:getMessage('추가')}</button>
+					<button type="button" class="s_bt03" onclick="removeRow()">${e3ps:getMessage('삭제')}</button>
+					<button type="button" class="s_bt03" onclick="save()">${e3ps:getMessage('저장')}</button>
+				</div>
+			</div>
+			<!-- //button -->
+<!-- 			<div class="list" id="grid_wrap" style="height:500px; border-top:2px solid #1064aa;"></div> -->
+			<div class="list" id="grid_wrap" style="height:500px; border-top:2px solid #74AF2A;"></div>
+		</div>
+	</div>
+</div>

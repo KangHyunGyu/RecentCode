@@ -1,0 +1,61 @@
+<%@page import="org.apache.commons.codec.binary.Hex"%>
+<%@page import="javax.crypto.spec.SecretKeySpec"%>
+<%@page import="javax.crypto.Mac"%>
+<%@page import="com.e3ps.common.jdf.config.ConfigImpl"%>
+<%@page import="java.util.Base64"%>
+<%@page import="java.util.Base64.Decoder"%>
+<%@page import="wt.session.SessionHelper"%>
+<%@page import="com.e3ps.org.People"%>
+<%@page import="com.e3ps.org.service.PeopleHelper"%>
+<%@page import="com.e3ps.admin.service.AdminHelper"%>
+<%@page import="org.json.JSONObject"%>
+<%@page import="com.e3ps.common.util.LoginAuthUtil"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"	pageEncoding="UTF-8"%>
+<%@ taglib uri="http://struts.apache.org/tags-bean" prefix="bean" %>
+<%
+JSONObject data = new JSONObject();
+String id = request.getParameter("id");
+String time = request.getParameter("time");
+String apiData = request.getParameter("apiData");
+
+System.out.println("## id :  " + id);
+System.out.println("## time : " + time);
+System.out.println("## apiData : " + apiData);
+
+/* HMAC 인증 Key */
+String apiKey = ConfigImpl.getInstance().getString("SLO.APIKEY.CODE");
+String algorism = "HmacSHA512";
+SecretKeySpec secretKey = new SecretKeySpec(apiKey.getBytes("utf-8"), algorism);
+Mac hasher = Mac.getInstance(algorism); 
+hasher.init(secretKey);
+byte[] hash = hasher.doFinal((id+time+apiKey).getBytes());
+String inKey = Hex.encodeHexString(hash);
+/* HMAC 인증 Key */
+//apiData = inKey;
+
+System.out.println("## inKey : " + inKey);
+
+String pass = "";
+boolean isChk = false; 
+if(inKey.equals(apiData)){
+	if(id != null){
+		SessionHelper.manager.setAdministrator();
+		People peo = PeopleHelper.manager.getIDPeople(id);
+		if(peo != null){
+			pass = peo.getPassword();
+			
+			Decoder decoder = Base64.getDecoder();
+			byte[] targetB = pass.getBytes();
+			byte[] decoded = decoder.decode(targetB);
+			
+			pass = new String(decoded);
+			isChk = true; 
+		}
+	}
+}
+
+data.put("pass", pass);
+data.put("isChk", isChk);
+response.setContentType("application/json");
+response.getWriter().write(data.toString());
+%>

@@ -1,0 +1,304 @@
+/**
+ * 
+ */
+package com.e3ps.statistics.service;
+
+
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.util.Map;
+
+import com.e3ps.approval.ApprovalLine;
+import com.e3ps.approval.ApprovalMaster;
+import com.e3ps.approval.ApprovalObjectLink;
+import com.e3ps.approval.service.ApprovalHelper;
+import com.e3ps.approval.util.ApprovalUtil;
+import com.e3ps.change.EChangeActivity;
+import com.e3ps.change.EChangeOrder2;
+import com.e3ps.change.EChangeRequest2;
+import com.e3ps.change.service.ChangeService;
+import com.e3ps.common.log4j.Log4jPackages;
+import com.e3ps.common.util.AccessControlUtil;
+import com.e3ps.common.util.CommonUtil;
+import com.e3ps.common.util.DateUtil;
+import com.e3ps.common.util.SearchUtil;
+import com.e3ps.common.util.StringUtil;
+import com.e3ps.distribute.DistributeDocument;
+import com.e3ps.doc.E3PSDocument;
+import com.e3ps.statistics.bean.StatisticsData;
+
+import wt.epm.EPMDocument;
+import wt.fc.PersistenceServerHelper;
+import wt.fc.QueryResult;
+import wt.org.WTUser;
+import wt.part.WTPart;
+import wt.query.ClassAttribute;
+import wt.query.QueryException;
+import wt.query.QuerySpec;
+import wt.query.SQLFunction;
+import wt.query.SearchCondition;
+import wt.services.ServiceFactory;
+import wt.session.SessionHelper;
+import wt.util.WTAttributeNameIfc;
+import wt.vc.VersionControlHelper;
+
+public class StatisticsHelper {
+	
+	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Log4jPackages.STATISTICS.getName());
+	public static final StatisticsService service = ServiceFactory.getService(StatisticsService.class);
+	
+	public static final StatisticsHelper manager = new StatisticsHelper();
+
+	/**
+	 * @desc	: 서브메뉴 (활동, 결재, ToDay, My)
+	 * @author	: mnyu
+	 * @date	: 2019. 12. 2.
+	 * @method	: getStatistics
+	 * @return	: void
+	 * @param reqMap
+	 * @throws QueryException 
+	 */
+	public StatisticsData getStatistics(Map<String, Object> reqMap) throws Exception {
+		String obj = StringUtil.checkNull((String) reqMap.get("obj"));		// 모듈
+		boolean active = StringUtil.booleanValue(reqMap.get("active"));		// 활동(ToDo), 결재
+		boolean today = StringUtil.booleanValue(reqMap.get("today"));		// ToDay, My
+		
+		StatisticsData data = new StatisticsData();
+		if(active){
+			int approvalCount = getApprovalCount();		// 결재 Count
+			data.setApprovalCount(approvalCount);
+		}
+		if(today){
+			int toDayCount = getToDayCount(obj, true);	// ToDay Count
+			int myCount = getToDayCount(obj, false);	// My Count
+			data.setToDayCount(toDayCount);
+			data.setMyCount(myCount);
+		}
+		return data;
+	}
+
+
+	/**
+	 * @desc	: obj 오늘 등록된 건수
+	 * @author	: mnyu
+	 * @date	: 2019. 12. 2.
+	 * @method	: getToDayCount
+	 * @return	: int
+	 * @param obj
+	 * @return
+	 * @throws Exception 
+	 */
+	public int getToDayCount(String obj, boolean all) throws Exception {
+		int count = 0;
+		QuerySpec qs = new QuerySpec();
+		
+		Class cls = null;
+		Class cls2 = null;
+		boolean revision = true;
+		boolean changeObj = false;
+		if("doc".equals(obj)){
+			cls = E3PSDocument.class;
+		}else if("part".equals(obj)){
+			cls = WTPart.class;
+		}else if("epm".equals(obj)){
+			cls = EPMDocument.class;
+		}else if("distribute".equals(obj)){
+			revision = false;
+			cls = DistributeDocument.class;
+		}else if("eco".equals(obj)){
+			revision = false;
+			changeObj = true;
+			cls = EChangeOrder2.class;
+			cls2 = EChangeRequest2.class;
+		}
+		WTUser currentUser = (WTUser) SessionHelper.manager.getPrincipal();
+		
+		int idx = qs.addClassList(cls, false);
+		int idx2 = 0;
+		if(cls2 != null) {
+			idx2 = qs.appendClassList(cls2, false);
+		}
+		ClassAttribute ca = new ClassAttribute(cls, "thePersistInfo.theObjectIdentifier.id");
+		SQLFunction fun = SQLFunction.newSQLFunction(SQLFunction.COUNT, ca);
+		qs.appendSelect(fun, new int[] { idx }, false);
+		SearchCondition sc = null;
+		
+		if(revision){	// doc, part, epm
+			//최신 이터레이션
+	    	qs.appendWhere(VersionControlHelper.getSearchCondition(cls, true), new int[]{idx});
+	    	SearchUtil.addLastVersionCondition(qs, cls, idx);
+	    	qs.appendAnd();
+			if(!all){
+				sc = new SearchCondition(cls, "iterationInfo.creator.key.id", SearchCondition.EQUAL, CommonUtil.getOIDLongValue(currentUser));
+				qs.appendWhere(sc, new int[] { idx });
+				qs.appendAnd();
+			}
+		}else{ 	// distribute, echage
+			if(!all){
+				if(changeObj) {
+					sc = new SearchCondition(cls, "owner.key.id", SearchCondition.EQUAL, CommonUtil.getOIDLongValue(currentUser));
+					qs.appendWhere(sc, new int[] { idx });
+					qs.appendAnd();
+					sc = new SearchCondition(cls2, "owner.key.id", SearchCondition.EQUAL, CommonUtil.getOIDLongValue(currentUser));
+					qs.appendWhere(sc, new int[] { idx2 });
+					qs.appendAnd();
+				}else {
+					sc = new SearchCondition(cls, "creator.key.id", SearchCondition.EQUAL, CommonUtil.getOIDLongValue(currentUser));
+					qs.appendWhere(sc, new int[] { idx });
+					qs.appendAnd();
+				}
+			}
+		}
+		Timestamp date = DateUtil.getToDayTimestamp();
+		
+		sc = new SearchCondition(cls, "thePersistInfo.createStamp", SearchCondition.GREATER_THAN, DateUtil.convertStartDate(date));
+		qs.appendWhere(sc, new int[] { idx });
+		
+		qs.appendAnd();
+		sc = new SearchCondition(cls, "thePersistInfo.createStamp", SearchCondition.LESS_THAN, DateUtil.convertEndDate(date));
+		qs.appendWhere(sc, new int[] { idx });
+		if(changeObj) {
+			qs.appendAnd();
+			sc = new SearchCondition(cls2, "thePersistInfo.createStamp", SearchCondition.GREATER_THAN, DateUtil.convertStartDate(date));
+			qs.appendWhere(sc, new int[] { idx2 });
+			
+			qs.appendAnd();
+			sc = new SearchCondition(cls2, "thePersistInfo.createStamp", SearchCondition.LESS_THAN, DateUtil.convertEndDate(date));
+			qs.appendWhere(sc, new int[] { idx2 });
+		}
+		qs.setAdvancedQueryEnabled(true);
+		QueryResult qr = PersistenceServerHelper.manager.query(qs);
+		
+	 	while (qr.hasMoreElements()) {
+	 		Object[] ob = (Object[]) qr.nextElement();
+	 		count += ((BigDecimal) ob[0]).intValue();
+	 	}
+		return count;
+	}
+
+	/**
+	 * @desc	: 결재 Count
+	 * @author	: mnyu
+	 * @date	: 2019. 12. 2.
+	 * @method	: getApprovalCount
+	 * @return	: int
+	 * @return
+	 * @throws Exception 
+	 */
+	public int getApprovalCount() throws Exception {
+		int count = 0;
+		QuerySpec qs = new QuerySpec();
+		
+		int idx0 = qs.addClassList(ApprovalMaster.class, false);
+		int idx1 = qs.addClassList(ApprovalObjectLink.class, false);
+		int idx2 = qs.addClassList(ApprovalLine.class, false);
+		
+		ClassAttribute ca1 = new ClassAttribute(ApprovalObjectLink.class, WTAttributeNameIfc.ROLEA_CLASSNAME);
+		qs.appendSelect(ca1, new int[] { idx1 }, false);
+		
+		ApprovalHelper.manager.getApprovalJoinQuery(qs);
+		
+		//로그인 유저 및 최신 결재 라인
+		ApprovalHelper.manager.getOwnerApprovalLine(qs, idx2,true);
+		 
+		//마스터 상태 (합의중,승인중,완료됨)
+		qs.appendAnd(); 
+		qs.appendOpenParen();
+	 	 SearchCondition sc = new SearchCondition(ApprovalMaster.class, ApprovalMaster.STATE,SearchCondition.EQUAL,ApprovalUtil.STATE_MASTER_DISCUSSING);
+	 	 qs.appendWhere(sc, new int[] { idx0 });
+     
+	 	 qs.appendOr();
+	 	 sc = new SearchCondition(ApprovalMaster.class, ApprovalMaster.STATE,SearchCondition.EQUAL,ApprovalUtil.STATE_MASTER_APPROVING);
+	 	 qs.appendWhere(sc, new int[] { idx0 });
+     
+	 	 qs.appendOr();
+	 	 sc = new SearchCondition(ApprovalMaster.class, ApprovalMaster.STATE,SearchCondition.EQUAL,ApprovalUtil.STATE_MASTER_COMPLETED);
+	 	 qs.appendWhere(sc, new int[] { idx0 });
+	 	qs.appendCloseParen();
+	 	
+	 	//설변업무
+	 	qs.appendAnd(); 
+	 	 sc = new SearchCondition(ApprovalMaster.class, ApprovalMaster.OBJECT_TYPE,"<>",ApprovalUtil.OBJECT_TYPE_ECA);
+	 	 qs.appendWhere(sc, new int[] { idx0 });
+	 
+	 	//결재라인 상태
+	 	qs.appendAnd(); 
+	 	sc = new SearchCondition(ApprovalLine.class, ApprovalLine.STATE,SearchCondition.EQUAL,"ONGOING");
+	 	qs.appendWhere(sc, new int[] { idx2 });
+     
+	 	qs.setAdvancedQueryEnabled(true);
+	 	QueryResult qr = PersistenceServerHelper.manager.query(qs);
+	 	while (qr.hasMoreElements()) {
+	 		Object[] obj = (Object[]) qr.nextElement();
+	 		String className = (String)obj[0];
+	 		boolean isPermission = AccessControlUtil.checkPermissionForObject(Class.forName(className));
+	 		if(isPermission) ++count;
+	 	}
+		
+	 	return count;
+	}
+	
+	public int getToDoCount() throws Exception {
+		int count = 0;
+		QuerySpec qs = new QuerySpec();
+		
+		int idx0 = qs.addClassList(ApprovalMaster.class, false);
+		int idx1 = qs.addClassList(ApprovalObjectLink.class, false);
+		int idx2 = qs.addClassList(ApprovalLine.class, false);
+		
+		ClassAttribute ca = new ClassAttribute(ApprovalLine.class, "thePersistInfo.theObjectIdentifier.id");
+		SQLFunction fun = SQLFunction.newSQLFunction(SQLFunction.COUNT, ca);
+		qs.appendSelect(fun, new int[] { idx2 }, false);
+		
+		ApprovalHelper.manager.getApprovalJoinQuery(qs);
+		
+		//로그인 유저 및 최신 결재 라인
+		ApprovalHelper.manager.getOwnerApprovalLine(qs, idx2,true);
+		 
+		//마스터 상태 (합의중,승인중,완료됨)
+		qs.appendAnd(); 
+		qs.appendOpenParen();
+	 	 SearchCondition sc = new SearchCondition(ApprovalMaster.class, ApprovalMaster.STATE,SearchCondition.EQUAL,ApprovalUtil.STATE_MASTER_DISCUSSING);
+	 	 qs.appendWhere(sc, new int[] { idx0 });
+     
+	 	 qs.appendOr();
+	 	 sc = new SearchCondition(ApprovalMaster.class, ApprovalMaster.STATE,SearchCondition.EQUAL,ApprovalUtil.STATE_MASTER_APPROVING);
+	 	 qs.appendWhere(sc, new int[] { idx0 });
+     
+	 	 qs.appendOr();
+	 	 sc = new SearchCondition(ApprovalMaster.class, ApprovalMaster.STATE,SearchCondition.EQUAL,ApprovalUtil.STATE_MASTER_COMPLETED);
+	 	 qs.appendWhere(sc, new int[] { idx0 });
+	 	qs.appendCloseParen();
+	 	
+	 	//셜변업무
+	 	qs.appendAnd(); 
+	 	 sc = new SearchCondition(ApprovalMaster.class, ApprovalMaster.OBJECT_TYPE,SearchCondition.EQUAL,ApprovalUtil.OBJECT_TYPE_ECA);
+	 	 qs.appendWhere(sc, new int[] { idx0 });
+	 	 
+	 	int ecaIdx = qs.appendClassList(EChangeActivity.class, false);
+	 	
+	 	qs.appendAnd();
+	 	sc = new SearchCondition(ApprovalObjectLink.class, ApprovalObjectLink.ROLE_AOBJECT_REF + ".key.id", EChangeActivity.class, EChangeActivity.PERSIST_INFO + ".theObjectIdentifier.id");
+	 	qs.appendWhere(sc, new int[] { idx1, ecaIdx });
+	 	
+	 	qs.appendAnd();
+	 	sc = new SearchCondition(EChangeActivity.class, EChangeActivity.ACTIVE_STATE, SearchCondition.NOT_EQUAL, ChangeService.ECO_STOPPED);
+	 	qs.appendWhere(sc, new int[] { ecaIdx });
+	 	 
+	 
+	 	//결재라인 상태
+	 	qs.appendAnd(); 
+	 	sc = new SearchCondition(ApprovalLine.class, ApprovalLine.STATE,SearchCondition.EQUAL,"ONGOING");
+	 	qs.appendWhere(sc, new int[] { idx2 });
+     
+	 	qs.setAdvancedQueryEnabled(true);
+	 	QueryResult qr = PersistenceServerHelper.manager.query(qs);
+	 	while (qr.hasMoreElements()) {
+	 		Object[] obj = (Object[]) qr.nextElement();
+	 		count = ((BigDecimal) obj[0]).intValue();
+	 	}
+		
+	 	return count;
+	}
+	
+}

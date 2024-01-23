@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<base href="../..">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Timing</title>
+
+	<link rel="stylesheet" href="./css/style.css">
+
+	<link rel="stylesheet" href="./js/gantt_7.0.9_ultimate/codebase/dhtmlxgantt.css">
+	<script src="./js/gantt_7.0.9_ultimate/codebase/dhtmlxgantt.js"></script>
+	<link rel="stylesheet" href="./js/gantt/css/style.css">
+	<script src="./js/gantt/js/zoom.js"></script>
+	<script src="./js/gantt/js/zoomToFit.js"></script>
+	<script src="./js/gantt/js/gridStruct.js"></script>
+
+</head>
+
+<body>
+
+	<!-- pop -->
+	<div class="pop">
+
+		<!-- top -->
+		<div class="top">
+			<h2>
+				Stage-Gate Dashboard – PSO Project 001
+			</h2>
+
+			<span class="close">
+				<a>
+					<img src="./images/colse_bt.png" alt="닫기">
+				</a>
+			</span>
+		</div>
+		<!-- //top -->
+
+		<div class="pop_nav">
+			▶ 관련 프로젝트: PSO Project 2/관련 부품번호(부품명): SHPART001(SHPartName001)
+		</div>
+
+		<!--tap -->
+		<div class="tap pt15">
+			<ul>
+				<li data-module="summary">Summary</li>
+				<li class="on" data-module="timing">Timing</li>
+				<li data-module="quality">Quality</li>
+				<li data-module="c_stop">C_Stop</li>
+				<li data-module="risk">Risk</li>
+				<li data-module="deliverable">Deliverable Status</li>
+				<li data-module="gateReviews">Gate Reviews</li>
+				<li data-module="productDev">Product Dev.</li>
+				<li data-module="inchanges">ECR</li>
+				<!-- <li data-module="">MM</li>
+			<li data-module="">Action</li> -->
+			</ul>
+
+			<div class="tapbutton">
+				<button type="button" class="s_bt03">1</button>
+				<button type="button" class="s_bt03">2</button>
+				<button type="button" class="s_bt03">3</button>
+				<button type="button" class="s_bt03">4</button>
+				<button type="button" class="s_bt09">5</button>
+				<button type="button" class="s_bt03">6</button>
+				<button type="button" class="s_bt010">7</button>
+			</div>
+		</div>
+		<!--//tap -->
+
+		<div class="seach_arm3 pl25 pt5 ">
+			<div class="leftbt">
+				<img class="pointer content--toggle" src="./images/minus_icon.png" data-target="timing">
+				Timing
+			</div>
+		</div>
+
+		<div class="pro_table pt5 pl25 pr25 body-container timing" summary="timing">
+			<div class="gantt-container list">
+				<div class="header gantt-header">
+					<ul class="gantt-controls">
+						<li class="gantt-menu-item">
+							<a id="collapseAll" href="javascript:collapseAll();">
+								<img src="./js/gantt/css/img/ic_collapse_all_24.png">
+								Collapse All
+							</a>
+						</li>
+						<li class="gantt-menu-item gantt-menu-item-last">
+							<a id="expandAll" href="javascript:expandAll();">
+								<img src="./js/gantt/css/img/ic_expand_all_24.png">
+								Expand All
+							</a>
+						</li>
+						<li class="gantt-menu-item">
+							<a onclick="excelDown('ganttForm', 'excelDownGantt');">
+								<img src="./js/gantt/css/img/ic_critical_path_24.png">
+								Template Export
+							</a>
+						</li>
+						<li class="gantt-menu-item-right">
+							<a id="fullScreen" href="javascript:fullScreen();">
+								<img src="./js/gantt/css/img/ic_fullscreen_24.png">
+								Fullscreen
+							</a>
+						</li>
+						<li class="gantt-menu-item-right gantt-menu-item-last">
+							<a id="zoomToFit" href="javascript:zoomToFit();">
+								<img src="./js/gantt/css/img/ic_zoom_to_fit_24.png">
+								Zoom to Fit
+							</a>
+						</li>
+						<!-- 					<li class="gantt-menu-item-right"><a id="zoomOut" href="javascript:zoomOut();"><img src="./js/gantt/css/img/ic_zoom_out.png">Zoom Out</a></li> -->
+						<!-- 					<li class="gantt-menu-item-right"><a id="zoomIn" href="javascript:zoomIn();"><img src="./js/gantt/css/img/ic_zoom_in.png">Zoom In</a></li> -->
+						<li class="gantt-menu-item-right">
+							<a>
+								<img src="./js/gantt/css/img/ic_zoom_in.png">
+								Zoom
+								<select onchange="zoomScale();" id="zoomScale">
+									<option value="days">day</option>
+									<option value="weeks">week</option>
+									<option value="quarters">month</option>
+								</select>
+							</a>
+						</li>
+						<li class="gantt-menu-item-right">
+
+						</li>
+					</ul>
+				</div>
+
+				<div class="main-content">
+					<div class="pop" id="ganttChart"></div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+	<script src="./index.js"></script>
+	<script src="./modules/timing/data.js"></script>
+	<script src="./modules/timing/timing.js"></script>
+</body>
+
+</html>

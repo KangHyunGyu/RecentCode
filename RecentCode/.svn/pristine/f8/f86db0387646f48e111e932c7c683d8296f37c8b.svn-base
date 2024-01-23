@@ -1,0 +1,10 @@
+/*!
+ * AUIGrid 3.0.12 License
+ * License Type : Evaluation(Trial) Version
+ * Authorized Domain(or IP) : localhost,127.0.0.1,plmdev.worldex.com
+ * Expiration Date : 2023-12-13
+ * www.auisoft.net
+ */
+ /* eslint-disable */
+var AUIGridLicense = "eyJjdCI6Ik5jZDV5dHhtNzlDMWlZXC8rc0RuUWFTdXhhVUNIa3hyZm9kZWg1WFpyNUtrcDRLR2FDTGdkR3lYamo5N01Lck1tZ0ZCbVVwU1wvaFBhWDIwUDdjU0N3aFpvUUtkUzc3ZjllMGwxZVpEeUtkQnhcL3h1cVVYNERjbEV0VmRxYkJZd3hLIiwiaXYiOiIwMjc4NDc3Y2QzZjIwY2IxMDUzNzNhNDg5NDNlMmU2ZCIsInMiOiIzMmE1YjBkZTBlMTJjMjhhIn0=";
+if (typeof window !== "undefined") window.AUIGridLicense = AUIGridLicense;

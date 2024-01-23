@@ -1,0 +1,211 @@
+------------------------------------------------------------------------------------------------------------------------------------
+Winchill 설치 완료 후 모든 서비스 중지 - oracle, DS, windchill stop, apache
+
+Windchill 11.0 폴더 복사 (orignal 폴더)
+
+복사 완료 이후 모든 서비스 재 실행
+------------------------------------------------------------------------------------------------------------------------------------
+1. 제품 생성 : e3ps(  plmadmin 계정으로 제품 생성이 불가능할 경우, 사이트 유틸리티 > 참여자 관리에서 plmadmin 계정에 조직을 넣어준다. )
+       라이브러리 생성  : LIBRARY
+       제품 생성 : COMMON,E3PS,ELECTRIC
+2. ResourceBuild Windchill/wtCustom 폴더 복사후
+
+    ResourceBuild wt.lifecycle.StateRB**
+    ResourceBuild wt.epm.EPMApplicationTypeRB**
+    ResourceBuild wt.part.QuantityUnitRB**
+    ResourceBuild wt.part.PartTypeRB**
+    ResourceBuild com.e3ps.common.code.NumberCodeTypeRB**
+    ResourceBuild com.e3ps.approval.ApproveRoleTypeRB**
+    ResourceBuild com.e3ps.approval.ApproveStateTypeRB**
+    
+    ResourceBuild com.e3ps.change.EChangeActivityTypeEnumRB**
+    ResourceBuild com.e3ps.change.EChangeOccurenceEnumRB**
+    ResourceBuild com.e3ps.change.ProgressConditionTypeEnumRB**
+	
+3. lifecycle 가져오기
+
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\lifecycle\LC_Default\TAG-NmLoader-0.xml -u wcadmin -p wcadmin
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\lifecycle\LC_Project\TAG-NmLoader-0.xml -u wcadmin -p wcadmin -CONT_PATH /wt.inf.container.OrgContainer=worldex/wt.pdmlink.PDMLinkProduct=worldex
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\lifecycle\LC_ECA\TAG-NmLoader-0.xml
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\lifecycle\LC_ECN\TAG-NmLoader-0.xml
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\lifecycle\LC_ECN_ECCB\TAG-NmLoader-0.xml
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\lifecycle\LC_ECN_EXPANSION\TAG-NmLoader-0.xml
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\lifecycle\LC_ECO\TAG-NmLoader-0.xml
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\lifecycle\LC_ECR\TAG-NmLoader-0.xml
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\lifecycle\LC_ECR_ECCB\TAG-NmLoader-0.xml
+	
+    
+4. makejar 실행
+    
+    D:\ptc\Windchill_11.0\Windchill\codebase>ant -f makejar.xml
+
+5. DB 생성
+
+    ant -f %WT_HOME%\bin\tools.xml -Dgen.input=com.e3ps.** sql_script
+    
+    ant -f %WT_HOME%\bin\tools.xml -Dgen.input=com.e3ps.approval.** sql_script
+    ant -f %WT_HOME%\bin\tools.xml -Dgen.input=com.e3ps.common.** sql_script
+    ant -f %WT_HOME%\bin\tools.xml -Dgen.input=com.e3ps.workspace.** sql_script
+    
+    ant -f %WT_HOME%\bin\tools.xml -Dgen.input=com.e3ps.doc.** sql_script
+    
+    ant -f %WT_HOME%\bin\tools.xml -Dgen.input=com.e3ps.project.** sql_script
+    ant -f %WT_HOME%\bin\tools.xml -Dgen.input=com.e3ps.issue.** sql_script
+    ant -f %WT_HOME%\bin\tools.xml -Dgen.input=com.e3ps.distribute.** sql_script 
+    
+    ant -f %WT_HOME%\bin\tools.xml -Dgen.input=com.e3ps.change.** sql_script 
+    
+    ant -f %WT_HOME%\bin\tools.xml -Dgen.input=com.e3ps.part.** sql_script
+    
+   	 스크립트 명령어로 생성된 sql파일로 db 생성을 하기위해
+    
+    windchill shell에서 해당 경로( D:\ptc\Windchill_11.0\Windchill\db\sql3 )로 이동하여 sqlplus 로그인 이후 
+
+	@ 입력 후 sql파일을 shell에 드래그한 후 엔터키 눌러 생성 
+
+6. NumberCode Loader
+    windchill com.e3ps.load.CodeLoader %WT_HOME%\loadFiles\e3ps\NumberCode.xls wcadmin wcadmin
+	windchill com.e3ps.load.CodeLoader %WT_HOME%\loadFiles\e3ps\NumberCode2.xls wcadmin wcadmin
+7. 유저 로더
+    windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\WTUSER.csv -u wcadmin -p wcadmin
+     windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\WTUSER_ADD.csv -u wcadmin -p wcadmin
+     windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\user_dnc.csv -u wcadmin -p wcadmin
+    
+8. Department 로더
+	windchill com.e3ps.load.DepartmentLoader %WT_HOME%\loadFiles\e3ps\Department.xls wcadmin wcadmin
+    
+9.1 People 로더
+	windchill com.e3ps.load.PeopleLoader %WT_HOME%\loadFiles\e3ps\People.xls wcadmin wcadmin
+	windchill com.e3ps.load.PeopleLoader %WT_HOME%\loadFiles\e3ps\People_dnc.xls wcadmin wcadmin
+	
+
+* Group 로더
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\Groups.xml -u wcadmin -p wcadmin -CONT_PATH /wt.inf.container.OrgContainer=e3ps
+	windchill com.e3ps.load.GroupToUserLoader %WT_HOME%\loadFiles\e3ps\PDM_GROUP_USER_FINAL.xls wcadmin wcadmin
+	windchill com.e3ps.load.GroupToUserLoader %WT_HOME%\loadFiles\e3ps\PDM_GROUP_USER_FINAL2.xls wcadmin wcadmin
+	
+	
+10. 폴더 로더
+	** Common Container(설계)
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\COMMON_folders.xml -u wcadmin -p wcadmin -CONT_PATH /wt.inf.container.OrgContainer=e3ps/wt.pdmlink.PDMLinkProduct=COMMON
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\folders_dnc.xml -u wcadmin -p wcadmin -CONT_PATH /wt.inf.container.OrgContainer=dnc/wt.pdmlink.PDMLinkProduct=dnc
+	
+	
+	** Library Container
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\LIBRARY_folders.xml -u wcadmin -p wcadmin -CONT_PATH /wt.inf.container.OrgContainer=e3ps/wt.inf.library.WTLibrary=LIBRARY
+	**E3PS (공통)
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\E3PS_folders.xml -u wcadmin -p wcadmin -CONT_PATH /wt.inf.container.OrgContainer=e3ps/wt.pdmlink.PDMLinkProduct=E3PS
+	** ELECTRIC(제어)
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\ELECTRIC_folders.xml -u wcadmin -p wcadmin -CONT_PATH /wt.inf.container.OrgContainer=e3ps/wt.pdmlink.PDMLinkProduct=ELECTRIC
+	** Template(General)
+	windchill com.e3ps.load.TemplateLoader %WT_HOME%\loadFiles\e3ps\Template_GENERAL_iljin.xls wcadmin wcadmin
+	
+10.1 문서 CodeType, valudDefinition, CodeTypeToValueLink  로더
+	windchill com.e3ps.load.DocLoader %WT_HOME%\loadFiles\e3ps\doc\DocCodeType.xls wcadmin wcadmin
+	windchill com.e3ps.load.DocLoader %WT_HOME%\loadFiles\e3ps\doc\DocValueDefinition.xls wcadmin wcadmin
+	windchill com.e3ps.load.DocLoader %WT_HOME%\loadFiles\e3ps\doc\DocCodeToValueDefinitionLink.xls wcadmin wcadmin
+
+11.IBA 속성 로더
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\AttributeDefinitions.xml -u wcadmin -p wcadmin
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\AttributeDefinitions_dnc.xml -u wcadmin -p wcadmin
+
+12. JELProject, Issue  로더
+	windchill com.e3ps.load.ProjectLoader %WT_HOME%\loadFiles\e3ps\project\MIG_Project.xls wcadmin wcadmin
+	windchill com.e3ps.load.ProjectMemberLoader %WT_HOME%\loadFiles\e3ps\project\MIG_ProjectMember.xls wcadmin wcadmin
+	windchill com.e3ps.load.IssueLoader %WT_HOME%\loadFiles\e3ps\project\MIG_Issue.xls wcadmin wcadmin
+
+12.1 Supplier 로더
+	windchill com.e3ps.load.SupplierLoader %WT_HOME%\loadFiles\e3ps\SupplierLoader.xls wcadmin wcadmin
+
+13.TimeZone 설정
+
+14. View 생성 (DOC,PART,EPM)
+-DOC View
+CREATE VIEW DOCLOCATION (doc,loc,CREATESTAMPA2,UPDATESTAMPA2,UPDATECOUNTA2,CLASSNAMEA2A2,IDA2A2,MODIFYSTAMPA2,MARKFORDELETEA2) AS 
+SELECT E.IDA2A2 doc,T.LOC loc,E.CREATESTAMPA2 CREATESTAMPA2,E.UPDATESTAMPA2 UPDATESTAMPA2,
+E.UPDATECOUNTA2 UPDATECOUNTA2,E.CLASSNAMEA2A2 CLASSNAMEA2A2,E.IDA2A2 IDA2A2,
+E.MODIFYSTAMPA2 MODIFYSTAMPA2,E.MARKFORDELETEA2 MARKFORDELETEA2
+FROM E3PSDOCUMENT E, (
+	SELECT F2ID,SYS_CONNECT_BY_PATH(F2N,'/') LOC FROM (
+	  SELECT F1.NAME F1N,F2.NAME F2N,F1.IDA2A2 F1ID,F2.IDA2A2 F2ID FROM SUBFOLDER F1,SUBFOLDER F2, SUBFOLDERLINK L WHERE F1.IDA2A2=L.IDA3A5 AND F2.IDA2A2=L.IDA3B5
+	)
+	start with F1N='Document' CONNECT BY PRIOR F2ID=F1ID
+	union
+	  SELECT ida2a2,'/'||NAME FROM SUBFOLDER WHERE NAME='Document'
+)
+T WHERE E.IDA3B2FOLDERINGINFO=T.F2ID;
+
+ -PART View
+CREATE VIEW PARTLOCATION (part,loc,CREATESTAMPA2,UPDATESTAMPA2,UPDATECOUNTA2,CLASSNAMEA2A2,IDA2A2,MODIFYSTAMPA2,MARKFORDELETEA2) AS 
+SELECT E.IDA2A2 part,T.LOC loc,E.CREATESTAMPA2 CREATESTAMPA2,E.UPDATESTAMPA2 UPDATESTAMPA2,
+E.UPDATECOUNTA2 UPDATECOUNTA2,E.CLASSNAMEA2A2 CLASSNAMEA2A2,E.IDA2A2 IDA2A2,
+E.MODIFYSTAMPA2 MODIFYSTAMPA2,E.MARKFORDELETEA2 MARKFORDELETEA2
+FROM WTPART E, (
+	SELECT F2ID,SYS_CONNECT_BY_PATH(F2N,'/') LOC FROM (
+	  SELECT F1.NAME F1N,F2.NAME F2N,F1.IDA2A2 F1ID,F2.IDA2A2 F2ID FROM SUBFOLDER F1,SUBFOLDER F2, SUBFOLDERLINK L WHERE F1.IDA2A2=L.IDA3A5 AND F2.IDA2A2=L.IDA3B5
+	)
+	start with F1N='Material' CONNECT BY PRIOR F2ID=F1ID
+	union
+	  SELECT ida2a2,'/'||NAME FROM SUBFOLDER WHERE NAME='Material'
+)
+T WHERE E.IDA3B2FOLDERINGINFO=T.F2ID;
+
+-EPM View
+CREATE VIEW EPMLOCATION (epm,loc,CREATESTAMPA2,UPDATESTAMPA2,UPDATECOUNTA2,CLASSNAMEA2A2,IDA2A2,MODIFYSTAMPA2,MARKFORDELETEA2) AS 
+SELECT E.IDA2A2 epm,T.LOC loc,E.CREATESTAMPA2 CREATESTAMPA2,E.UPDATESTAMPA2 UPDATESTAMPA2,
+E.UPDATECOUNTA2 UPDATECOUNTA2,E.CLASSNAMEA2A2 CLASSNAMEA2A2,E.IDA2A2 IDA2A2,
+E.MODIFYSTAMPA2 MODIFYSTAMPA2,E.MARKFORDELETEA2 MARKFORDELETEA2
+FROM EPMDOCUMENT E, (
+	SELECT F2ID,SYS_CONNECT_BY_PATH(F2N,'/') LOC FROM (
+    SELECT F1.NAME F1N,F2.NAME F2N,F1.IDA2A2 F1ID,F2.IDA2A2 F2ID FROM SUBFOLDER F1,SUBFOLDER F2, SUBFOLDERLINK L WHERE F1.IDA2A2=L.IDA3A5 AND F2.IDA2A2=L.IDA3B5
+  )
+  start with F1N='Drawing' CONNECT BY PRIOR F2ID=F1ID
+  union
+  SELECT ida2a2,'/'||NAME FROM SUBFOLDER WHERE NAME='Drawing'
+)
+T WHERE E.IDA3B2FOLDERINGINFO=T.F2ID;
+
+***** PDF, DWG 변환 설정 *****
+1. 프로퍼티 적용 : site.xconf 또는 eSolution.xconf에 하위 프로퍼티 추가
+<Property name="publish.usesPublishRules" overridable="true" targetFile="codebase\WEB-INF\conf\wvs.properties" value="ARBORTEXT PROE" />
+
+2. Windchill Shell에서 아래 명령어를 수행하여 적용
+xconfmanager -p
+
+3. Windchill OOTB에 관리자 계정으로 접속(wcadmin)
+
+4. 사이트 > 유틸리티 > 시각화 구성 관리로 이동
+
+5. 구성 작성 아이콘을 클릭하여 구성 유형 입력(additional_pv) 후 만들기 버튼 클릭
+
+6. 구성에 파일 추가 아이콘을 클릭하여 additional_file_type_publishrule.xml 선택 후 파일 추가 버튼 클릭
+
+***** 포지셔닝 어셈블리 설정 *****
+1. 프로퍼티 적용 : site.xconf 또는 eSolution.xconf에 하위 프로퍼티 추가
+<Property name="publish.positioningassembly.filtermethod" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value="ext.ptc.dpa.CADWorkerFilter/isPositioningAssembly"/>
+<Property name="publish.configspec.default.posassy.useasstoredifavailable" overridable="true" targetFile="codebase/WEB-INF/conf/wvs.properties" value="false"/>
+
+2. Windchill Shell에서 아래 명령어를 수행하여 적용
+xconfmanager -p
+
+3. CADWorkerFilter.java 파일을 %WT_HOME%\src\ext\ptc\dpa 폴더롤 복사
+
+4. Windchill Shell에서 아래 명령어를 수행하여 컴파일
+ant -f %WT_HOME%\bin\tools.xml class -Dclass.includes=ext/ptc/dpa/CADWorkerFilter.java
+
+5. 해당 패키지에 컴파일이 되었는지 확인 (%WT_HOME%\codebase\ext\ptc\dpa\CADWorkerFilter.class)
+
+6. Windchill Service 재 시작
+
+***** smart editor 사용 *****
+1. 주성 공지사항에 smart editor 사용
+- 이슈사항 : 공지사항의 smart editor를 이용하여 테이블을 생성하여 공지를 한 경우, 해당 공지를 수정 할 때 설명에 만들어놓은 테이블 내용을 가져오지못함.
+- 원인 : 해당 내용을 content로 담을 때 중간에 엔터(\n)가 들어가서 텍스트로 읽지않고 태그로 읽게 됨
+- 해결 : SmartEditor2.min.js, SmartEditor2.js 에서 테이블을 생성 할 때 추가로 들어가는 \n 부분을 삭제
+- 가져오지 못하는 내용이 있다면 editor로 생성하는 부분에서 해당 내용을 입력 후 HTML을 확인하여 연속적으로 이어지는 내용이 아닌 엔터가 들어가거나 
+HTML 내용이 다른지 확인 후 js에서 바꿔줌
+
+  
+   
+
+  

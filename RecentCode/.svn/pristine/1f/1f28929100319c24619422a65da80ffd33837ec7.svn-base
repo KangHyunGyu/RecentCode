@@ -1,0 +1,77 @@
+﻿ResourceInfo.class=wt.tools.resource.EnumResourceInfo
+ResourceInfo.abbreviatedDisplay=true
+ResourceInfo.deprecated=false
+
+
+# Entry Format (values equal to default value are not included)
+# <key>.value=
+# <key>.category=
+# <key>.comment=
+# <key>.argComment<n>=
+# <key>.constant=
+# <key>.customizable=
+# <key>.deprecated=
+# <key>.abbreviatedDisplay=
+# <key>.fullDisplay=
+# <key>.shortDescription=
+# <key>.longDescription=
+# <key>.order=
+# <key>.defaultValue=
+# <key>.selectable= 
+
+# Entry Contents
+STANDING.value=대기중
+STANDING.order=0
+STANDING.shortDescription=LINE
+
+ONGOING.value=진행중
+ONGOING.order=0
+ONGOING.shortDescription=LINE
+
+COMPLETE.value=완료
+COMPLETE.order=0
+COMPLETE.shortDescription=LINE
+
+REJECT.value=반려
+REJECT.order=0
+REJECT.shortDescription=LINE
+
+APPEAL.value=이의
+APPEAL.order=0
+APPEAL.shortDescription=LINE
+
+AGREEMENT.value=합의
+AGREEMENT.order=0
+AGREEMENT.shortDescription=LINE
+
+DELEGATE.value=위임
+DELEGATE.order=0
+DELEGATE.shortDescription=LINE
+
+CANCEL.value=취소
+CANCEL.order=0
+CANCEL.shortDescription=LINE
+
+TEMP_STORAGE.value=임시저장
+TEMP_STORAGE.order=0
+TEMP_STORAGE.shortDescription=MASTER
+
+DISCUSSING.value=합의중
+DISCUSSING.order=0
+DISCUSSING.shortDescription=MASTER
+
+APPROVING.value=승인중
+APPROVING.order=0
+APPROVING.shortDescription=MASTER
+
+REJECTED.value=반려됨
+REJECTED.order=0
+REJECTED.shortDescription=MASTER
+
+COMPLETED.value=완료됨
+COMPLETED.order=0
+COMPLETED.shortDescription=MASTER
+
+DISCARD.value=폐기
+DISCARD.order=0
+DISCARD.shortDescription=MASTER

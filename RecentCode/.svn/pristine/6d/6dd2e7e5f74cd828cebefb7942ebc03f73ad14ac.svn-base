@@ -1,0 +1,545 @@
+package com.e3ps.distribute.service;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.net.ftp.FTPClient;
+
+import com.e3ps.approval.service.ApprovalHelper;
+import com.e3ps.approval.util.ApprovalUtil;
+import com.e3ps.common.message.util.MessageUtil;
+import com.e3ps.common.util.CommonUtil;
+import com.e3ps.common.util.DateUtil;
+import com.e3ps.common.util.FTPUtil;
+import com.e3ps.common.util.FolderUtil;
+import com.e3ps.common.util.StringUtil;
+import com.e3ps.common.util.WCUtil;
+import com.e3ps.distribute.DistributeDocument;
+import com.e3ps.distribute.DistributePartToEpmLink;
+import com.e3ps.distribute.DistributeRegPartToEpmLink;
+import com.e3ps.distribute.DistributeRegToPartLink;
+import com.e3ps.distribute.DistributeRegistration;
+import com.e3ps.distribute.DistributeToPartLink;
+import com.e3ps.distribute.bean.DistributeData;
+import com.e3ps.distribute.util.DistributeUtil;
+import com.e3ps.epm.service.EpmHelper;
+import com.e3ps.epm.util.EpmUtil;
+import com.e3ps.interfaces.cpc.service.CPCService;
+import com.e3ps.project.key.ProjectKey.APPROVALKEY;
+
+import wt.clients.folder.FolderTaskLogic;
+import wt.content.ApplicationData;
+import wt.epm.EPMDocument;
+import wt.epm.EPMDocumentMaster;
+import wt.fc.PersistenceHelper;
+import wt.fc.PersistenceServerHelper;
+import wt.fc.QueryResult;
+import wt.fc.collections.WTArrayList;
+import wt.fc.collections.WTCollection;
+import wt.fc.collections.WTHashSet;
+import wt.fc.collections.WTSet;
+import wt.folder.Folder;
+import wt.folder.FolderEntry;
+import wt.folder.FolderHelper;
+import wt.folder.FolderNotFoundException;
+import wt.inf.container.WTContainerRef;
+import wt.lifecycle.LifeCycleHelper;
+import wt.part.WTPart;
+import wt.pom.Transaction;
+import wt.query.QuerySpec;
+import wt.services.StandardManager;
+import wt.util.WTException;
+
+public class StandardDistributeService extends StandardManager implements DistributeService {
+	
+	private static final long serialVersionUID = 1L;
+	
+	private static final String LIFECYCLE = "LC_Default";
+	private static final String DISTRIBUTEFOLDER = "/Default/Distribute";
+	private static final String PUBLISHINGFOLDER = "/Default/Publishing";
+
+	public static StandardDistributeService newStandardDistributeService() throws WTException {
+		final StandardDistributeService instance = new StandardDistributeService();
+		instance.initialize();
+		return instance;
+	}
+
+	@Override
+	public List<Map<String, Object>> createDistributeAction(Map<String, Object> reqMap) throws Exception {
+		
+		Transaction trx = new Transaction();
+		List<Map<String,Object>> returnItem = new ArrayList<Map<String,Object>>();
+		DistributeDocument distribute = null;
+		try {
+			String distName = StringUtil.checkNull((String)reqMap.get("distName"));
+			String company = StringUtil.checkNull((String)reqMap.get("company"));
+			String companyName = StringUtil.checkNull((String)reqMap.get("companyName"));
+			String purpose = StringUtil.checkNull((String)reqMap.get("purpose"));
+			String markingConfirm = StringUtil.checkNull((String)reqMap.get("markingConfirm"));
+			String fileType = StringUtil.checkNull((String)reqMap.get("fileType"));
+			String distDate = StringUtil.checkNull((String)reqMap.get("distDate"));
+			String downloadDate = (String)reqMap.get("downloadDate");
+			String withdraw = (String)reqMap.get("withdraw");
+			String description = StringUtil.checkNull((String)reqMap.get("description"));
+			List<Map<String,Object>> purchaseParts = (List<Map<String,Object>>)reqMap.get("purchaseParts");
+			List<Map<String, Object>> approvalList = (List<Map<String, Object>>) reqMap.get("approvalList");
+			trx.start();
+			
+			distribute = DistributeDocument.newDistributeDocument();
+			
+			distribute.setDistributeNumber(DistributeUtil.createDistributeNumber());
+			distribute.setDistributeName(distName);
+			//distribute.setDistributeType(distType);
+			//distribute.setCompanyId(company);
+			//distribute.setCompanyName(companyName);
+			distribute.setPurpose(purpose);
+			distribute.setMarkingConfirm(markingConfirm);
+			distribute.setFileType(fileType);
+			distribute.setDistributeDate(DateUtil.convertDate(distDate));
+			distribute.setDownloadDeadline(downloadDate==null?null:DateUtil.convertDate(downloadDate));
+			distribute.setWithdraw(withdraw==null?null:withdraw);
+			distribute.setDescription(description);
+			
+			
+			
+			// 제품 위치 설정
+			WTContainerRef wtContainerRef = WTContainerRef.newWTContainerRef(WCUtil.getPDMLinkProduct());
+			
+			// 라이프 사이클 설정
+			LifeCycleHelper.setLifeCycle(distribute, LifeCycleHelper.service.getLifeCycleTemplate(LIFECYCLE, wtContainerRef));
+			
+			// 폴더 설정
+			Folder parentfolder = FolderTaskLogic.getFolder(DISTRIBUTEFOLDER, wtContainerRef);
+			Folder folder = null;
+			try {
+				folder = FolderTaskLogic.getFolder(DISTRIBUTEFOLDER + "/" + LocalDate.now().getYear(), wtContainerRef);
+			} catch(FolderNotFoundException e) {
+				folder = FolderUtil.createFolder(parentfolder, String.valueOf(LocalDate.now().getYear()));
+			}
+			FolderHelper.assignLocation((FolderEntry) distribute, folder);
+			
+			distribute = (DistributeDocument) PersistenceHelper.manager.save(distribute);
+			
+//			//구매 요청 품목 링크 생성
+//			for(Map<String,Object> map : purchaseParts) {
+//				createDistributePartLink(map, distribute);
+//			}
+			
+			ApprovalHelper.service.registApproval(distribute, approvalList, ApprovalUtil.STATE_MASTER_APPROVING, null);
+			
+			trx.commit();
+			trx = null;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new Exception(e);
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+		
+		return returnItem;
+	}
+
+//	@Override
+//	public void createDistributePartLink(Map<String, Object> reqMap, DistributeDocument distribute) throws Exception {
+//		
+//		String distPartOid = StringUtil.checkNull((String)reqMap.get("distPartOid"));
+//		
+//		DistributeToPartLink link =  
+//				DistributeToPartLink.newDistributeToPartLink(distribute, (WTPart)CommonUtil.getObject(distPartOid));
+//		link = (DistributeToPartLink) PersistenceHelper.manager.save(link);
+//		//Distribute 링크 생성
+//		createDistributePartToEpmLink(link);
+//		
+//	}
+
+	@Override
+	public List<DistributeData> searchDistributeList(Map<String, Object> reqMap) throws Exception {
+		List<DistributeData> returnList = new ArrayList<DistributeData>();
+		
+		QuerySpec qs = DistributeHelper.manager.getDistributeListQuery(reqMap);
+		
+		QueryResult qr = PersistenceHelper.manager.find(qs);
+		
+		while(qr.hasMoreElements()) {
+			Object[] o = (Object[]) qr.nextElement();
+			DistributeDocument dd = (DistributeDocument) o[0]; 
+			returnList.add(new DistributeData(dd));
+		}
+		
+		return returnList;
+	}
+
+	@Override
+	public void deleteDistributeAction(Map<String, Object> reqMap) throws Exception {
+		
+		Transaction trx = new Transaction();
+		try {
+			trx.start();
+			
+			String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+			
+			if(oid.length() > 0) {
+				DistributeDocument distribute = (DistributeDocument) CommonUtil.getObject(oid);
+				
+				deleteDistributePartLink(distribute);
+				
+				PersistenceHelper.manager.delete(distribute);
+			}
+			
+			trx.commit();
+			trx = null;
+		} catch (Exception e) {
+			throw new Exception(e);
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+		
+	}
+
+	@Override
+	public void eventListener(Object obj, String event) {
+		try {
+			if(obj instanceof DistributeDocument){
+				
+				if (event.equals("STATE_CHANGE")) {
+					DistributeDocument distribute = (DistributeDocument)obj;
+					String state = distribute.getLifeCycleState().toString();
+					if(state.equals("APPROVED")) {
+						
+						//boolean checkDist = DMSHelper.manager.duplicateCheckReceptionByNumber(purchase.getPurchaseNumber());
+						
+						//if(!checkDist) {
+							
+							// 배포 정보 전송
+							//DMSService.service.insertDistribute(distribute);
+							
+							// 배포 부품 리스트 전송
+							//DMSService.service.insertDistributePart(distribute);
+							
+							// 배포 도면 리스트 전송
+							//DMSService.service.insertDistributeEpm(distribute);
+							
+							// 배포 첨부파일 리스트 전송 
+							//List<Map<String,Object>> ftpFileList = DMSService.service.insertDistributeAttachFile(distribute);
+							
+							// 배포 파일 FTP 업로드
+							//uploadDistFile(ftpFileList);
+							
+						//}
+						
+					}
+				}
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
+
+	@Override
+	public void modifyDistributeAction(Map<String, Object> reqMap) throws Exception {
+		Transaction trx = new Transaction();
+		DistributeDocument distribute = null;
+		try {
+			String oid = StringUtil.checkNull((String)reqMap.get("oid"));
+			String distName = StringUtil.checkNull((String)reqMap.get("distName"));
+			String company = StringUtil.checkNull((String)reqMap.get("company"));
+			String companyName = StringUtil.checkNull((String)reqMap.get("companyName"));
+			String purpose = StringUtil.checkNull((String)reqMap.get("purpose"));
+			String markingConfirm = StringUtil.checkNull((String)reqMap.get("markingConfirm"));
+			String fileType = StringUtil.checkNull((String)reqMap.get("fileType"));
+			String distDate = StringUtil.checkNull((String)reqMap.get("distDate"));
+			String downloadDate = (String)reqMap.get("downloadDate");
+			String withdraw = (String)reqMap.get("withdraw");
+			String description = StringUtil.checkNull((String)reqMap.get("description"));
+			List<Map<String,Object>> purchaseParts = (List<Map<String,Object>>)reqMap.get("purchaseParts");
+			
+			trx.start();
+			
+			distribute = (DistributeDocument) CommonUtil.getObject(oid);
+			
+			distribute.setDistributeName(distName);
+			//distribute.setDistributeType(distType);
+			//distribute.setCompanyId(company);
+			//distribute.setCompanyName(companyName);
+			distribute.setPurpose(purpose);
+			distribute.setMarkingConfirm(markingConfirm);
+			distribute.setFileType(fileType);
+			distribute.setDistributeDate(DateUtil.convertDate(distDate));
+			distribute.setDownloadDeadline(downloadDate==null?null:DateUtil.convertDate(downloadDate));
+			distribute.setWithdraw(withdraw==null?null:withdraw);
+			distribute.setDescription(description);
+			distribute = (DistributeDocument) PersistenceHelper.manager.modify(distribute);
+			
+			//배포요청 부품 리스트 삭제
+			deleteDistributePartLink(distribute);
+			
+//			//배포요청 부품 재생성
+//			for(Map<String,Object> map : purchaseParts) {
+//				createDistributePartLink(map, distribute);
+//			}
+			
+			trx.commit();
+			trx = null;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+		
+	}
+
+	@Override
+	public void deleteDistributePartLink(DistributeDocument distribute) throws Exception {
+		List<DistributeToPartLink> partLinkList = DistributeHelper.manager.getDistributePartListByDistribute(distribute);
+		for(DistributeToPartLink link : partLinkList) {
+			//배포 링크 삭제
+			deleteDistributePartToEpmLink(link);
+			
+			PersistenceHelper.manager.delete(link);
+		}
+		
+	}
+
+//	@Override
+//	public void createDistributePartToEpmLink(DistributeToPartLink distPartLink) throws Exception {
+//		
+//		WTCollection wc = new WTArrayList();
+//		
+//		WTPart distPart = distPartLink.getPart();
+//		
+//		EPMDocument part3D = EpmHelper.manager.getEPMDocument(distPart);
+//		EPMDocument part2D = null;
+//		DistributePartToEpmLink link = null;
+//		// 기본적으로 구매요청 품목의 2D 도면을 링크 (변환파일 DWG, PDF 를 배포하기 위함)
+//		if(part3D!=null) {
+//			part2D = EpmHelper.manager.getDrawing((EPMDocumentMaster)part3D.getMaster());
+//			if(part2D!=null) {
+//				if(!EpmUtil.check_2D_AdditionalFiles(part2D)) {
+////					throw new Exception("["+distPart.getNumber()+"]"+MultiLangUtil.getMessage("의 DWG,PDF 파일을 확인해주세요."));
+//					throw new Exception("["+distPart.getNumber()+"]"+MessageUtil.getMessage("의 DWG,PDF 파일을 확인해주세요."));
+//				}
+//				
+//				link = DistributePartToEpmLink.newDistributePartToEpmLink(distPartLink, part2D); 
+//				link.setDistributeDocument(distPartLink.getDistribute());
+//				wc.add(link);
+//				
+//			}
+//		}
+//		
+//		if(wc.size() > 0) {
+//    		PersistenceServerHelper.manager.insert(wc);
+//    	}
+//		
+//	}
+	
+	public void deleteDistributePartToEpmLink(DistributeToPartLink distPartLink) throws Exception {
+    	QueryResult results = PersistenceHelper.manager.navigate(distPartLink, DistributePartToEpmLink.DISTRIBUTE_PART_TO_EPM_ROLE, DistributePartToEpmLink.class, false);
+    	WTSet ws = new WTHashSet(results);
+        PersistenceServerHelper.manager.remove(ws);
+	}
+
+
+	@Override
+	public void uploadDistFile(List<Map<String, Object>> ftpFileList) throws Exception {
+		
+		if(ftpFileList.size() < 0) return;
+		FTPClient client = FTPUtil.manager.connection();
+		
+		for (Map<String,Object> ftpFile : ftpFileList) {
+			
+			String uploadPath = (String) ftpFile.get("path");
+			ApplicationData app = (ApplicationData) ftpFile.get("app");
+			
+			
+			FTPUtil.manager.uploadFTP(client, app, uploadPath);
+			
+		}
+		
+		FTPUtil.manager.disconnect(client);
+		
+	}
+	
+	@Override
+	public List<Map<String, Object>> requestFormDistributeAction(Map<String, Object> reqMap) throws Exception {
+		
+		Transaction trx = new Transaction();
+		List<Map<String,Object>> returnItem = new ArrayList<Map<String,Object>>();
+		DistributeDocument distribute = null;
+		try {
+			String distName = StringUtil.checkNull((String)reqMap.get("distName"));
+			String purpose = StringUtil.checkNull((String)reqMap.get("purpose"));
+			String markingConfirm = StringUtil.checkNull((String)reqMap.get("markingConfirm"));
+			String fileType = StringUtil.checkNull((String)reqMap.get("fileType"));
+			String distDate = StringUtil.checkNull((String)reqMap.get("distDate"));
+			String downloadDate = (String)reqMap.get("downloadDate");
+			String withdraw = (String)reqMap.get("withdraw");
+			String description = StringUtil.checkNull((String)reqMap.get("description"));
+			String appState = StringUtil.checkNull((String)reqMap.get("appState"));
+			List<Map<String, Object>> approvalList = (List<Map<String, Object>>) reqMap.get("approvalList");
+			trx.start();
+			
+			distribute = DistributeDocument.newDistributeDocument();
+			
+			distribute.setDistributeNumber(DistributeUtil.createDistributeNumber());
+			distribute.setDistributeName(distName);
+			distribute.setPurpose(purpose);
+			distribute.setMarkingConfirm(markingConfirm);
+			distribute.setFileType(fileType);
+			distribute.setDistributeDate(DateUtil.convertDate(distDate));
+			distribute.setDownloadDeadline(downloadDate==null?null:DateUtil.convertDate(downloadDate));
+			distribute.setWithdraw(withdraw==null?null:withdraw);
+			distribute.setDescription(description);
+			
+			
+			
+			// 제품 위치 설정
+			WTContainerRef wtContainerRef = WTContainerRef.newWTContainerRef(WCUtil.getPDMLinkProduct());
+			
+			// 라이프 사이클 설정
+			LifeCycleHelper.setLifeCycle(distribute, LifeCycleHelper.service.getLifeCycleTemplate(LIFECYCLE, wtContainerRef));
+			
+			// 폴더 설정
+			Folder parentfolder = FolderTaskLogic.getFolder(DISTRIBUTEFOLDER, wtContainerRef);
+			Folder folder = null;
+			try {
+				folder = FolderTaskLogic.getFolder(DISTRIBUTEFOLDER + "/" + LocalDate.now().getYear(), wtContainerRef);
+			} catch(FolderNotFoundException e) {
+				folder = FolderUtil.createFolder(parentfolder, String.valueOf(LocalDate.now().getYear()));
+			}
+			FolderHelper.assignLocation((FolderEntry) distribute, folder);
+			
+			distribute = (DistributeDocument) PersistenceHelper.manager.save(distribute);
+			ApprovalHelper.service.registApproval(distribute, approvalList, appState, null);
+			
+			trx.commit();
+			trx = null;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new Exception(e);
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+		
+		return returnItem;
+	}
+	
+	@Override
+	public List<Map<String, Object>> createRegistrationDistributeAction(Map<String, Object> reqMap) throws Exception {
+		
+		Transaction trx = new Transaction();
+		List<Map<String,Object>> returnItem = new ArrayList<Map<String,Object>>();
+		DistributeRegistration distributeReg = null;
+		DistributeDocument distribute = null;
+		
+		try {
+			String oid = StringUtil.checkNull((String)reqMap.get("oid"));
+			String distributeTarget = StringUtil.checkNull((String)reqMap.get("distributeTarget"));
+			String distributeCompany = StringUtil.checkNull((String)reqMap.get("distributeCompany"));
+			String descriptionDRF = StringUtil.checkNull((String)reqMap.get("descriptionDRF"));
+			List<Map<String,Object>> purchaseParts = (List<Map<String,Object>>)reqMap.get("purchaseParts");
+			List<Map<String, Object>> approvalList = (List<Map<String, Object>>) reqMap.get("approvalList");
+			trx.start();
+			
+			distribute = (DistributeDocument)CommonUtil.getObject(oid);
+			distributeReg = DistributeRegistration.newDistributeRegistration();
+			distributeReg.setDistribute(distribute);
+			distributeReg.setDescriptionDRF(descriptionDRF);
+			distributeReg.setDistributeTarget(distributeTarget);
+			distributeReg.setDistributeCompany(distributeCompany);
+			
+//			DistributeHelper.manager.getDistributeRegistrationByDistributeDocument(oid);
+			
+			
+			// 제품 위치 설정
+			WTContainerRef wtContainerRef = WTContainerRef.newWTContainerRef(WCUtil.getPDMLinkProduct());
+			
+			// 라이프 사이클 설정
+			LifeCycleHelper.setLifeCycle(distributeReg, LifeCycleHelper.service.getLifeCycleTemplate(LIFECYCLE, wtContainerRef));
+			
+			// 폴더 설정
+			Folder parentfolder = FolderTaskLogic.getFolder(DISTRIBUTEFOLDER, wtContainerRef);
+			Folder folder = null;
+			try {
+				folder = FolderTaskLogic.getFolder(DISTRIBUTEFOLDER + "/" + LocalDate.now().getYear(), wtContainerRef);
+			} catch(FolderNotFoundException e) {
+				folder = FolderUtil.createFolder(parentfolder, String.valueOf(LocalDate.now().getYear()));
+			}
+			FolderHelper.assignLocation((FolderEntry) distributeReg, folder);
+			distributeReg = (DistributeRegistration) PersistenceHelper.manager.save(distributeReg);
+			
+			//품목 링크 생성
+			for(Map<String,Object> map : purchaseParts) {
+				createDistributeRegPartLink(map, distributeReg);
+			}
+			
+//			DistributeHelper.manager.getDistributeRegistrationListQuery(reqMap);
+//			DistributeHelper.service.deleteDistributeAction(reqMap);
+			
+			ApprovalHelper.service.registApproval(distributeReg, approvalList, ApprovalUtil.STATE_MASTER_APPROVING, null);
+			
+			trx.commit();
+			trx = null;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new Exception(e);
+		} finally {
+			if (trx != null) {
+				trx.rollback();
+			}
+		}
+		
+		return returnItem;
+	}
+	
+	@Override
+	public void createDistributeRegPartLink(Map<String, Object> reqMap, DistributeRegistration distributeReg) throws Exception {
+		
+		String distPartOid = StringUtil.checkNull((String)reqMap.get("distPartOid"));
+		
+		DistributeRegToPartLink link =  
+				DistributeRegToPartLink.newDistributeRegToPartLink(distributeReg, (WTPart)CommonUtil.getObject(distPartOid));
+		link = (DistributeRegToPartLink) PersistenceHelper.manager.save(link);
+		//Distribute 링크 생성
+		createDistributeRegPartToEpmLink(link);
+		
+	}
+	
+	@Override
+	public void createDistributeRegPartToEpmLink(DistributeRegToPartLink distRegPartLink) throws Exception {
+		
+		WTCollection wc = new WTArrayList();
+		
+		WTPart distPart = distRegPartLink.getPart();
+		
+		EPMDocumentMaster partData = null;
+		DistributeRegPartToEpmLink link = null;
+		EPMDocument epmPart = EpmHelper.manager.getEPMDocument(distPart);
+		//partData = (EPMDocumentMaster)epmPart.getMaster();
+		
+		//요청 품목 DWG . PDF 파일 배포하기 위함
+//		if(!EpmUtil.check_AdditionalFiles(epmPart)) {
+//			
+//			throw new Exception("["+distPart.getNumber()+"]"+MessageUtil.getMessage("의 DWG,PDF 파일을 확인해주세요."));
+//		}
+		link = DistributeRegPartToEpmLink.newDistributeRegPartToEpmLink(distRegPartLink, epmPart);
+		link.setDistributeRegistration(distRegPartLink.getDistributeReg());
+		wc.add(link);
+		
+		if(wc.size() > 0) {
+    		PersistenceServerHelper.manager.insert(wc);
+    	}
+		
+	}
+
+}

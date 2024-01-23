@@ -1,0 +1,38 @@
+﻿ResourceInfo.class=wt.tools.resource.EnumResourceInfo
+ResourceInfo.abbreviatedDisplay=true
+ResourceInfo.deprecated=false
+
+
+# Entry Format (values equal to default value are not included)
+# <key>.value=
+# <key>.category=
+# <key>.comment=
+# <key>.argComment<n>=
+# <key>.constant=
+# <key>.customizable=
+# <key>.deprecated=
+# <key>.abbreviatedDisplay=
+# <key>.fullDisplay=
+# <key>.shortDescription=
+# <key>.longDescription=
+# <key>.order=
+# <key>.defaultValue=
+# <key>.selectable= 
+
+# Entry Contents
+#DRAFT - 기안
+DRAFT.value=기안
+DRAFT.order=0
+
+#DISCUSS  - 합의
+DISCUSS.value=합의
+DISCUSS.order=1
+
+#APPROVE  - 승인
+APPROVE.value=승인
+APPROVE.order=2
+
+#RECEIVE  - 수신
+RECEIVE.value=수신
+RECEIVE.order=3
+

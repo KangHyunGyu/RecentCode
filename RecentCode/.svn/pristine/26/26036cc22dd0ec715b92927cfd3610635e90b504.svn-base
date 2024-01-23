@@ -1,0 +1,71 @@
+<html lang="ko">
+<head>
+	 <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Notice Mail</title>
+</head>
+<body style="margin:0; font-family:sans-serif; ">
+	<!-- mail -->
+	<table cellspacing="0" cellpadding="0" summary="mail" style="width:850px; margin:0 auto; border:1px solid #dedede;">
+		<tr>
+			<td style="background:#1064aa; color:#fff; font-size:26px; font-weight:normal;  padding-left:25px; height:70px;"><@ gubun>의 해결방안 완료취소 메일입니다.</td>
+		</tr>
+		<tr>
+			<td style=" height:60px; padding-left:25px;">ㆍ  본 메일은 "PLM System"에서 알려드리는   공지 메일입니다.</td>
+		</tr>
+		<tr>
+			<td style="padding:0 25px 25px 25px;">
+			<!-- pro_table -->			
+				<table cellspacing="0" cellpadding="0" summary="검색조건"  style="width:100%;  border-top:2px solid #1064aa; background:#fff;  border-left:1px solid #cdcdcd; border-right:1px solid #cdcdcd; border-bottom:1px solid #cdcdcd;">					
+					<colgroup>
+						<col style="width:15%">
+						<col style="width:35%">
+						<col style="width:15%">
+						<col style="width:35%">								
+					</colgroup>						
+					<tbody>
+						<tr style="height:45px">
+							<th scope="col" style="background:#f7f7f7; color:#373c44; font-size:15px; text-align:left; border-bottom:1px solid #dedede; padding-left:20px;">업무대상</th>
+							<td style="border-bottom:1px solid #dedede; padding-left:15px; padding-right:30px; color: #000ac9; font-weight: bold;" colspan="3"><@ viewString ></td>							
+						</tr>
+						<tr style="height:45px">
+							<th scope="col" style="background:#f7f7f7; color:#373c44; font-size:15px; text-align:left; border-bottom:1px solid #dedede; padding-left:20px;">도착일</th>
+							<td style="border-bottom:1px solid #dedede; padding-left:15px; padding-right:30px;"> <@ startDate > </td>
+							<th scope="col" style="background:#f7f7f7; color:#373c44; font-size:15px; text-align:left; border-bottom:1px solid #dedede; padding-left:20px;">구분</th>
+							<td style="border-bottom:1px solid #dedede; padding-left:15px; padding-right:30px;"><@ gubun > </td>
+						</tr>
+						<tr style="height:45px">
+							<th scope="col" style="background:#f7f7f7; color:#373c44; font-size:15px; text-align:left; border-bottom:1px solid #dedede; padding-left:20px;">담당자</th>
+							<td style="border-bottom:1px solid #dedede; padding-left:15px; padding-right:30px;">  <@ ownerName ></td>
+							<th scope="col" style="background:#f7f7f7; color:#373c44; font-size:15px; text-align:left; border-bottom:1px solid #dedede; padding-left:20px;">등록자</th>
+							<td style="border-bottom:1px solid #dedede; padding-left:15px; padding-right:30px;"> <@ creatorName ></td>														
+						</tr>
+						<tr style="height:45px">
+							<th scope="col" style="background:#f7f7f7; color:#373c44; font-size:15px; text-align:left; border-bottom:1px solid #dedede; padding-left:20px;">완료 요청일</th>
+							<td style="border-bottom:1px solid #dedede; padding-left:15px; padding-right:30px;">  <@ deadline ></td>
+							<th scope="col" style="background:#f7f7f7; color:#373c44; font-size:15px; text-align:left; border-bottom:1px solid #dedede; padding-left:20px;">완료 예정일</th>
+							<td style="border-bottom:1px solid #dedede; padding-left:15px; padding-right:30px;"> <@ requestDate ></td>														
+						</tr>
+						<tr style="height:45px">
+							<th scope="col" style="background:#f7f7f7; color:#373c44; font-size:15px; text-align:left; border-bottom:1px solid #dedede; padding-left:20px;">위치</th>
+							<td style="border-bottom:1px solid #dedede; padding-left:15px; padding-right:30px;" colspan="3">Home > 프로젝트 > 나의 이슈 > 이슈상세  </td>							
+						</tr>
+						<tr style="height:45px">
+							<th scope="col" style="background:#f7f7f7; color:#373c44; font-size:15px; text-align:left; border-bottom:1px solid #dedede; padding-left:20px;">내용</th>
+							<td style="border-bottom:1px solid #dedede; padding-left:15px; padding-right:30px;" colspan="3"><@ description ></td>							
+						</tr>
+						
+					</tbody>
+				</table>	
+			<!-- //pro_table -->	
+			</td>
+			</tr> 
+			<tr >
+			<td style="background:#999;  font-size:16px; color:#fff; height:55px; padding-left:25px;">ㆍ 본 Mail은 발신전용입니다.<span style="color:#e32f2f;">(*회신불가) </span>
+			ㆍ 문의 사항은 <span style="color:#1064aa;"><a href="http://<@ domainUrl >" target="_blank"><@ domainUrl ></a></span> 을 이용해 주십시오.</td>
+		</tr>
+	</table>
+	<!-- mail -->
+</body>
+</html>

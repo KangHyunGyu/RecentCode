@@ -1,0 +1,879 @@
+package com.e3ps.change.beans;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
+
+import wt.doc.WTDocument;
+import wt.epm.EPMDocument;
+import wt.fc.PersistenceHelper;
+import wt.fc.QueryResult;
+import wt.fc.WTObject;
+import wt.org.WTUser;
+import wt.part.WTPart;
+import wt.part.WTPartMaster;
+import wt.query.ArrayExpression;
+import wt.query.ClassAttribute;
+import wt.query.ExistsExpression;
+import wt.query.OrderBy;
+import wt.query.QuerySpec;
+import wt.query.SearchCondition;
+import wt.query.StringSearch;
+import wt.query.SubSelectExpression;
+import wt.query.TableExpression;
+import wt.session.SessionHelper;
+import wt.util.WTAttributeNameIfc;
+import wt.util.WTException;
+import wt.util.WTPropertyVetoException;
+
+import com.e3ps.change.EChangeActivity;
+import com.e3ps.change.EChangeOrder2;
+import com.e3ps.change.EChangeRequest2;
+import com.e3ps.change.EChangeStopStartHistory;
+import com.e3ps.change.EcoPartLink;
+import com.e3ps.change.EcoProjectLink;
+import com.e3ps.change.EcoTargetLink;
+import com.e3ps.change.EcoTargetResultLink;
+import com.e3ps.change.EcrPartLink;
+import com.e3ps.change.EcrProjectLink;
+import com.e3ps.change.RequestOrderLink;
+import com.e3ps.change.service.ChangeService;
+import com.e3ps.common.code.service.CodeHelper;
+import com.e3ps.common.query.SearchUtil;
+import com.e3ps.common.util.CommonUtil;
+import com.e3ps.common.util.DateUtil;
+import com.e3ps.common.util.StringUtil;
+import com.e3ps.common.web.ParamUtil;
+import com.e3ps.doc.E3PSDocument;
+import com.e3ps.epm.bean.EpmData;
+import com.e3ps.epm.service.EpmHelper;
+import com.e3ps.org.Department;
+import com.e3ps.org.People;
+import com.e3ps.org.bean.OrgDao;
+import com.e3ps.org.bean.PeopleData;
+import com.e3ps.part.bean.PartData;
+import com.e3ps.part.service.PartHelper;
+import com.e3ps.project.EProject;
+import com.e3ps.project.beans.ProjectData;
+
+public class ChangeECOSearch {
+	
+	public static ChangeECOSearch manager  = new ChangeECOSearch();
+	
+	public static QuerySpec getECOQuery(Map<String, Object> reqMap) throws WTException, WTPropertyVetoException, Exception{
+
+		QuerySpec qs = new QuerySpec();
+		int idx = qs.addClassList(EChangeOrder2.class, true);
+		SearchCondition sc = null;
+		try{
+			String name = StringUtil.checkNull((String) reqMap.get("name"));
+			String orderNumber = StringUtil.checkNull((String) reqMap.get("orderNumber"));
+			String productName = StringUtil.checkNull((String) reqMap.get("productName"));
+			String predate = StringUtil.checkNull((String) reqMap.get("predate"));
+			String postdate = StringUtil.checkNull((String) reqMap.get("postdate"));
+			String modifyPredate = StringUtil.checkNull((String) reqMap.get("modifyPredate"));
+			String modifyPostdate = StringUtil.checkNull((String) reqMap.get("modifyPostdate"));
+			String preSpecificDate = StringUtil.checkNull((String) reqMap.get("preSpecificDate"));
+			String postSpecificDate = StringUtil.checkNull((String) reqMap.get("postSpecificDate"));
+			String preFinishDate = StringUtil.checkNull((String) reqMap.get("preFinishDate"));
+			String postFinishDate = StringUtil.checkNull((String) reqMap.get("postFinishDate"));
+			String preEcaFinishDate = StringUtil.checkNull((String) reqMap.get("preEcaFinishDate"));
+			String postEcaFinishDate = StringUtil.checkNull((String) reqMap.get("postEcaFinishDate"));
+			String applyDate = StringUtil.checkNull((String) reqMap.get("applyDate"));
+			String sortCheck = StringUtil.checkNull(String.valueOf((boolean) reqMap.get("sortCheck")));
+			String sortValue = StringUtil.checkNull((String) reqMap.get("sortValue"));
+//			String upg = StringUtil.checkNull((String) reqMap.get("upg"));
+//			List<String> carTypes = StringUtil.checkReplaceArray(reqMap.get("carType"));
+			List<String> state = StringUtil.checkReplaceArray(reqMap.get("state"));
+			List<String> changeOwners = StringUtil.checkReplaceArray(reqMap.get("changeOwner"));
+			List<String> creator = StringUtil.checkReplaceArray(reqMap.get("creator"));
+			List<String> relatedProject = StringUtil.checkReplaceArray(reqMap.get("relatedProject"));
+			
+			
+			//번호
+			if(orderNumber.length() > 0) {
+				if(qs.getConditionCount() > 0) {
+					qs.appendAnd();
+				}
+				sc = new SearchCondition(EChangeOrder2.class, EChangeOrder2.ORDER_NUMBER, SearchCondition.LIKE, "%" + orderNumber + "%", false);
+				qs.appendWhere(sc, new int[] { idx });
+			}
+			
+			//이름
+			if(name.length() > 0) {
+				if(qs.getConditionCount() > 0) {
+					qs.appendAnd();
+				}
+				sc = new SearchCondition(EChangeOrder2.class, EChangeOrder2.NAME, SearchCondition.LIKE, "%" + name + "%", false);
+				qs.appendWhere(sc, new int[] { idx });
+			}
+			
+			// 등록자
+			if (creator.size() > 0) {
+				List<Long> userOidLongValueList = new ArrayList<>();
+				
+				for (String pp : creator) {
+					People people = (People) CommonUtil.getObject(pp);
+					WTUser user = people.getUser();
+					
+					userOidLongValueList.add(CommonUtil.getOIDLongValue(user));
+				}
+				
+				if (qs.getConditionCount() > 0) {
+					qs.appendAnd();
+				}
+				sc = new SearchCondition(
+						new ClassAttribute(EChangeOrder2.class, "creator.key.id"), SearchCondition.IN,
+						new ArrayExpression(userOidLongValueList.toArray()));
+				qs.appendWhere(sc, new int[] { idx });
+			}
+			
+			// 담당자
+			if (changeOwners.size() > 0) {
+				List<String> changeOwnersNameList = new ArrayList<>();
+
+				for (String pp : changeOwners) {
+					People people = (People) CommonUtil.getObject(pp);
+					WTUser user = people.getUser();
+
+					changeOwnersNameList.add(people.getName());
+				}
+
+				if (qs.getConditionCount() > 0) {
+					qs.appendAnd();
+				}
+				sc = new SearchCondition(
+						new ClassAttribute(EChangeOrder2.class, EChangeOrder2.CHANGE_OWNER), SearchCondition.IN,
+						new ArrayExpression(changeOwnersNameList.toArray()));
+				qs.appendWhere(sc, new int[] { idx });
+			}
+			
+			// 제품명
+			if(productName.length() > 0){
+				QuerySpec subQs = new QuerySpec();
+				
+				int idxLink = subQs.addClassList(EcoPartLink.class, false);
+				int idxMaster = subQs.addClassList(WTPartMaster.class, false);
+				
+				SearchCondition outerJoinSc = new SearchCondition(WTPartMaster.class, WTPartMaster.PERSIST_INFO + ".theObjectIdentifier.id",
+						EcoPartLink.class, EcoPartLink.ROLE_AOBJECT_REF + ".key.id");
+				outerJoinSc.setOuterJoin(SearchCondition.NO_OUTER_JOIN);
+				subQs.appendWhere(outerJoinSc, new int[] { idxMaster, idxLink });
+				
+				subQs.appendAnd();
+				
+				sc = new SearchCondition(WTPartMaster.class, WTPartMaster.NAME, SearchCondition.LIKE, "%" + productName + "%", false);
+				subQs.appendWhere(sc, new int[] { idxMaster });
+				
+	    		subQs.appendSelect(new ClassAttribute(EcoPartLink.class, EcoPartLink.ROLE_BOBJECT_REF + ".key.id"), false);
+	    		
+	    		sc = new SearchCondition(new ClassAttribute(EChangeOrder2.class, EChangeOrder2.PERSIST_INFO + ".theObjectIdentifier.id"), "=",
+	    				new SubSelectExpression(subQs));
+	    		qs.appendWhere(sc, new int[] {0});
+			}
+			
+			// 적용 요구 시점
+			if(applyDate.length() > 0) {
+				if(applyDate.equals("specificDate")) {
+					// 특정일자 Start
+					if(preSpecificDate.trim().length() > 0){
+					     if (qs.getConditionCount() > 0)
+					        qs.appendAnd();
+					     qs.appendWhere(new SearchCondition(EChangeOrder2.class,EChangeOrder2.SPECIFIC_DATE,SearchCondition.GREATER_THAN_OR_EQUAL, DateUtil.convertStartDate(preSpecificDate)),	new int[] { idx });
+					}
+					// 특정일자 End
+					if(postSpecificDate.trim().length() > 0){
+					    if (qs.getConditionCount() > 0)
+					        qs.appendAnd();
+					    qs.appendWhere(new SearchCondition(EChangeOrder2.class,EChangeOrder2.SPECIFIC_DATE,SearchCondition.LESS_THAN, DateUtil.convertEndDate(postSpecificDate)),	new int[] { idx }); 
+					}
+					qs.appendAnd();
+					sc = new SearchCondition(EChangeOrder2.class, EChangeOrder2.APPLY_DATE, SearchCondition.EQUAL, "specificDate", false);
+					qs.appendWhere(sc, new int[] { idx });
+				} else {
+					if(qs.getConditionCount() > 0) {
+						qs.appendAnd();
+					}
+					sc = new SearchCondition(EChangeOrder2.class, EChangeOrder2.APPLY_DATE, SearchCondition.EQUAL, applyDate, false);
+					qs.appendWhere(sc, new int[] { idx });
+				}
+			}
+			
+			//작성일_이전
+			if(predate.trim().length() > 0){
+			     if (qs.getConditionCount() > 0)
+			        qs.appendAnd();
+			     qs.appendWhere(new SearchCondition(EChangeOrder2.class,"thePersistInfo.createStamp",SearchCondition.GREATER_THAN_OR_EQUAL, DateUtil.convertStartDate(predate)),	new int[] { idx });
+			}
+			//작성일_이후
+			if(postdate.trim().length() > 0){
+			    if (qs.getConditionCount() > 0)
+			        qs.appendAnd();
+			    qs.appendWhere(new SearchCondition(EChangeOrder2.class,"thePersistInfo.createStamp",SearchCondition.LESS_THAN, DateUtil.convertEndDate(postdate)),	new int[] { idx }); 
+			}
+			
+			//수정일_이전
+			if(modifyPredate.trim().length() > 0){
+				if (qs.getConditionCount() > 0)
+					qs.appendAnd();
+				qs.appendWhere(new SearchCondition(EChangeOrder2.class,"thePersistInfo.modifyStamp",SearchCondition.GREATER_THAN_OR_EQUAL, DateUtil.convertStartDate(modifyPredate)),	new int[] { idx });
+			}
+			//수정일_이후
+			if(modifyPostdate.trim().length() > 0){
+				if (qs.getConditionCount() > 0)
+					qs.appendAnd();
+				qs.appendWhere(new SearchCondition(EChangeOrder2.class,"thePersistInfo.modifyStamp",SearchCondition.LESS_THAN, DateUtil.convertEndDate(modifyPostdate)),	new int[] { idx }); 
+			}
+			
+			
+			List<String> finishDateList = new ArrayList<String>();
+			
+			if(preFinishDate.trim().length() > 0) {
+				finishDateList.add(preFinishDate);
+			}
+			if(postFinishDate.trim().length() > 0) {
+				finishDateList.add(postFinishDate);
+			}
+			if(preEcaFinishDate.trim().length() > 0) {
+				finishDateList.add(preEcaFinishDate);
+			}
+			if(postEcaFinishDate.trim().length() > 0) {
+				finishDateList.add(postEcaFinishDate);
+			}
+			
+			if(finishDateList.size() > 0) {
+				int idx2 = qs.addClassList(EChangeActivity.class, false);
+				
+				if (qs.getConditionCount() > 0)
+					qs.appendAnd();
+				//orderReference.key.id
+				sc = new SearchCondition(EChangeActivity.class,EChangeActivity.ORDER_REFERENCE+".key.id", EChangeOrder2.class, "thePersistInfo.theObjectIdentifier.id");
+				qs.appendWhere(sc,	new int[] { idx2, idx });
+				
+				//완료 예정일 이전
+				if(preFinishDate.trim().length() > 0){
+					if (qs.getConditionCount() > 0)
+						qs.appendAnd();
+					//orderReference.key.id
+					sc = new SearchCondition(EChangeActivity.class,EChangeActivity.FINISH_DATE,SearchCondition.GREATER_THAN_OR_EQUAL, DateUtil.convertStartDate(preFinishDate));
+					qs.appendWhere(sc,	new int[] { idx2 }); 
+				}
+				//완료 예정일 이후
+				if(postFinishDate.trim().length() > 0){
+					if (qs.getConditionCount() > 0)
+						qs.appendAnd();
+					sc = new SearchCondition(EChangeActivity.class,EChangeActivity.FINISH_DATE,SearchCondition.LESS_THAN, DateUtil.convertEndDate(postFinishDate));
+					qs.appendWhere(sc,	new int[] { idx2 }); 
+				}
+				
+				//완료일 이전
+				if(preEcaFinishDate.trim().length() > 0){
+					if (qs.getConditionCount() > 0)
+						qs.appendAnd();
+					sc = new SearchCondition(EChangeActivity.class,EChangeActivity.ECAFINISH_DATE,SearchCondition.GREATER_THAN_OR_EQUAL, DateUtil.convertStartDate(preEcaFinishDate));
+					qs.appendWhere(sc,	new int[] { idx2 }); 
+				}
+				//완료일 이후
+				if(postEcaFinishDate.trim().length() > 0){
+					if (qs.getConditionCount() > 0)
+						qs.appendAnd();
+					sc = new SearchCondition(EChangeActivity.class,EChangeActivity.ECAFINISH_DATE,SearchCondition.LESS_THAN, DateUtil.convertEndDate(postEcaFinishDate));
+					qs.appendWhere(sc,	new int[] { idx2 }); 
+				}
+			}
+			
+			//상태
+			if (state.size() > 0) {
+				if (qs.getConditionCount() > 0) {
+					qs.appendAnd();
+				}
+				sc = new SearchCondition(new ClassAttribute(EChangeOrder2.class, EChangeOrder2.LIFE_CYCLE_STATE), SearchCondition.IN,
+						new ArrayExpression(state.toArray()));
+				qs.appendWhere(sc, new int[] { idx });
+			}
+			
+			//관련 프로젝트
+			if(relatedProject.size() > 0){
+				int pjtIdx = qs.addClassList(EcoProjectLink.class, false);
+				
+				List<Long> projectOidLongValueList = new ArrayList<>();
+	    		for(String oid : relatedProject) {
+	    			projectOidLongValueList.add(CommonUtil.getOIDLongValue(oid));
+	    		}
+	    		
+	    		if (qs.getConditionCount() > 0) {
+					qs.appendAnd();
+				}
+	    		
+	    		sc = new SearchCondition(new ClassAttribute(EcoProjectLink.class, "roleBObjectRef.key.id"), SearchCondition.IN, new ArrayExpression(projectOidLongValueList.toArray()));
+	    		qs.appendWhere(sc, new int[] { pjtIdx });
+	    		
+	    		qs.appendAnd();
+	    		sc = new SearchCondition(new ClassAttribute(EcoProjectLink.class, "roleAObjectRef.key.id"), SearchCondition.EQUAL, new ClassAttribute(EChangeOrder2.class, EChangeRequest2.PERSIST_INFO + ".theObjectIdentifier.id"));
+	    		qs.appendWhere(sc, new int[] {pjtIdx, idx});
+
+			}
+			// 소팅
+			boolean desc = false;
+			if (!"asc".equals(sortCheck)) {
+				desc = true;
+			}
+			if(sortValue==null || sortValue.length()==0){
+				sortValue = "updateDate";
+			}
+			// #. 필드별 컬럼정보 (jqgrid 의 Column 설정 확인할것)
+			Map<String, String> sortColumnMap = new HashMap<String, String>();
+			sortColumnMap.put("orderNumber", EChangeOrder2.ORDER_NUMBER);
+			sortColumnMap.put("name", EChangeOrder2.NAME);
+			sortColumnMap.put("createDate", WTObject.CREATE_TIMESTAMP);
+			sortColumnMap.put("updateDate", WTObject.MODIFY_TIMESTAMP);
+			sortColumnMap.put("tempcreator", SearchUtil.USER_PREFIX+"owner.key.id");
+			sortColumnMap.put("lifeCycleState", "state.state");
+			sortColumnMap.put("project", SearchUtil.IBA_PREFIX + "MODEL");
+			
+			SearchUtil.appendOrderBy(qs,EChangeOrder2.class, sortColumnMap.get(sortValue) ,idx, desc);
+			
+		} catch (WTPropertyVetoException e) {
+			throw new WTException(e.getLocalizedMessage());
+		} catch (WTException e) {
+			throw new WTException(e.getLocalizedMessage());
+		} catch (Exception e) {
+			throw new WTException(e.getLocalizedMessage());
+		}
+		return qs;
+	}
+	
+	private static QuerySpec getSubQuery(QuerySpec mainQuery,Class linkClass,Class roleBClass, String column,String value, String alias) throws WTPropertyVetoException, WTException{
+		StringSearch stringsearch = new StringSearch(column);
+		stringsearch.setValue(value.trim());
+        QuerySpec qs = new QuerySpec();
+		qs.getFromClause().setAliasPrefix(alias);
+		int ii = qs.addClassList(EChangeOrder2.class, false);
+		int jj = qs.addClassList(linkClass, false);
+		int mm = qs.addClassList(roleBClass, false);
+		qs.appendSelect(new ClassAttribute(EChangeOrder2.class,WTAttributeNameIfc.ID_NAME),new int[]{ii},true);
+		qs.appendWhere(new SearchCondition(EChangeOrder2.class,WTAttributeNameIfc.ID_NAME,linkClass,WTAttributeNameIfc.ROLEA_OBJECT_ID),new int[]{ii,jj});
+		qs.appendAnd();
+		qs.appendWhere(new SearchCondition(roleBClass,WTAttributeNameIfc.ID_NAME,linkClass,WTAttributeNameIfc.ROLEB_OBJECT_ID),new int[]{mm,jj});
+		qs.appendAnd();
+		qs.appendWhere(stringsearch.getSearchCondition(roleBClass),new int[]{mm});
+		TableExpression[] tables = new TableExpression[2];
+		String[] aliases = new String[2];
+		tables[0] = mainQuery.getFromClause().getTableExpressionAt(0);
+		aliases[0] = mainQuery.getFromClause().getAliasAt(0);
+		tables[1] = qs.getFromClause().getTableExpressionAt(ii);
+		aliases[1] = qs.getFromClause().getAliasAt(ii);
+		SearchCondition correlatedJoin = new SearchCondition(EChangeOrder2.class, WTAttributeNameIfc.ID_NAME, EChangeOrder2.class, WTAttributeNameIfc.ID_NAME);
+		qs.appendAnd();
+		qs.appendWhere(correlatedJoin, tables, aliases);
+		mainQuery.setAdvancedQueryEnabled(true);
+		return qs;
+	}
+	
+	/**
+	 * 설변 부품 조회
+	 * @param eco
+	 * @return
+	 */
+	public QueryResult ecoPartLink(EChangeOrder2 eco){ 
+		QueryResult rt = null;
+		try{
+			rt=PersistenceHelper.navigate(eco, "part", EcoPartLink.class, false);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return rt;
+	}
+	
+	/**
+	 * 설변 부품 조회
+	 * @param eco
+	 * @return
+	 */
+	public Vector<WTPart> ecoPartList(EChangeOrder2 eco){
+		QueryResult qr = null;
+		Vector<WTPart> partList = new Vector();
+		try{
+			qr=ecoPartLink(eco);
+			while(qr.hasMoreElements()){
+				EcoPartLink link = (EcoPartLink)qr.nextElement();
+				String version = link.getVersion();
+				WTPartMaster master = (WTPartMaster)link.getPart();
+				WTPart part = PartHelper.service.getPart(master.getNumber(),version);
+				partList.add(part);
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return partList;
+	}
+	
+	/**
+	 * eco에서 Part 리스트중에서 개정 리스트
+	 * @param eco
+	 * @return
+	 */
+	/*public Vector<WTPart> ecoPartReviseList(EChangeOrder2 eco){
+		Vector<WTPart> partList = new Vector();
+		try{
+			QueryResult qr=ecoPartLink(eco);
+			while(qr.hasMoreElements()){
+				EcoPartLink link = (EcoPartLink)qr.nextElement();
+				String version = link.getVersion();
+				WTPartMaster master = (WTPartMaster)link.getPart();
+				WTPart part = PartHelper.manager.getPart(master.getNumber(),version);
+				if(link.isRevise()){
+					WTPart nextPart = (WTPart)com.e3ps.common.obj.ObjectUtil.getNextVersion(part);
+					partList.add(nextPart);
+				}else{
+					partList.add(part);
+				}
+				
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		return partList;
+	}*/
+	
+	/**
+	 * eco에서 Part Link
+	 * @param eco
+	 * @return
+	 */
+	public Vector<EcoPartLink> ecoPartLinkList(EChangeOrder2 eco){
+		Vector<EcoPartLink> partList = new Vector();
+		try{
+			QueryResult qr=ecoPartLink(eco);
+			while(qr.hasMoreElements()){
+				EcoPartLink link = (EcoPartLink)qr.nextElement();
+				partList.add(link);
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		return partList;
+	}
+	
+//	/**
+//	 * eco에서 Target part link
+//	 * @param eco
+//	 * @return
+//	 */
+//	public static List<PartData> getECOrelatedParts(EChangeOrder2 eco) throws Exception {
+//		List<PartData> returnList = new ArrayList<PartData>();
+//		
+//		QuerySpec qs = new QuerySpec();
+//		
+//		int idx = qs.addClassList(EChangeOrder2.class, false);
+//		int idx2 = qs.addClassList(WTPart.class, true);
+//		
+//		ClassAttribute attr1 = new ClassAttribute(EChangeOrder2.class, "partReference.key.id");
+//		ClassAttribute attr2 = new ClassAttribute(WTPart.class, "thePersistInfo.theObjectIdentifier.id");
+//		
+//		SearchCondition sc = null;
+//		
+//		sc = new SearchCondition( attr1, "=", attr2 );
+//		qs.appendWhere(sc, new int[]{idx, idx2});
+//		qs.appendAnd();
+//		sc = new SearchCondition(EChangeOrder2.class, "thePersistInfo.theObjectIdentifier.id", SearchCondition.EQUAL, eco.getPersistInfo().getObjectIdentifier().getId());
+//		qs.appendWhere(sc, new int[] { idx });
+//		
+//		QueryResult result = PersistenceHelper.manager.find(qs);
+//		
+//		while(result.hasMoreElements()){
+//			Object[] obj = (Object[]) result.nextElement();
+//			WTPart part = (WTPart) obj[0];
+//			
+//			PartData data = new PartData(part);
+//			data.loadAttributes();
+//			
+//			returnList.add(data);
+//		}
+//		
+//		return returnList;
+//	}
+	
+	/**
+	 * part 에서 Target eco link
+	 * @param eco
+	 * @return
+	 */
+	public static List<EChangeOrder2> getPartRelatedEco(WTPart eco) {
+		List<EChangeOrder2> relatedParts = new ArrayList<EChangeOrder2>();
+		QueryResult qr = null;
+		try {
+			QuerySpec qs = new QuerySpec();
+			int ii = qs.addClassList(EcoTargetLink.class,true);
+			int jj = qs.addClassList(EChangeOrder2.class,true);
+			qs.appendWhere(new SearchCondition(EcoTargetLink.class,"roleBObjectRef.key.id","=",eco.getPersistInfo().getObjectIdentifier().getId()),new int[]{ii});
+			qs.appendAnd();
+
+			ClassAttribute target = new ClassAttribute(EcoTargetLink.class, "roleAObjectRef.key.id");
+			ClassAttribute wtpart = new ClassAttribute(EChangeOrder2.class, "thePersistInfo.theObjectIdentifier.id");
+
+			SearchCondition value = new SearchCondition(wtpart, "=", target);
+			qs.appendWhere(value, new int[]{jj, ii});
+
+			qr = PersistenceHelper.manager.find(qs);
+			
+			while(qr.hasMoreElements()){
+				Object[] o = (Object[])qr.nextElement();
+				EcoTargetLink link = (EcoTargetLink)o[0];
+				EChangeOrder2 part = (EChangeOrder2)o[1];
+				relatedParts.add(part);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return relatedParts;
+	}
+	
+	/**
+	 * eco에서 Target epm link
+	 * @param eco
+	 * @return
+	 */
+	public static List<Object> getECOrelatedDrawings(EChangeOrder2 eco) {
+		List<Object> relatedDrawings = new ArrayList<Object>();
+		QueryResult qr = null;
+		try {
+			QuerySpec qs = new QuerySpec();
+			int ii = qs.addClassList(EcoTargetLink.class,true);
+			int ee = qs.addClassList(EPMDocument.class,true);
+			qs.appendWhere(new SearchCondition(EcoTargetLink.class,"roleAObjectRef.key.id","=",eco.getPersistInfo().getObjectIdentifier().getId()),new int[]{ii});
+			qs.appendAnd();
+			ClassAttribute ca1 = new ClassAttribute(EcoTargetLink.class, "roleBObjectRef.key.id");
+			ClassAttribute ca2 = new ClassAttribute(EPMDocument.class, "thePersistInfo.theObjectIdentifier.id");
+
+			SearchCondition sc1 = new SearchCondition(ca2, "=", ca1);
+			qs.appendWhere(sc1, new int[]{ee, ii});
+
+			qr = PersistenceHelper.manager.find(qs);
+			
+			while(qr.hasMoreElements()){
+				Object[] o = (Object[])qr.nextElement();
+				EcoTargetLink link = (EcoTargetLink)o[0];
+				EPMDocument epm = (EPMDocument)o[1];
+				relatedDrawings.add(epm);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return relatedDrawings;
+	}
+	
+	public static List<EPMDocument> getECOrelatedDrawings2(EChangeOrder2 eco) {
+		List<EPMDocument> relatedDrawings = new ArrayList<EPMDocument>();
+		QueryResult qr = null;
+		try {
+			QuerySpec qs = new QuerySpec();
+			int ii = qs.addClassList(EcoTargetLink.class,true);
+			int ee = qs.addClassList(EPMDocument.class,true);
+			qs.appendWhere(new SearchCondition(EcoTargetLink.class,"roleAObjectRef.key.id","=",eco.getPersistInfo().getObjectIdentifier().getId()),new int[]{ii});
+			qs.appendAnd();
+			ClassAttribute ca1 = new ClassAttribute(EcoTargetLink.class, "roleBObjectRef.key.id");
+			ClassAttribute ca2 = new ClassAttribute(EPMDocument.class, "thePersistInfo.theObjectIdentifier.id");
+
+			SearchCondition sc1 = new SearchCondition(ca2, "=", ca1);
+			qs.appendWhere(sc1, new int[]{ee, ii});
+
+			qr = PersistenceHelper.manager.find(qs);
+			
+			while(qr.hasMoreElements()){
+				Object[] o = (Object[])qr.nextElement();
+				EcoTargetLink link = (EcoTargetLink)o[0];
+				EPMDocument epm = (EPMDocument)o[1];
+				relatedDrawings.add(epm);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return relatedDrawings;
+	}
+	
+	/**
+	 * eco에서 Target Result epm link
+	 * @param eco
+	 * @return
+	 */
+	public static List<Object> getECOrelatedResultDrawings(EChangeOrder2 eco) {
+		List<Object> relatedDrawings = new ArrayList<Object>();
+		if(eco == null){
+			return relatedDrawings;
+		}
+		QueryResult qr = null;
+		try {
+			QuerySpec qs = new QuerySpec();
+			int ii = qs.addClassList(EcoTargetResultLink.class,true);
+			int ee = qs.addClassList(EPMDocument.class,true);
+			qs.appendWhere(new SearchCondition(EcoTargetResultLink.class,"roleAObjectRef.key.id","=",eco.getPersistInfo().getObjectIdentifier().getId()),new int[]{ii});
+			qs.appendAnd();
+			ClassAttribute ca1 = new ClassAttribute(EcoTargetResultLink.class, "roleBObjectRef.key.id");
+			ClassAttribute ca2 = new ClassAttribute(EPMDocument.class, "thePersistInfo.theObjectIdentifier.id");
+
+			SearchCondition sc1 = new SearchCondition(ca2, "=", ca1);
+			qs.appendWhere(sc1, new int[]{ee, ii});
+
+			qr = PersistenceHelper.manager.find(qs);
+			
+			while(qr.hasMoreElements()){
+				Object[] o = (Object[])qr.nextElement();
+				EcoTargetResultLink link = (EcoTargetResultLink)o[0];
+				EPMDocument epm = (EPMDocument)o[1];
+				relatedDrawings.add(o);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return relatedDrawings;
+	}
+	
+	public static List<EPMDocument> getECOrelatedResultDrawings2(EChangeOrder2 eco) {
+		List<EPMDocument> relatedDrawings = new ArrayList<EPMDocument>();
+		if(eco == null){
+			return relatedDrawings;
+		}
+		QueryResult qr = null;
+		try {
+			QuerySpec qs = new QuerySpec();
+			int ii = qs.addClassList(EcoTargetResultLink.class,true);
+			int ee = qs.addClassList(EPMDocument.class,true);
+			qs.appendWhere(new SearchCondition(EcoTargetResultLink.class,"roleAObjectRef.key.id","=",eco.getPersistInfo().getObjectIdentifier().getId()),new int[]{ii});
+			qs.appendAnd();
+			ClassAttribute ca1 = new ClassAttribute(EcoTargetResultLink.class, "roleBObjectRef.key.id");
+			ClassAttribute ca2 = new ClassAttribute(EPMDocument.class, "thePersistInfo.theObjectIdentifier.id");
+
+			SearchCondition sc1 = new SearchCondition(ca2, "=", ca1);
+			qs.appendWhere(sc1, new int[]{ee, ii});
+
+			qr = PersistenceHelper.manager.find(qs);
+			
+			while(qr.hasMoreElements()){
+				Object[] o = (Object[])qr.nextElement();
+				EcoTargetResultLink link = (EcoTargetResultLink)o[0];
+				EPMDocument epm = (EPMDocument)o[1];
+				relatedDrawings.add(epm);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return relatedDrawings;
+	}
+
+	public static QuerySpec getMyworkECOQuery() throws WTException {
+		QuerySpec qs  = new QuerySpec();
+		int ii = qs.addClassList(EChangeOrder2.class, true);
+		int uu = qs.addClassList(WTUser.class, false);
+		int pp = qs.addClassList(People.class, false);
+		int dd = qs.addClassList(Department.class, false);
+		try {
+			WTUser user = (WTUser)SessionHelper.manager.getPrincipal();
+			PeopleData pd = new PeopleData(user);
+			//String deptOid = CommonUtil.getOIDString(pd.department);
+			String deptOid = pd.getDepartmentOID();
+			Department dept = (Department)CommonUtil.getObject(deptOid);
+			
+//			qs.appendOpenParen();
+//			qs.appendWhere(new SearchCondition(EChangeOrder2.class,EChangeOrder2.ORDER_STATE,"=",ChangeService.ECO_WORKING),new int[]{ii});
+//			qs.appendOr();
+//			qs.appendWhere(new SearchCondition(EChangeOrder2.class,EChangeOrder2.ORDER_STATE,"=",ChangeService.ECO_BEFORE_APPROVING),new int[]{ii});
+//			qs.appendOr();
+//			qs.appendWhere(new SearchCondition(EChangeOrder2.class,EChangeOrder2.ORDER_STATE,"=",ChangeService.ECO_ECA_WORKING),new int[]{ii});
+//			qs.appendOr();
+//			qs.appendWhere(new SearchCondition(EChangeOrder2.class,EChangeOrder2.ORDER_STATE,"=",ChangeService.ECO_ECA_COMPLETE),new int[]{ii});
+//			qs.appendOr();
+//			qs.appendWhere(new SearchCondition(EChangeOrder2.class,EChangeOrder2.ORDER_STATE,"=",ChangeService.ECO_AFTER_APPROVING),new int[]{ii});
+//			qs.appendOr();
+//			qs.appendWhere(new SearchCondition(EChangeOrder2.class,EChangeOrder2.ORDER_STATE,"=",ChangeService.ECO_REJECTED),new int[]{ii});
+//			qs.appendOr();
+//			qs.appendWhere(new SearchCondition(EChangeOrder2.class,EChangeOrder2.ORDER_STATE,"=",ChangeService.ECO_CANCELLED),new int[]{ii});
+//			qs.appendCloseParen();
+			
+			qs.appendAnd();
+			qs.appendSelect(new ClassAttribute(EChangeOrder2.class,"owner.key.id"),new int[]{ii},true);
+
+			qs.appendWhere(new SearchCondition(EChangeOrder2.class, "owner.key.id",
+					WTUser.class, "thePersistInfo.theObjectIdentifier.id"), new int[] { ii, uu });
+			qs.appendAnd();
+			qs.appendWhere(new SearchCondition(People.class, "userReference.key.id",
+					WTUser.class, "thePersistInfo.theObjectIdentifier.id"), new int[] { pp, uu });
+			qs.appendAnd();
+			qs.appendWhere(new SearchCondition(People.class, "departmentReference.key.id",
+					Department.class, "thePersistInfo.theObjectIdentifier.id"), new int[] { pp, dd });
+			
+			if(dept!=null){
+				ArrayList list = OrgDao.service.getDepartmentTree(dept.getPersistInfo().getObjectIdentifier().getId());
+
+				qs.appendAnd();
+				qs.appendOpenParen();
+				qs.appendWhere(new SearchCondition(Department.class, "thePersistInfo.theObjectIdentifier.id", "=", dept.getPersistInfo().getObjectIdentifier().getId()), new int[] { dd });
+				for(int i=0; i< list.size(); i++){
+					String[] node = (String[])list.get(i);
+					
+					qs.appendOr();
+					
+					long did = Long.parseLong(node[2].substring(node[2].lastIndexOf(":")+1));
+					qs.appendWhere(new SearchCondition(Department.class, "thePersistInfo.theObjectIdentifier.id", "=", did), new int[] { dd });
+				}
+				qs.appendCloseParen();
+				TableExpression[] tables = new TableExpression[2];
+				String[] aliases = new String[2];
+				tables[0] = qs.getFromClause().getTableExpressionAt(0);
+				aliases[0] = qs.getFromClause().getAliasAt(0);
+				tables[1] = qs.getFromClause().getTableExpressionAt(ii);
+				aliases[1] = qs.getFromClause().getAliasAt(ii);
+				SearchCondition correlatedJoin = new SearchCondition(EChangeOrder2.class, "owner.key.id", EChangeOrder2.class, "owner.key.id");
+				qs.appendAnd();
+				qs.appendWhere(correlatedJoin, tables, aliases);
+				qs.setAdvancedQueryEnabled(true);
+			}
+			
+		} catch (Exception e) {
+			throw new WTException(e.getLocalizedMessage());
+		}
+		return qs;
+	}
+	
+	public static List<PartData> getECOrelatedPartDatas(EChangeOrder2 eco) {
+		List<PartData> relatedParts = new ArrayList<PartData>();
+		QueryResult qr = null;
+		try {
+			QuerySpec qs = new QuerySpec();
+			int ii = qs.addClassList(EcoTargetLink.class,true);
+			int jj = qs.addClassList(WTPart.class,true);
+			qs.appendWhere(new SearchCondition(EcoTargetLink.class,"roleAObjectRef.key.id","=",eco.getPersistInfo().getObjectIdentifier().getId()),new int[]{ii});
+			qs.appendAnd();
+
+			ClassAttribute target = new ClassAttribute(EcoTargetLink.class, "roleBObjectRef.key.id");
+			ClassAttribute wtpart = new ClassAttribute(WTPart.class, "thePersistInfo.theObjectIdentifier.id");
+
+			SearchCondition value = new SearchCondition(wtpart, "=", target);
+			qs.appendWhere(value, new int[]{jj, ii});
+
+			qr = PersistenceHelper.manager.find(qs);
+			
+			while(qr.hasMoreElements()){
+				Object[] o = (Object[])qr.nextElement();
+				EcoTargetLink link = (EcoTargetLink)o[0];
+				WTPart part = (WTPart)o[1];
+				PartData data = new PartData(part);
+				relatedParts.add(data);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return relatedParts;
+	}
+	
+	public static List<EpmData> getECOrelatedDrawingDatas(EChangeOrder2 eco) {
+		List<EpmData> relatedDrawings = new ArrayList<EpmData>();
+		QueryResult qr = null;
+		try {
+			QuerySpec qs = new QuerySpec();
+			int ii = qs.addClassList(EcoTargetLink.class,true);
+			int ee = qs.addClassList(EPMDocument.class,true);
+			qs.appendWhere(new SearchCondition(EcoTargetLink.class,"roleAObjectRef.key.id","=",eco.getPersistInfo().getObjectIdentifier().getId()),new int[]{ii});
+			qs.appendAnd();
+			ClassAttribute ca1 = new ClassAttribute(EcoTargetLink.class, "roleBObjectRef.key.id");
+			ClassAttribute ca2 = new ClassAttribute(EPMDocument.class, "thePersistInfo.theObjectIdentifier.id");
+
+			SearchCondition sc1 = new SearchCondition(ca2, "=", ca1);
+			qs.appendWhere(sc1, new int[]{ee, ii});
+
+			qr = PersistenceHelper.manager.find(qs);
+			
+			while(qr.hasMoreElements()){
+				Object[] o = (Object[])qr.nextElement();
+				EcoTargetLink link = (EcoTargetLink)o[0];
+				EPMDocument epm = (EPMDocument)o[1];
+				EpmData data = new EpmData(epm);
+				relatedDrawings.add(data);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return relatedDrawings;
+	}
+	
+	public static List<EpmData> getECOrelatedResultDrawingDatas(EChangeOrder2 eco) {
+		List<EpmData> relatedDrawings = new ArrayList<EpmData>();
+		if(eco == null){
+			return relatedDrawings;
+		}
+		QueryResult qr = null;
+		try {
+			QuerySpec qs = new QuerySpec();
+			int ii = qs.addClassList(EcoTargetResultLink.class,true);
+			int ee = qs.addClassList(EPMDocument.class,true);
+			qs.appendWhere(new SearchCondition(EcoTargetResultLink.class,"roleAObjectRef.key.id","=",eco.getPersistInfo().getObjectIdentifier().getId()),new int[]{ii});
+			qs.appendAnd();
+			ClassAttribute ca1 = new ClassAttribute(EcoTargetResultLink.class, "roleBObjectRef.key.id");
+			ClassAttribute ca2 = new ClassAttribute(EPMDocument.class, "thePersistInfo.theObjectIdentifier.id");
+
+			SearchCondition sc1 = new SearchCondition(ca2, "=", ca1);
+			qs.appendWhere(sc1, new int[]{ee, ii});
+
+			qr = PersistenceHelper.manager.find(qs);
+			
+			while(qr.hasMoreElements()){
+				Object[] o = (Object[])qr.nextElement();
+				EcoTargetResultLink link = (EcoTargetResultLink)o[0];
+				EPMDocument epm = (EPMDocument)o[1];
+				EpmData data = new EpmData(epm);
+				relatedDrawings.add(data);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return relatedDrawings;
+	}
+	
+	public static List<ProjectData> getRelatedProject(EChangeOrder2 eco) throws Exception{
+		List<ProjectData> relatedProjects = new ArrayList<ProjectData>();
+		QueryResult qr = PersistenceHelper.manager.navigate(eco,"project",EcoProjectLink.class);
+		if (qr.size() > 0) {
+			while(qr.hasMoreElements()){
+				EProject project = (EProject)qr.nextElement();
+				ProjectData data = new ProjectData(project);
+				relatedProjects.add(data);
+			}
+		}
+		return relatedProjects;
+	}
+	
+	public static List<ECRData> getRelatedEcr(EChangeOrder2 eco) throws Exception{
+		List<ECRData> relatedECRs = new ArrayList<ECRData>();
+		QueryResult qr = PersistenceHelper.manager.navigate(eco,"request",RequestOrderLink.class);
+		if (qr.size() > 0) {
+			while(qr.hasMoreElements()){
+				EChangeRequest2 ecr = (EChangeRequest2)qr.nextElement();
+				ECRData data = new ECRData(ecr);
+				relatedECRs.add(data);
+			}
+		}
+		return relatedECRs;
+	}
+	
+	public static List<EChangeStopStartHistoryData> getStopStartHistory(EChangeOrder2 eco)throws WTException{
+		List<EChangeStopStartHistoryData> historys = new ArrayList<EChangeStopStartHistoryData>();
+		QuerySpec qs = new QuerySpec();
+		int ii = qs.addClassList(EChangeStopStartHistory.class, true);
+		qs.appendWhere(new SearchCondition(EChangeStopStartHistory.class,"ecoReference.key.id","=",eco.getPersistInfo().getObjectIdentifier().getId()),new int[]{ii});
+		qs.appendOrderBy(new OrderBy(new ClassAttribute(EChangeStopStartHistory.class,EChangeStopStartHistory.ACTIVE_DATE),false),new int[]{ii});
+		QueryResult qr = PersistenceHelper.manager.find(qs);
+		if (qr.size() > 0) {
+			while(qr.hasMoreElements()){
+				Object[] o = (Object[])qr.nextElement();
+				EChangeStopStartHistory history = (EChangeStopStartHistory)o[0];
+				EChangeStopStartHistoryData data = new EChangeStopStartHistoryData(history);
+				historys.add(data);
+			}
+		}
+		return historys;
+	}
+}

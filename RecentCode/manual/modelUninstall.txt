@@ -1,0 +1,17 @@
+ant -f %WT_HOME%\bin\tools.xml model_uninstall -Dmodel_uninstall.filter=com.e3ps.common.util.Tree
+ant -f %WT_HOME%\bin\tools.xml model_uninstall -Dmodel_uninstall.filter=com.e3ps.common.util.ParentChildLink
+ant -f %WT_HOME%\bin\tools.xml model_uninstall -Dmodel_uninstall.filter=com.e3ps.approval.ApprovalToObjectLink
+ant -f %WT_HOME%\bin\tools.xml model_uninstall -Dmodel_uninstall.filter=com.e3ps.workspace.BoardComent
+ant -f %WT_HOME%\bin\tools.xml model_uninstall -Dmodel_uninstall.filter=com.e3ps.workspace.BoardComentLink
+ant -f %WT_HOME%\bin\tools.xml model_uninstall -Dmodel_uninstall.filter=com.e3ps.doc.EpmLocation
+ant -f %WT_HOME%\bin\tools.xml model_uninstall -Dmodel_uninstall.filter=com.e3ps.part.DocLocation
+
+ant -f %WT_HOME%\bin\tools.xml model_uninstall -Dmodel_uninstall.filter=com.e3ps.admin=AuthorityClassification
+ant -f %WT_HOME%\bin\tools.xml model_uninstall -Dmodel_uninstall.filter=com.e3ps.approval=MutiApprovalObjectLink
+0. 윈칠 종료
+1. 언인스톨할 패키지 명령어를 복사한 후 이클립스를 종료
+2. 쉘에서 복사한 언인스톨 명령어 실행
+3. codebase의 언인스톨 할 패키지 폴더 삭제
+4. 이클립스 실행 후 프로젝트 클린 & 빌드
+5. upgrademanager 실행 또는 해당 패키지 테이블 재생성
+6. 윈칠 시작

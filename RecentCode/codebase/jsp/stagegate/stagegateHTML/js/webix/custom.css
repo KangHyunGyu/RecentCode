@@ -1,0 +1,96 @@
+.webix_hcell{
+ 	font-size:0.8rem;
+	font-weight:bold;
+ 	border-left:1px solid #cccccc;
+ 	text-align:center;
+ 	border-bottom:1px solid #cccccc;
+}
+
+.webix_column{
+	font-size:0.8rem;
+    border-left:1px solid #cccccc;
+}
+
+.custom_webix_marker{
+  	background:#ffd;
+}
+
+.custom_webix_ellipsis div{
+	text-overflow: ellipsis;
+}
+
+.custom_webix_imgCenter div{
+	text-align: center;
+	padding: 0;
+}
+
+.custom_webix_imgCenter img{
+	vertical-align: middle;
+}
+
+.custom_webix_center {
+	text-align: center;
+}
+
+.custom_webix_editable {
+	background: #EBF7FF;
+	color: #0000ff; 
+}
+
+.custom_webix_contextMenu a{
+	color: #475466; 
+}
+
+.custom_webix_disabled {
+	background-color: #ebebeb; 
+}
+
+.webix_datatable_hover{
+  	background: #EAEAEA;
+}
+
+.webix_non_editable{
+  	background: #F6E3CE;
+  	color: #FE2E2E;
+}
+
+.webix_datatable_checked{
+	text-align: center;
+    color:green;
+    font-weight: bold; cursor:pointer;
+}
+
+.webix_datatable_notchecked{
+	text-align: center;
+    color:red;
+    font-weight:bold; cursor:pointer;	
+}
+
+.webix_datatable_risk{
+	text-align: center;
+    color:#003AE6;
+    background:#FFFFCC;
+}
+
+.webix_datatable_riskHeader{
+	vertical-align:middle;
+	text-align: center;
+    color:#FFFFFF;
+    background:#000080;
+   
+}
+
+.webix_datatable_riskHeader2{
+	text-align: center;
+	vertical-align:middle;
+	font-size:0.3rem;
+    color:#FFFFFF;
+    background:#000080;
+}
+
+.webix_datatable_riskHeader3{
+	padding-top:7px;
+	font-size:0.7rem;
+    color:#FFFFFF;
+    background:#000080;
+}

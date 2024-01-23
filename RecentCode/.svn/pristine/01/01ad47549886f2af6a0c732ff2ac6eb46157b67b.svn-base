@@ -1,0 +1,70 @@
+﻿ResourceInfo.class=wt.tools.resource.EnumResourceInfo
+ResourceInfo.customizable=true
+ResourceInfo.deprecated=false
+
+
+# Entry Format (values equal to default value are not included)
+# <key>.value=
+# <key>.category=
+# <key>.comment=
+# <key>.argComment<n>=
+# <key>.constant=
+# <key>.customizable=
+# <key>.deprecated=
+# <key>.abbreviatedDisplay=true는 계층 구조 (Tree)
+# <key>.fullDisplay=General(공통)-10 ,Project(프로젝트) - 20 ,Doc(문서) -30 ,Part(품목)-40 ,Change(설계변경)-50, Disabled(미사용), PRODUCTION(생산요청) - 100
+# <key>.shortDescription= Code 생성시 : 자동 true (longDescription에서 정해진 key값으로 code 자동 생성) 수동 false(사용자가 입력 하는 방식))
+# <key>.longDescription=seq - XX001
+# <key>.order=
+# <key>.defaultValue=
+# <key>.selectable= 
+
+# Entry Contents
+
+#DOC
+DOC.value=com.e3ps.doc.E3PSDocument
+DOC.order=1
+DOC.abbreviatedDisplay=false
+DOC.fullDisplay=Document
+
+#PART
+PART.value=wt.part.WTPart
+PART.order=2
+PART.abbreviatedDisplay=false
+PART.fullDisplay=Part
+
+#EPM
+EPM.value=wt.epm.EPMDocument
+EPM.order=3
+EPM.abbreviatedDisplay=false
+EPM.fullDisplay=Drawing
+
+#ECR
+ECR.value=com.e3ps.change.EChangeRequest2
+ECR.order=4
+ECR.abbreviatedDisplay=false
+ECR.fullDisplay=Engineering Change Request
+
+#ECO
+ECO.value=com.e3ps.change.EChangeOrder2
+ECO.order=5
+ECO.abbreviatedDisplay=false
+ECO.fullDisplay=Engineering Change Order
+
+#PROJECT
+PROJECT.value=com.e3ps.project.EProject
+PROJECT.order=6
+PROJECT.abbreviatedDisplay=false
+PROJECT.fullDisplay=Project
+
+#DIST_DOC
+DIST_DOC.value=com.e3ps.distribute.DistributeDocument
+DIST_DOC.order=7
+DIST_DOC.abbreviatedDisplay=false
+DIST_DOC.fullDisplay=Drawing Release Request
+
+#DIST_REG
+DIST_REG.value=com.e3ps.distribute.DistributeRegistration
+DIST_REG.order=8
+DIST_REG.abbreviatedDisplay=false
+DIST_REG.fullDisplay=Distribution Request

@@ -1,0 +1,319 @@
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+	transition: background-color 5000s;
+}
+.pro_table .mainTable > thead > tr > th {
+  background: #f7f7f7;
+  color: #373c44;
+  font-size: 14px;
+  line-height: 30px;
+  text-align: left;
+  border-bottom: 1px solid #dedede;
+  padding: 0px 20px;
+}
+.pro_table .mainTable > thead > tr > td {
+  border-bottom: 1px solid #dedede;
+  font-size: 14px;
+  padding-left: 20px;
+  line-height: 30px;
+  padding-right: 15px;
+}
+
+button:focus,
+button:active,
+select:focus {
+  outline: none;
+}
+
+.pro_table .mainTable > tbody > tr > td > input[type="text"],
+.pro_table .mainTable > tbody > tr > td > input[type="number"] {
+  width: 100%;
+  height: 26px;
+  border: none;
+  text-align: center;
+  background-color: #fff3a1;
+  padding: 0px;
+  font-weight: bold;
+}
+
+.subdivision{
+	background-color: #FFE08C;
+	text-align: center;
+	width: 100%;
+  	height: 26px;
+  	font-weight: bold;
+  	padding: 0px;
+}
+
+.noTeduri{
+	border: none; background: transparent;
+}
+
+.pro_table .mainTable > tbody > tr > td > input[type="text"].textLF {
+  padding-left: 15px;
+  text-align: left;
+  font-weight: normal;
+}
+
+.pro_table .mainTable > tbody > tr > td > input[type="text"].textLFN {
+  padding-left: 15px;
+  text-align: left;
+  font-weight: normal;
+  border: none;
+}
+
+.pro_table .mainTable > tbody > tr > td input[type="text"].textLFP {
+    text-align: center;
+    font-weight: normal;
+    width: 50%;
+}
+
+.pro_table .mainTable > tbody > tr > td > input[type="text"].textLFM {
+  font-weight: normal;
+  padding : 0px;
+  border : none;
+  text-align : center;
+}
+
+.pro_table
+  .mainTable
+  > tbody
+  > tr
+  > td
+  > input[type="text"].noticeText:disabled {
+  color: #ff0000;
+}
+
+.pro_table .mainTable > tbody > tr > td > input[type="text"].noticeText {
+  color: #000000;
+}
+
+.pro_table .mainTable > tbody > tr > td > input[type="text"]:focus,
+.pro_table .mainTable > tbody > tr > td > input[type="number"]:focus {
+  outline: none;
+}
+
+.pro_table .mainTable > tbody > tr > td > input:disabled {
+  text-align: center;
+  background-color: white;
+  color: #000000;
+}
+
+.property_update,
+.property_submit,
+.excel_import,
+.excel_export {
+  height: 20px;
+  margin-right: 0;
+  font-size: 14px;
+  line-height: 0px;
+}
+
+.property_update:hover,
+.property_submit:hover,
+.excel_import:hover,
+.excel_export:hover {
+  background: #74AF2A;
+  color: #fff;
+}
+
+select {
+  width: 100%;
+  padding: 0 5px;
+  text-align-last: center;
+  -moz-text-align-last: center;
+  -ms-text-align-last: center;
+  cursor: pointer;
+}
+
+select:disabled {
+  color: #fff;
+  border: none;
+  opacity: 1;
+  cursor: default;
+}
+
+select > option.none {
+  color: #fff;
+  background: #fff;
+}
+
+select.signal_normal {
+  color: #000000;
+  font-weight: bold;
+}
+select.ds {
+	background: #74AF2A;
+    color: #fff;
+}
+select.signal_G,
+select > option.signal_G {
+  color: #fff;
+  background: #339900;
+}
+
+select.signal_Y,
+select > option.signal_Y {
+  color: #fff;
+  background: #ffc200;
+}
+
+select.signal_R,
+select > option.signal_R {
+  color: #fff;
+  background: #ff0000;
+}
+
+select.signal_NA,
+select > option.signal_NA {
+  color: #fff;
+  background: #BDBDBD;
+}
+
+.signal_info {
+  position: absolute;
+  z-index: 9999;
+  width: 650px;
+  height: 250px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cdcdcd;
+  box-sizing: border-box;
+}
+
+.visibility_hidden {
+  visibility: hidden;
+}
+
+.signal_info > .pro_table {
+  width: 620px;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.font_green {
+  color: #339900;
+}
+
+.font_yellow {
+  color: #ffc200;
+}
+
+.font_red {
+  color: #ff0000;
+}
+
+.height65 {
+  height: 65px;
+}
+
+.rotate270 {
+  transform: rotate(-90deg);
+}
+
+.lineH20 {
+  line-height: 20px;
+}
+
+textarea.demo-textArea {
+  resize: auto;
+  background-color: #fff3a1;
+  height: 100%;
+  font-size: 1em;
+  padding: 5px;
+}
+
+textarea.demo-textArea:focus {
+  outline: none;
+}
+
+textarea.demo-textArea:disabled {
+  background-color: white;
+  color: #000000;
+  border: none;
+  resize: none;
+}
+
+button.row_delete_button,
+button.row_add_button {
+  width: 22px;
+  height: 22px;
+  font-weight: bold;
+  padding: 0;
+  font-size: 1.5em;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+}
+
+button.row_delete_button {
+  background: #c82333;
+}
+
+button.row_add_button {
+  background: #28a745;
+}
+
+span.numbering_label {
+  font-weight: bold;
+}
+
+.sm_bt03 {
+  background: #fff;
+  border: 1px solid #74AF2A;
+  color: #74AF2A;
+  padding: 1px 8px;
+  border-radius: 2px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.risk > tbody > tr > td {
+  padding-right: 20px !important;
+  text-align: center;
+}
+
+.pro_table .risk textarea {
+  resize: vertical;
+  font-size: 14px;
+}
+
+.borderGrey {
+	border: 1px solid #dedede;
+}
+
+.textCenter{
+	text-align : center;
+}
+
+.ds select {
+  margin: 1px;
+}
+
+.xhidden{
+	overflow-x: hidden;
+	width: 100%;
+}
+.bigBottomBtn{
+    width: 100%;
+    height: 50px;
+    font-size: 20px;
+}
+.bigBottomBtn:hover{
+	background: #74AF2A;
+	color: #fff;
+}

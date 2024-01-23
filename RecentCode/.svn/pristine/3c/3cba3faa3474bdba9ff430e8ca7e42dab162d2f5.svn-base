@@ -1,0 +1,375 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib prefix="c"		uri="http://java.sun.com/jsp/jstl/core"			%>
+<%@ taglib prefix="e3ps" 	uri="/WEB-INF/tlds/e3ps-functions.tld"%>
+
+<div class="product"> 
+<form name="mainForm" id="mainForm" method="post">
+	<%-- <input type=hidden name="root" value="${param.root}"> --%>
+<div class="seach_arm pt20 pb5">
+	<div class="leftbt">
+		<span class="title"><img class="pointer" onclick="switchDiv(this);" src="/Windchill/jsp/portal/images/minus_icon.png">${e3ps:getMessage('설계변경 활동 단계 편집')}</span>
+	</div>
+	<div class="rightbt">
+		
+	</div>
+</div>
+<div class="seach_arm pt20 pb5">
+	<div class="leftbt">
+	<span style="font-size: x-large;">ROOT :</span> 
+			<select id="root" name="root" onchange="selectRoot(this.value);">
+			</select>
+	</div>
+	<div class="rightbt">
+		<input type="button"
+						class="s_bt03" value="Root 추가" onclick="createRootDefinition()">
+		<span id="rootBtn">
+		<input type="button" class="s_bt03" value="Root 수정" onclick="updateRootDefinition()"> 
+		<input type="button" class="s_bt05" value="Root 삭제" onclick="deleteRootDefinition()">
+		<input type="button" class="s_bt03" value="활동 추가" onclick="addDefinition()"> 
+		<input type="button" class="s_bt05" value="활동 삭제" onclick="deleteDefinition()">
+		</span>
+	</div>
+</div>
+	<!-- table list-->
+	<div class="table_list">
+		<div class="list" id="grid_wrap"></div>
+	</div>
+	<!-- //table list-->
+</form>
+</div>
+<script src="/Windchill/jsp/js/popup.js"></script>
+<script src="/Windchill/jsp/js/checkbox.js"></script>
+<script>
+$(document).ready(function () {
+    //enter key pressed event
+    $("#searchForm").keypress(function (e) {
+      if (e.keyCode == 13) {
+        search();
+      }
+    });
+
+    //grid setting
+    createAUIGrid(columnLayout);
+    
+    getRootList("update");
+    
+  });
+
+//AUIGrid 생성 후 반환 ID
+var myGridID;
+
+//AUIGrid 칼럼 설정
+var columnLayout = [
+  {
+    dataField: "step",
+    headerText: "${e3ps:getMessage('단계')}",
+    width: "10%",
+    filter: {
+      showIcon: true,
+      iconWidth: 30,
+    },
+    styleFunction: function (
+      rowIndex,
+      columnIndex,
+      value,
+      headerText,
+      item,
+      dataField
+    ) {
+      if (item.oid != null) {
+        return "aui-grid-non-editable-cell";
+      }
+      return null;
+    },
+  },
+  {
+    dataField: "activityName",
+    headerText: "${e3ps:getMessage('활동명')}",
+    width: "20%",
+    filter: {
+      showIcon: true,
+      iconWidth: 30,
+    },
+  },
+  {
+    dataField: "activityTypeValue",
+    headerText: "${e3ps:getMessage('활동구분')}",
+    width: "*",
+    style: "AUIGrid_Left",
+    filter: {
+      showIcon: true,
+      iconWidth: 30,
+    },
+  },
+  {
+    dataField: "departmentName",
+    headerText: "${e3ps:getMessage('담당부서')}",
+    width: "*",
+    style: "AUIGrid_Left",
+    filter: {
+      showIcon: true,
+      iconWidth: 30,
+    },
+  },
+  {
+    dataField: "name",
+    headerText: "${e3ps:getMessage('담당자')}",
+    width: "*",
+    style: "AUIGrid_Left",
+    filter: {
+      showIcon: true,
+      iconWidth: 30,
+    },
+  },
+];
+
+//AUIGrid 를 생성합니다.
+function createAUIGrid(columnLayout) {
+  // 그리드 속성 설정
+  var gridPros = {
+    editable: true,
+
+    selectionMode: "multipleCells",
+
+    rowIdField: "_$uid",
+
+    showStateColumn: true,
+
+    showSelectionBorder: true,
+
+    noDataMessage: gridNoDataMessage,
+
+    showRowNumColumn: true,
+
+    showEditedCellMarker: true,
+
+    wrapSelectionMove: true,
+
+    showRowCheckColumn: true,
+
+    enableFilter: true,
+
+    enableMovingColumn: true,
+
+    headerHeight: gridHeaderHeight,
+
+    rowHeight: gridRowHeight,
+  };
+
+  // 실제로 #grid_wrap 에 그리드 생성
+  myGridID = AUIGrid.create("#grid_wrap", columnLayout, gridPros);
+
+  //에디팅 정상 종료 이벤트 바인딩
+  AUIGrid.bind(myGridID, "cellEditEnd", auiCellEditingHandler);
+
+  AUIGrid.bind(myGridID, "cellEditBegin", auiCellEditingHandler);
+
+  var gridData = new Array();
+  AUIGrid.setGridData(myGridID, gridData);
+  
+  
+}
+
+function auiCellEditingHandler(event) {
+    var dataField = event.dataField;
+
+    if (event.type == "cellEditEnd") {
+    } else if (event.type == "cellEditBegin") {
+      if (event.dataField == "code") {
+        // 추가된 행 아이템인지 조사하여 추가된 행인 경우만 에디팅 진입 허용
+        if (AUIGrid.isAddedById(event.pid, event.item._$uid)) {
+          return true;
+        } else {
+          return false; // false 반환하면 기본 행위 안함(즉, cellEditBegin 의 기본행위는 에디팅 진입임)
+        }
+      }
+      return true; // 다른 필드들은 편집 허용
+    }
+  }
+
+	/* selectRoot("");
+	getRootList();
+	getGridData(); */
+//그리드 데이터 불러오기
+function getGridData(roid) {
+	var param = new Object();
+	
+	param["rootOid"] = "${param.root}";
+	if(roid != null){
+		param["rootOid"] = roid;
+	}
+	var url = getURLString("/admin/getActivityStepList");
+	AUIGrid.update(myGridID);
+	ajaxCallServer(url, param, function(data){
+		// 그리드 데이터
+		var gridData = data.list;
+		
+		console.log(gridData);
+		// 그리드에 데이터 세팅
+		AUIGrid.setGridData(myGridID, gridData);
+		var spanNum = 0;
+		var stepStartId = 0;
+		for(var i = 0; i < gridData.length; i++){
+			if(i == 0){
+				spanNum = 1;
+				stepStartId = gridData[0].id;
+			}else if(i == gridData.length-1){
+				if(gridData[i].step == gridData[i-1].step){
+					spanNum++;
+				}
+				$$("grid_wrap").addSpan(stepStartId, "step", 1, spanNum);
+				$$("grid_wrap").refresh();
+			}else{
+				if(gridData[i].step == gridData[i-1].step){
+					spanNum ++;
+				}else{
+					$$("grid_wrap").addSpan(stepStartId, "step", 1, spanNum);
+					$$("grid_wrap").refresh();
+					spanNum = 1;
+					stepStartId = gridData[i].id;
+				}
+			}
+		}
+	});
+	
+}
+
+function createRootDefinition() {
+	var sURL = "/Windchill/worldex/admin/createRootDefinition";
+	var sName = "createRootDefinition";
+	var nWidth = 605;
+	var nHeight = 400;
+	var bMoveCenter = true;
+	var bStatus = false;
+	var bScrollbars = true;
+	var bResizable = false;
+	openWindow(sURL, sName, nWidth, nHeight, bMoveCenter, bStatus,
+			bScrollbars, bResizable);
+}
+
+function updateRootDefinition() {
+	var sURL = "/Windchill/worldex/admin/updateRootDefinition";
+	var roid = $("#root").val();
+	var params = {
+		oid : roid
+	};
+	var callbackObj = null;
+	sURL = createQueryStringURL(sURL, params);
+	var sName = "updateRootDefinition";
+	var nWidth = 605;
+	var nHeight = 400;
+	var bMoveCenter = true;
+	var bStatus = false;
+	var bScrollbars = true;
+	var bResizable = false;
+	openWindow(sURL, sName, nWidth, nHeight, bMoveCenter, bStatus,
+			bScrollbars, bResizable);
+}
+
+function deleteRootDefinition() {
+	if (!confirm("삭제 하시겠습니까?"))
+		return;
+	var url = getURLString("/admin/deleteRootDefinitionAction");
+	
+	var param = new Object();
+	
+	var paramArray = $("#mainForm").serializeArray();
+	
+	$(paramArray).each(function(idx, obj){
+		param[obj.name] = obj.value;
+	});
+	
+	ajaxCallServer(url, param, function(data){
+		// location.reload();
+	}, true);
+}
+
+function selectRoot(roid) {
+	getGridData(roid);
+	if(roid != ""){
+		$("#rootBtn").show();
+	}else{
+		$("#rootBtn").hide();
+	}
+	
+}
+
+function addDefinition() {
+	var sURL = "/Windchill/worldex/admin/createDefinition";
+	var sName = "createDefinition";
+	var roid = $("#root").val();
+	var params = {
+		root : roid
+	};
+	var callbackObj = null;
+	sURL = createQueryStringURL(sURL, params);
+	var nWidth = 605;
+	var nHeight = 400;
+	var bMoveCenter = true;
+	var bStatus = false;
+	var bScrollbars = true;
+	var bResizable = false;
+	openWindow(sURL, sName, nWidth, nHeight, bMoveCenter, bStatus,
+			bScrollbars, bResizable);
+}
+
+function updateDefinition(doid) {
+	var sURL = "/Windchill/worldex/admin/updateDefinition";
+	var roid = $("#root").val();
+	var params = {
+		root : roid,
+		oid : doid
+	};
+	var callbackObj = null;
+	sURL = createQueryStringURL(sURL, params);
+	var sName = "updateDefinition";
+	var nWidth = 605;
+	var nHeight = 400;
+	var bMoveCenter = true;
+	var bStatus = false;
+	var bScrollbars = true;
+	var bResizable = false;
+	openWindow(sURL, sName, nWidth, nHeight, bMoveCenter, bStatus,
+			bScrollbars, bResizable);
+}
+
+function deleteDefinition() {
+	var isactivityChk = false;
+    var arr_Activity = AUIGrid.getCheckedRowItems(myGridID);
+    var deleteList = new Array();
+    var roid = $("#root").val();
+    
+    for(var i=0;i<arr_Activity.length;i++){
+        if(arr_Activity[i].mark == "On") {
+        	deleteList.push(arr_Activity[i].activity);
+	       	isactivityChk = true;
+        }
+    }
+    
+    if(arr_Activity.length < 0){
+        alert("활동을 체크 해 주세요.");
+        return false;
+    }
+	
+	if (!confirm("삭제 하시겠습니까?"))
+		return;
+	
+	var param = new Object();
+	param["activity"] = deleteList;
+	
+	var url = getURLString("/admin/deleteDefinitionAction");
+	ajaxCallServer(url, param, function(data){
+		AUIGrid.update(myGridID);
+		getGridData(roid);
+	});
+	
+	/* document.mainForm.action = "/Windchill/worldex/admin/deleteDefinitionAction";
+	document.mainForm.submit(); */
+}
+
+function reGrid(roid){
+	AUIGrid.update(myGridID);
+	getGridData(roid);
+}
+</script>

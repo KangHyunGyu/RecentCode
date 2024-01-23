@@ -1,0 +1,181 @@
+package com.e3ps.common.restful.service;
+
+import java.util.Base64;
+import java.util.Base64.Encoder;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import com.e3ps.common.util.WCUtil;
+import com.e3ps.org.Department;
+import com.e3ps.org.People;
+import com.e3ps.org.service.DepartmentHelper;
+import com.e3ps.org.service.PeopleHelper;
+
+import wt.fc.PersistenceHelper;
+import wt.fc.QueryResult;
+import wt.inf.container.WTContainer;
+import wt.org.AttributeHolder;
+import wt.org.OrganizationServicesHelper;
+import wt.org.WTUser;
+import wt.query.QuerySpec;
+import wt.services.StandardManager;
+
+@SuppressWarnings("serial")
+public class StandardRestFulService extends StandardManager implements RestFulService{
+
+	public static StandardRestFulService newStandardRestFulService() throws Exception{
+		final StandardRestFulService instance = new StandardRestFulService();
+		instance.initialize();
+		return instance;
+	}
+	/**
+	 * HR DEPT SYNC
+	 */
+	@Override
+	public Map<String, Object> deptSyncAction() throws Exception {
+		Map<String, Object> map = new HashMap<>();
+		/**
+		 * 
+		 * all delete
+		 * */
+		QuerySpec spec = new QuerySpec(Department.class);
+		QueryResult qr = PersistenceHelper.manager.find(spec);
+		while (qr.hasMoreElements()) {
+			Department dept = (Department) qr.nextElement();
+			PersistenceHelper.manager.delete(dept);
+		}
+		
+		
+		/**
+		 * 
+		 * new add
+		 * */
+		//jsonObj = RestFulHelper.
+		JSONArray jsonObj = RestFulHelper.manager.getJsonData(RestFulHelper.getDeptInfoKey(), "user");
+
+		for(int i=0; i<jsonObj.size(); i++) {
+			JSONObject jsonalr = (JSONObject)jsonObj.get(i); 
+			String id = jsonalr.get("ORG_ID").toString();
+			String name = jsonalr.get("ORG_NM").toString();
+			
+			String upId = jsonalr.get("UP_ORG_ID").toString();
+			String upName = jsonalr.get("UP_ORG_NM").toString();
+			
+			Department dept = DepartmentHelper.manager.getDepartment(id);
+			if(dept == null){
+				Department pdept = DepartmentHelper.manager.getDepartment(upId);
+				if(pdept == null){
+					pdept = new Department();
+				}
+				dept = new Department();
+				dept.setCode(id);
+				dept.setName(name);
+				dept.setParent(pdept);
+				PersistenceHelper.manager.save(dept);
+			}	
+			System.out.println(id + "[" +name+"] ---- " + upId + "[" +upName+ "]");
+		}
+        
+		map.put("result", true);
+		return map;
+	}
+	
+	
+	/**
+	 * HR USER SYNC
+	 */
+	public Map<String, Object> userSyncAction() throws Exception{
+		Map<String, Object> map = new HashMap<>();
+		WTContainer product = WCUtil.getPDMLinkProduct();
+		String orgName = product.getOrganizationName();
+		
+		JSONArray jsonObj = RestFulHelper.manager.getJsonData(RestFulHelper.getHrInfoKey(), "user");
+        JSONArray jsonObjPost = RestFulHelper.manager.getJsonData(RestFulHelper.getCodeInfoKey(), "duty", "/SY04");
+        //JSONArray jsonObjDuty = getJsonData(RestFulHelper.getCodeInfoKey(), "duty", "/SY05");
+        //JSONArray jsonObjEmp = getJsonData(RestFulHelper.getCodeInfoKey(), "duty", "/SY03");
+        
+        
+        int count = 0;
+        for(int i=0; i<jsonObj.size(); i++) {
+        	JSONObject jsonalr = (JSONObject)jsonObj.get(i); 
+        	String id = jsonalr.get("EMP_ID").toString();
+        	
+        	WTUser user = PeopleHelper.manager.getWTUser(id);
+        	
+        	String name = jsonalr.get("EMP_NM").toString();
+        	String stat = jsonalr.get("STAT_CD").toString().trim();
+        	String mail = jsonalr.get("MAIL_ADDR").toString().trim();
+        	
+        	//String EMP_GRADE_CD = jsonalr.get("EMP_GRADE_CD").toString().trim();		//직급
+        	//String DUTY_CD = jsonalr.get("DUTY_CD").toString().trim();		//직책
+        	String POST_CD = jsonalr.get("POST_CD").toString().trim();		//직위
+        	
+        	String ORG_ID = jsonalr.get("ORG_ID").toString().trim(); //부서코드
+        	
+        	if("10".equals(stat)) {  //stat : 10 재직, 13 : 휴직, 30 : 퇴직, 99 타사
+        		String POST_CD_NM = "확인불가";
+        		
+	        	for(int j=0; j<jsonObjPost.size(); j++) {
+	            	JSONObject jsonPost = (JSONObject)jsonObjPost.get(j); 
+	            	String CD = jsonPost.get("CD").toString();
+	            	
+	            	if(CD.equals(POST_CD)) {
+	            		POST_CD_NM = jsonPost.get("CD_NM").toString();
+	            	}
+	            }
+	        	
+	        	if(user != null) {
+	        		People peo = PeopleHelper.manager.getPeople(user);
+	        		
+	        		Department dept = DepartmentHelper.manager.getDepartment(ORG_ID);
+	        		
+	        		peo.setDepartment(dept);
+	        		peo.setDuty(POST_CD_NM);
+	        		peo.setDutyCode(POST_CD);
+	        		
+	        		PersistenceHelper.manager.modify(peo);
+            	} else {
+            		user = WTUser.newWTUser(id);
+                	user.setAllowLDAPSynchronization(true);
+                	user.setOrganizationName(orgName);
+                	user.setAuthenticationName(name);
+                	user.setFullName(name);
+                	user.setLast(name);
+                	user.setEMail(mail);
+                	
+                	AttributeHolder holder = user.getAttributes();
+                	holder.setValue("last", name);
+                	holder.setValue("userPassword", "1");
+                	holder.setValue("preferredLanguage", "ko");
+                	
+                	WTUser newUser = (WTUser)OrganizationServicesHelper.manager.createPrincipal(user);
+                	
+                	People peo = PeopleHelper.manager.getPeople(newUser);
+                	
+                	Encoder encoder  = Base64.getEncoder();
+                	byte[] targetBytes = "1".getBytes();
+                	byte[] encoded = encoder.encode(targetBytes);
+                	
+                	Department dept = DepartmentHelper.manager.getDepartment(ORG_ID);
+                	peo.setDepartment(dept);
+	        		peo.setDuty(POST_CD_NM);
+	        		peo.setPassword(new String(encoded));
+	        		peo.setDutyCode(POST_CD);
+	        		peo.setIsDisable(true);
+	        		
+	        		PersistenceHelper.manager.modify(peo);
+            	}
+	        	
+	        	System.out.println("id : " + id + " / Name : " + name + " / "+ ORG_ID + " /직위 : " + POST_CD + "["+POST_CD_NM+"]" );
+	        	count++;
+        	}
+        }
+        System.out.println("COUNT : " + count);
+        map.put("result", true);
+        return map;
+	}
+	
+}

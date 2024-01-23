@@ -1,0 +1,12 @@
+#4.    Windchill Shell에서 comment실행：ant -f \bin\tools.xml custom_column -Dgen.input=wt.part.*
+#5.             Database 관련 자료 수정:
+#
+#a. Database가 Oracle일 경우
+#Windchill Shell에서 sqlplus를 사용하여 DB에 접속하여 아래 comment 실행 (만약에codebase\wt.properties중의wt.db.maxBytesPerChar의 값이3 인경우 경로를 db\sql3로 함；그렇지 않을 경우는db\sql경로 사용함)：
+#@<WT_HOME>\db\sql3\wnc\Foundation\wt\part\drop_WTPartMaster_Index.sql;
+#alter table wtpartmaster modify (name varchar2(600));
+#alter table wtpartmaster modify (WTPartNumber varchar2(600));
+#@<WT_HOME>\db\sql3\wnc\Foundation\wt\part\create_WTPartMaster_Index.sql;
+#commit;
+WTPartMaster.number.UpperLimit=200
+WTPartMaster.name.UpperLimit=200

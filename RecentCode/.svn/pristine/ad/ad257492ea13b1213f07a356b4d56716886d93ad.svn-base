@@ -1,0 +1,885 @@
+package com.e3ps.part.service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+
+import com.e3ps.admin.service.AdminHelper;
+import com.e3ps.change.EChangeActivity;
+import com.e3ps.change.EChangeOrder2;
+import com.e3ps.change.EChangeRequest2;
+import com.e3ps.change.EcoPartLink;
+import com.e3ps.change.EcrPartLink;
+import com.e3ps.change.beans.ChangeECOSearch;
+import com.e3ps.change.beans.ChangeECRSearch;
+import com.e3ps.change.service.ChangeHelper;
+import com.e3ps.common.bean.RevisionData;
+import com.e3ps.common.iba.IBAUtil;
+import com.e3ps.common.log4j.Log4jPackages;
+import com.e3ps.common.util.CommonUtil;
+import com.e3ps.common.util.DateUtil;
+import com.e3ps.common.util.FolderUtil;
+import com.e3ps.common.util.SearchUtil;
+import com.e3ps.common.util.StringUtil;
+import com.e3ps.common.util.WCUtil;
+import com.e3ps.common.web.PageQueryBroker;
+import com.e3ps.distribute.DistributeRegToPartLink;
+import com.e3ps.distribute.DistributeRegistration;
+import com.e3ps.doc.DocLocation;
+import com.e3ps.doc.E3PSDocument;
+import com.e3ps.epm.util.EpmUtil;
+import com.e3ps.org.People;
+import com.e3ps.part.PartLocation;
+import com.e3ps.part.bean.PartData;
+import com.e3ps.part.util.PartPropList;
+import com.e3ps.project.EProject;
+import com.e3ps.project.EProjectMasteredLink;
+import com.e3ps.project.beans.ProjectData;
+
+import wt.clients.folder.FolderTaskLogic;
+import wt.epm.EPMDocument;
+import wt.epm.build.EPMBuildHistory;
+import wt.epm.build.EPMBuildRule;
+import wt.epm.structure.EPMDescribeLink;
+import wt.fc.PagingQueryResult;
+import wt.fc.PagingSessionHelper;
+import wt.fc.Persistable;
+import wt.fc.PersistenceHelper;
+import wt.fc.QueryResult;
+import wt.folder.Folder;
+import wt.folder.IteratedFolderMemberLink;
+import wt.inf.container.WTContainer;
+import wt.inf.container.WTContainerRef;
+import wt.org.WTUser;
+import wt.part.PartDocHelper;
+import wt.part.WTPart;
+import wt.part.WTPartMaster;
+import wt.pdmlink.PDMLinkProduct;
+import wt.pds.StatementSpec;
+import wt.query.ArrayExpression;
+import wt.query.ClassAttribute;
+import wt.query.OrderBy;
+import wt.query.QuerySpec;
+import wt.query.SearchCondition;
+import wt.services.ServiceFactory;
+import wt.vc.VersionControlHelper;
+import wt.vc.views.View;
+import wt.vc.views.ViewHelper;
+
+public class PartHelper {
+
+	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Log4jPackages.PART.getName());
+	public static final PartService service = ServiceFactory.getService(PartService.class);
+
+	public static final PartHelper manager = new PartHelper();
+	
+	public static final String ROOTLOCATION = "/Default";
+	
+	public List<PartData> getPartList(Map<String, Object> reqMap) throws Exception {
+		
+		List<PartData> list = new ArrayList<>();
+		
+		QuerySpec query = getPartListQuery(reqMap);
+		
+		QueryResult result = PersistenceHelper.manager.find((StatementSpec)query);
+		
+		while(result.hasMoreElements()){
+			Object[] obj = (Object[]) result.nextElement();
+			WTPart part = (WTPart) obj[0];
+			
+			PartData data = new PartData(part);
+			data.loadAttributes();
+			data.epmOid();
+			
+			list.add(data);
+		}
+		
+		return list;
+	}
+	
+	public Map<String, Object> getPartScrollList(Map<String, Object> reqMap) throws Exception {
+		
+		Map<String, Object> map = new HashMap<>();
+		
+		List<PartData> list = new ArrayList<>();
+		
+		int page = (Integer) reqMap.get("page");
+		int rows = (Integer) reqMap.get("rows");
+
+		String sessionId = StringUtil.checkNull((String) reqMap.get("sessionId"));
+		
+		String moduleType = StringUtil.checkNull((String) reqMap.get("moduleType"));
+		
+		PagingQueryResult result = null;
+		
+		if (sessionId.length() > 0) {
+			result = PagingSessionHelper.fetchPagingSession((page - 1) * rows, rows, Long.valueOf(sessionId));
+		} else {
+			QuerySpec query = getPartListQuery(reqMap);
+			
+			result = PageQueryBroker.openPagingSession((page - 1) * rows, rows, query, true);
+		}
+		
+		int totalSize = result.getTotalSize();
+		
+		while(result.hasMoreElements()){
+			Object[] obj = (Object[]) result.nextElement();
+			WTPart part = (WTPart) obj[0];
+			
+			PartData data = new PartData(part);
+			data.loadAttributes();
+			data.epmOid();
+			
+			if("multiApproval".equals(moduleType)) {
+				if(!"INWORK".equals(data.getState())) {
+					data.setSelect(false);
+				} else {
+					if("c/o".equals(data.getCheckoutState()) || "wrk".equals(data.getCheckoutState())) {
+						data.setSelect(false);
+					}
+				}
+			} else if("distribute".equals(moduleType) || "distributeTemp".equals(moduleType)){
+				if(!"APPROVED".equals(data.getState())) {
+					data.setSelect(false);
+				}
+			}
+			list.add(data);
+		}
+		
+
+		map.put("list", list);
+		map.put("totalSize", totalSize);
+		map.put("sessionId", result.getSessionId() == 0 ? "" : result.getSessionId());
+		
+		return map;
+	}
+	
+	public QuerySpec getPartListQuery(Map<String, Object> reqMap) throws Exception {
+		
+		//필터
+		//Map<String, Object> filter = reqMap.get("filter") != null ? (Map<String, Object>) reqMap.get("filter") : new HashMap<>();
+		
+		//소팅
+		Map<String, Object> sort = reqMap.get("sort") != null ? (Map<String, Object>) reqMap.get("sort") : new HashMap<>();
+		
+		//기본속성
+		String location = StringUtil.checkReplaceStr((String) reqMap.get("location"), PartPropList.PART_CREATION_DATA.getLocations().get("Default")); // 부품분류
+		String version = StringUtil.checkNull((String) reqMap.get("version")); // 버전
+		String number = StringUtil.checkNull((String) reqMap.get("number")); // 부품번호 start
+		String numberEnd = StringUtil.checkNull((String) reqMap.get("numberEnd")); // 부품번호 end
+		String name = StringUtil.checkNull((String) reqMap.get("name")); // 부품명
+		String predate = StringUtil.checkNull((String) reqMap.get("predate")); // 작성일 pre
+		String postdate = StringUtil.checkNull((String) reqMap.get("postdate")); // 작성일 post
+		String predate_modify = StringUtil.checkNull((String) reqMap.get("predate_modify")); // 최종수정일 pre
+		String postdate_modify = StringUtil.checkNull((String) reqMap.get("postdate_modify")); // 최종수정일 post
+		String unit = StringUtil.checkNull((String) reqMap.get("unit")); // 단위
+	
+		List<String> creator = StringUtil.checkReplaceArray(reqMap.get("creator")); // 작성자
+		List<String> modifier = StringUtil.checkReplaceArray(reqMap.get("modifier")); // 최종수정자
+		List<String> state = StringUtil.checkReplaceArray(reqMap.get("state")); // 상태
+		List<String> relatedProject = StringUtil.checkReplaceArray(reqMap.get("relatedProject")); // 관련 프로젝트
+		
+		//IBA
+//		String material = StringUtil.checkNull((String) reqMap.get("material")); // 재질
+//		String weight = StringUtil.checkNull((String) reqMap.get("weight")); // 중량
+//		String upg = StringUtil.checkNull((String) reqMap.get("upg")); // UPG
+//		String customer_part_number = StringUtil.checkNull((String) reqMap.get("customer_part_number")); // 고객품번
+//		String unit_cost = StringUtil.checkNull((String) reqMap.get("unit_cost")); // 단가
+//		String finish = StringUtil.checkNull((String) reqMap.get("finish")); // FINISH
+//		String specialAttr = StringUtil.checkNull((String) reqMap.get("special_attribute")); // 특별특성
+//		String certification = StringUtil.checkNull((String) reqMap.get("certification_regulations")); // 인증 및 법규
+//		String carryOver = StringUtil.checkNull((String) reqMap.get("carry_over")); // CARRY OVER
+//		String pressure = StringUtil.checkNull((String) reqMap.get("allowable_pressure")); // 허용 압력
+//		String gasType = StringUtil.checkNull((String) reqMap.get("gas_type")); // 가스 타입
+//		
+//		String method = StringUtil.checkNull((String) reqMap.get("method")); // 공븝
+//		String specification = StringUtil.checkNull((String) reqMap.get("specification")); // 규격 및 특징
+//		String description = StringUtil.checkNull((String) reqMap.get("description")); // 비고
+//		String start_company_name = StringUtil.checkNull((String) reqMap.get("start_company_name")); // 시작업체 명
+//		String start_company_manager = StringUtil.checkNull((String) reqMap.get("start_company_manager")); // 시작업체 담당자
+//		String start_company_tell = StringUtil.checkNull((String) reqMap.get("start_company_tell")); // 시작업체 연락처
+//		String prod_company_name = StringUtil.checkNull((String) reqMap.get("prod_company_name")); // 양산업체 명
+//		String prod_company_manager = StringUtil.checkNull((String) reqMap.get("prod_company_manager")); // 양산업체 담당자
+//		String prod_company_tell = StringUtil.checkNull((String) reqMap.get("prod_company_tell")); // 양산업체 연락처
+//		String start_unit_cost = StringUtil.checkNull((String) reqMap.get("start_unit_cost")); // 시작 단가
+//		String prod_unit_cost = StringUtil.checkNull((String) reqMap.get("prod_unit_cost")); // 양산 단가
+		
+		QuerySpec query = new QuerySpec();
+		int idx = query.addClassList(WTPart.class, true);
+		
+		SearchCondition sc = null;
+		
+		//최신 이터레이션
+		if(query.getConditionCount() > 0) {
+			query.appendAnd(); 
+		}
+    	query.appendWhere(VersionControlHelper.getSearchCondition(WTPart.class, true), new int[]{idx});
+    	
+    	WTContainer product = WCUtil.getPDMLinkProduct();
+		//폴더분류
+		Folder folder = FolderTaskLogic.getFolder(location, WTContainerRef.newWTContainerRef(product));
+    	if (folder != null) {
+    		if(query.getConditionCount() > 0) {
+    			query.appendAnd(); 
+    		}
+			int f_idx = query.appendClassList(IteratedFolderMemberLink.class, false);
+			sc = new SearchCondition(new ClassAttribute(IteratedFolderMemberLink.class, "roleBObjectRef.key.branchId"), "=", new ClassAttribute(WTPart.class, "iterationInfo.branchId"));
+			query.appendWhere(sc , new int[] { f_idx, idx });
+			query.appendAnd();
+
+			List<Long> folderOidLongValueList = new ArrayList<>();
+			
+			long fid = folder.getPersistInfo().getObjectIdentifier().getId();
+
+			folderOidLongValueList.add(fid);
+			
+			ArrayList<Folder> subFolderList = new ArrayList<>(); 
+			FolderUtil.getSubFolderList(folder, subFolderList);
+			
+			if(subFolderList.size()>0) {
+				for (Folder sub: subFolderList) {
+					folderOidLongValueList.add(CommonUtil.getOIDLongValue(sub));
+				}
+			}
+			
+			sc = new SearchCondition(new ClassAttribute(IteratedFolderMemberLink.class, "roleAObjectRef.key.id"), SearchCondition.IN, new ArrayExpression(folderOidLongValueList.toArray()));
+			query.appendWhere(sc, new int[] { f_idx });
+		}
+
+    	//부품분류
+//    	if (location.length() > 0) {
+//			int l = location.indexOf(ROOTLOCATION);
+//
+//			if (l >= 0) {
+//				if (query.getConditionCount() > 0) {
+//					query.appendAnd();
+//				}
+//				location = location.substring((l + ROOTLOCATION.length()));
+//				// Folder Search
+//				int folder_idx = query.addClassList(PartLocation.class, false);
+//				query.appendWhere(new SearchCondition(PartLocation.class, PartLocation.PART, WTPart.class, "thePersistInfo.theObjectIdentifier.id"), new int[] { folder_idx, idx });
+//				query.appendAnd();
+//				query.appendOpenParen();
+//				query.appendWhere(new SearchCondition(PartLocation.class, "loc", SearchCondition.EQUAL, location ),	new int[] { folder_idx });
+//				query.appendOr();
+//				query.appendWhere(new SearchCondition(PartLocation.class, "loc", SearchCondition.LIKE, location + "/%"), new int[] { folder_idx });
+//				query.appendOr();
+//				query.appendWhere(new SearchCondition(PartLocation.class, "loc", SearchCondition.EQUAL, "/Checked Out"), new int[] { folder_idx });
+//				query.appendCloseParen();
+//			}
+//
+//		}
+    	
+    	//제품 
+    	if(query.getConditionCount() > 0) {
+			query.appendAnd();
+		}
+		sc = new SearchCondition(WTPart.class, WTPart.CONTAINER_REFERENCE+".key.id", SearchCondition.EQUAL ,CommonUtil.getOIDLongValue(product));
+		query.appendWhere(sc, new int[] { idx });
+		
+		//특정 객체에 대한 권한
+		//query = AdminHelper.manager.getAuthQuerySpec(query, "WTPart", idx);
+    	
+		//버전
+		if(version.length() > 0) {
+			if("new".equals(version)) {
+				//SearchUtil 내용 정리 필요
+				SearchUtil.addLastVersionCondition(query, WTPart.class, idx);
+			}
+		} else {
+			SearchUtil.addLastVersionCondition(query, WTPart.class, idx);
+		}
+		
+		//부품번호
+		if(number.length() > 0) {
+			if(query.getConditionCount() > 0) {
+				query.appendAnd();
+			}
+			
+			if(numberEnd.length() > 0) {
+				sc = new SearchCondition(WTPart.class, WTPart.NUMBER, SearchCondition.GREATER_THAN_OR_EQUAL, number, false);
+				query.appendWhere(sc, new int[] { idx });
+			} else {
+				sc = new SearchCondition(WTPart.class, WTPart.NUMBER, SearchCondition.LIKE, "%" + number + "%", false);
+				query.appendWhere(sc, new int[] { idx });
+			}
+		}
+		
+		if(numberEnd.length() > 0) {
+			if(query.getConditionCount() > 0) {
+				query.appendAnd();
+			}
+			sc = new SearchCondition(WTPart.class, WTPart.NUMBER, SearchCondition.LESS_THAN_OR_EQUAL, numberEnd, false);
+			query.appendWhere(sc, new int[] { idx });
+		}
+		
+		//부품명
+		if(name.length() > 0) {
+			if(query.getConditionCount() > 0) {
+				query.appendAnd();
+			}
+			sc = new SearchCondition(WTPart.class, WTPart.NAME, SearchCondition.LIKE, "%" + name + "%", false);
+			query.appendWhere(sc, new int[] { idx });
+		}
+		
+		//작성자
+		if (creator.size() > 0) {
+			List<Long> userOidLongValueList = new ArrayList<>();
+			
+			for(String pp : creator) {
+				People people = (People) CommonUtil.getObject(pp);
+				WTUser user = people.getUser();
+				
+				userOidLongValueList.add(CommonUtil.getOIDLongValue(user));
+			}
+			
+			if (query.getConditionCount() > 0) {
+				query.appendAnd();
+			}
+			sc = new SearchCondition(new ClassAttribute(WTPart.class, "iterationInfo.creator.key.id"), SearchCondition.IN, new ArrayExpression(userOidLongValueList.toArray()));
+			query.appendWhere(sc, new int[] { idx });
+		}
+		
+		//수정자
+		if (modifier.size() > 0) {
+			List<Long> userOidLongValueList = new ArrayList<>();
+			
+			for(String pp : modifier) {
+				People people = (People) CommonUtil.getObject(pp);
+				WTUser user = people.getUser();
+				
+				userOidLongValueList.add(CommonUtil.getOIDLongValue(user));
+			}
+			
+			if (query.getConditionCount() > 0) {
+				query.appendAnd();
+			}
+			sc = new SearchCondition(new ClassAttribute(WTPart.class, "iterationInfo.modifier.key.id"), SearchCondition.IN, new ArrayExpression(userOidLongValueList.toArray()));
+			query.appendWhere(sc, new int[] { idx });
+		}
+				
+		//상태
+		if (state.size() > 0) {
+			if (query.getConditionCount() > 0) {
+				query.appendAnd();
+			}
+			sc = new SearchCondition(new ClassAttribute(WTPart.class, WTPart.LIFE_CYCLE_STATE), SearchCondition.IN, new ArrayExpression(state.toArray()));
+			query.appendWhere(sc, new int[] { idx });
+		}
+		
+		//Working Copy 제외
+		/*
+		 * if (query.getConditionCount() > 0) { query.appendAnd(); }
+		 * query.appendWhere(new SearchCondition(WTPart.class, WTPart.CHECKOUT_INFO +
+		 * ".state", SearchCondition.NOT_EQUAL, "wrk", false), new int[] { idx });
+		 */
+		//등록일
+    	if(predate.length() > 0){
+    		if (query.getConditionCount() > 0) {
+				query.appendAnd();
+			}
+    		sc = new SearchCondition(WTPart.class, WTPart.CREATE_TIMESTAMP ,SearchCondition.GREATER_THAN,DateUtil.convertStartDate(predate));
+    		query.appendWhere(sc, new int[] { idx });
+    	}
+    	if(postdate.length() > 0){
+    		if (query.getConditionCount() > 0) {
+				query.appendAnd();
+			}
+    		sc = new SearchCondition(WTPart.class, WTPart.CREATE_TIMESTAMP,SearchCondition.LESS_THAN,DateUtil.convertEndDate(postdate));
+    		query.appendWhere(sc, new int[] { idx });
+    	}
+    	
+    	//수정일
+    	if(predate_modify.length() > 0){
+    		if (query.getConditionCount() > 0) {
+				query.appendAnd();
+			}
+    		sc = new SearchCondition(WTPart.class, WTPart.CREATE_TIMESTAMP ,SearchCondition.GREATER_THAN,DateUtil.convertStartDate(predate_modify));
+    		query.appendWhere(sc, new int[] { idx });
+    	}
+    	if(postdate_modify.length() > 0){
+    		if (query.getConditionCount() > 0) {
+				query.appendAnd();
+			}
+    		sc = new SearchCondition(WTPart.class, WTPart.CREATE_TIMESTAMP,SearchCondition.LESS_THAN,DateUtil.convertEndDate(postdate_modify));
+    		query.appendWhere(sc, new int[] { idx });
+    	}
+    	
+    	//단위
+    	if (unit.length() > 0) {
+			if (query.getConditionCount() > 0) {
+				query.appendAnd();
+			}
+			sc = new SearchCondition(WTPart.class, WTPart.DEFAULT_UNIT, SearchCondition.EQUAL, unit, false);
+			query.appendWhere(sc, new int[] { idx });
+		}
+    	
+    	/*
+    	//관련 프로젝트
+    	if(relatedProject.size() > 0) {
+    		int masterIdx = query.addClassList(WTPartMaster.class, false);
+    		int linkIdx = query.addClassList(EProjectMasteredLink.class, false);
+    		int pjtIdx = query.addClassList(EProject.class, false);
+    		
+    		List<Long> projectOidLongValueList = new ArrayList<>();
+    		for(String oid : relatedProject) {
+    			projectOidLongValueList.add(CommonUtil.getOIDLongValue(oid));
+    		}
+    		
+    		if(query.getConditionCount() > 0) {
+    			query.appendAnd();
+    		}
+    		sc = new SearchCondition(new ClassAttribute(WTPart.class, WTPart.MASTER_REFERENCE + ".key.id"), SearchCondition.EQUAL, new ClassAttribute(WTPartMaster.class, WTPartMaster.PERSIST_INFO + ".theObjectIdentifier.id"));
+    		query.appendWhere(sc, new int[] {idx, masterIdx});
+    		
+    		if(query.getConditionCount() > 0) {
+    			query.appendAnd();
+    		}
+    		sc = new SearchCondition(new ClassAttribute(WTPartMaster.class, WTPartMaster.PERSIST_INFO + ".theObjectIdentifier.id"), SearchCondition.EQUAL, new ClassAttribute(EProjectMasteredLink.class, EProjectMasteredLink.ROLE_AOBJECT_REF + ".key.id"));
+    		query.appendWhere(sc, new int[] {masterIdx, linkIdx});
+    		
+    		if(query.getConditionCount() > 0) {
+    			query.appendAnd();
+    		}
+    		sc = new SearchCondition(new ClassAttribute(EProject.class, EProject.PERSIST_INFO + ".theObjectIdentifier.id"), SearchCondition.EQUAL, new ClassAttribute(EProjectMasteredLink.class, EProjectMasteredLink.ROLE_BOBJECT_REF + ".key.id"));
+    		query.appendWhere(sc, new int[] {pjtIdx, linkIdx});
+    		
+    		if(query.getConditionCount() > 0) {
+    			query.appendAnd();
+    		}
+    		sc = new SearchCondition(new ClassAttribute(EProject.class, EProject.PERSIST_INFO + ".theObjectIdentifier.id"), SearchCondition.IN, new ArrayExpression(projectOidLongValueList.toArray()));
+    		query.appendWhere(sc, new int[] { pjtIdx });
+    		
+    	}
+    	
+    	/*
+    	Hashtable<String, Object> params = new Hashtable<>();
+    	
+    	params.put("MATERIAL", material);
+    	params.put("WEIGHT", weight);
+    	params.put("UPG", upg);
+    	params.put("CUSTOMER_PART_NUMBER", customer_part_number);
+    	params.put("UNIT_COST", unit_cost);
+    	params.put("FINISH", finish);
+    	params.put("SPECIAL_ATTRIBUTE", specialAttr);
+    	params.put("CERTIFICATION_REGULATIONS", certification);
+    	params.put("CARRY_OVER", carryOver);
+    	params.put("ALLOWABLE_PRESSURE", pressure);
+    	params.put("GAS_TYPE", gasType);
+    	
+    	params.put("METHOD", method);
+    	params.put("SPECIFICATION", specification);
+    	params.put("DESCRIPTION", description);
+    	params.put("START_COMPANY_NAME", start_company_name);
+    	params.put("START_COMPANY_MANAGER", start_company_manager);
+    	params.put("START_COMPANY_TELL", start_company_tell);
+    	params.put("PROD_COMPANY_NAME", prod_company_name);
+    	params.put("PROD_COMPANY_MANAGER", prod_company_manager);
+    	params.put("PROD_COMPANY_TELL", prod_company_tell);
+    	params.put("START_UNIT_COST", start_unit_cost);
+    	params.put("PROD_UNIT_COST", prod_unit_cost);
+    	*/
+    	//IBAUtil.appendIBAWhere(query, WTPart.class, idx, params, true);
+    	
+    	/*
+    	// 소팅
+		if (sort.size() > 0) {
+			String id = (String) sort.get("id");
+			String dir = (String) sort.get("dir");
+			
+			String sortValue = "";
+			if("number".equals(id)) {
+				sortValue = WTPart.NUMBER;
+			} else if("name".equals(id)) {
+				sortValue = WTPart.NAME;
+			} else if("unit".equals(id)) {
+				sortValue = WTPart.DEFAULT_UNIT;
+			} else if("stateName".equals(id)) {
+				sortValue = WTPart.LIFE_CYCLE_STATE;
+			} else if("createDateFormat".equals(id)) {
+				sortValue = WTPart.CREATE_TIMESTAMP;
+			} else if("modifyDateFormat".equals(id)) {
+				sortValue = WTPart.MODIFY_TIMESTAMP;
+			}
+			
+			if ("asc".equals(dir)) {
+				query.appendOrderBy(new OrderBy(new ClassAttribute(WTPart.class, sortValue), false), new int[] { idx });
+			} else if("desc".equals(dir)) {
+				query.appendOrderBy(new OrderBy(new ClassAttribute(WTPart.class, sortValue), true), new int[] { idx });
+			}
+		} else {
+			query.appendOrderBy(new OrderBy(new ClassAttribute(WTPart.class, "master>number"), true), new int[] { idx });
+		}
+		*/
+		System.out.println("partHelper ::::: " + query);
+    	return query;
+	}
+	
+	public List<PartData> getRelatedPart(Map<String, Object> reqMap) throws Exception {
+		List<PartData> list = new ArrayList<PartData>();
+		
+		String oid = StringUtil.checkNull((String) reqMap.get("oid"));
+		String moduleType = StringUtil.checkNull((String) reqMap.get("moduleType"));
+		
+//		WTPartDescribeLink wtdl = PartData.class
+		
+		Persistable per = CommonUtil.getObject(oid);
+		if(per != null) {
+			QueryResult qr = null;
+			
+			if(per instanceof E3PSDocument) {
+				E3PSDocument doc = (E3PSDocument) per;
+				qr = PartDocHelper.service.getAssociatedParts(doc);
+				
+				while (qr.hasMoreElements()) {
+					WTPart part = (WTPart) qr.nextElement();
+					PartData data = new PartData(part);
+					list.add(data);
+				}
+			} else if(per instanceof EPMDocument) {
+				EPMDocument epm = (EPMDocument) per;
+				qr = PersistenceHelper.manager.navigate(epm, "describes", EPMDescribeLink.class);
+				while (qr.hasMoreElements()) {
+					WTPart part = (WTPart) qr.nextElement();
+					PartData data = new PartData(part);
+					list.add(data);
+				}
+			} 
+			else if(per instanceof DistributeRegistration){
+				DistributeRegistration distributeReg = (DistributeRegistration) per;
+				qr = PersistenceHelper.manager.navigate(distributeReg, "part", DistributeRegToPartLink.class);
+				while (qr.hasMoreElements()) {
+					WTPart part = (WTPart) qr.nextElement();
+					PartData data = new PartData(part);
+					list.add(data);
+				}
+			}
+//			else if(per instanceof DistributeDocument){
+//				DistributeDocument distribute = (DistributeDocument) per;
+//				qr = PersistenceHelper.manager.navigate(distribute, "part", DistributeToPartLink.class);
+//				while (qr.hasMoreElements()) {
+//					WTPart part = (WTPart) qr.nextElement();
+//					PartData data = new PartData(part);
+//					list.add(data);
+//				}
+//			}
+//			else if(per instanceof DistributeRegistration) {
+//				DistributeRegistration distPartData = (DistributeRegistration) per;
+//				
+//				qr = PersistenceHelper.manager.navigate((Persistable) distPartData, "distribute", DistributeToPartLink.class);
+//				
+//				System.out.println("distPartData :::: " + distPartData);
+//				System.out.println("qr :::: " + qr);
+//				
+//				
+//				while (qr.hasMoreElements()) {
+//					WTPart part = (WTPart) qr.nextElement();
+//					PartData data = new PartData(part);
+//					list.add(data);
+//				}
+//			} 
+//			else if(per instanceof DistributeTemp){
+//				DistributeTemp temp = (DistributeTemp) per;
+//				list = DistributeHelper.manager.getTempPartList(temp);
+//			}
+			else if(per instanceof EChangeOrder2){
+				EChangeOrder2 eco = (EChangeOrder2) per;
+				String ecoOid = CommonUtil.getOIDString(eco);
+				//list = ChangeECOSearch.getECOrelatedParts(eco);
+				list = ChangeECOSearch.getECOPartDataList(ecoOid);
+//				List<WTPart> relatedParts = new ArrayList<WTPart>();
+//				relatedParts = ChangeECOSearch.getECOrelatedParts(eco);
+//				for(WTPart part : relatedParts) {
+//					PartData data = new PartData(part);
+//					list.add(data);
+//				}
+			}else if(per instanceof EChangeRequest2){
+//				EChangeRequest2 ecr = (EChangeRequest2) per;
+//				List<PartData> relatedParts = new ArrayList<PartData>();
+				list = ChangeHelper.manager.getECRPartDataList(oid);
+//				for(WTPart part : relatedParts) {
+//					PartData data = new PartData(part);
+//					
+//					System.out.println("############ 품목 정보 : " + data.getName());
+//					
+//					list.add(data);
+//				}
+			}else if(per instanceof EChangeActivity) {
+				EChangeActivity eca = (EChangeActivity) per;
+				if(eca.getOrder() instanceof EChangeOrder2){
+					EChangeOrder2 eco = (EChangeOrder2) eca.getOrder();
+					//list = ChangeECOSearch.getECOrelatedParts(eco);
+					QuerySpec qs = new QuerySpec(EcoPartLink.class);
+					qs.appendWhere(new SearchCondition(EcoPartLink.class,"roleBObjectRef.key.id","=",
+							eca.getOrder().getPersistInfo().getObjectIdentifier().getId()),new int[]{0});
+					QueryResult  aqr = PersistenceHelper.manager.find(qs);
+					while(aqr.hasMoreElements()){
+						EcoPartLink link = (EcoPartLink)aqr.nextElement();	
+						WTPartMaster master = link.getPart();
+						WTPart part = PartHelper.service.getPart(master.getNumber(), link.getVersion());
+						PartData data = new PartData(part);
+						list.add(data);
+					}
+				}else if(eca.getOrder() instanceof EChangeRequest2){
+					QuerySpec qs = new QuerySpec(EcrPartLink.class);
+					qs.appendWhere(new SearchCondition(EcrPartLink.class,"roleBObjectRef.key.id","=",
+							eca.getOrder().getPersistInfo().getObjectIdentifier().getId()),new int[]{0});
+					QueryResult  aqr = PersistenceHelper.manager.find(qs);
+					while(aqr.hasMoreElements()){
+						EcrPartLink link = (EcrPartLink)aqr.nextElement();	
+						WTPartMaster master = link.getPart();
+						WTPart part = PartHelper.service.getPart(master.getNumber(), link.getVersion());
+						PartData data = new PartData(part);
+						list.add(data);
+					}
+				}
+				
+			}
+		}
+		return list;
+	}
+	
+	public List<RevisionData> getRelatedPartRevisionData(Map<String, Object> reqMap) throws Exception {
+
+		List<RevisionData> list = new ArrayList<>();
+		
+		List<PartData> partList = getRelatedPart(reqMap);
+		
+		for(PartData pData : partList) {
+			RevisionData rData = (RevisionData) pData;
+			list.add(rData);
+		}
+		
+		return list;
+	}
+	
+	public WTPart getWTPart(EPMDocument epm) throws Exception {
+		
+		if (epm == null) {
+			return null;
+		}
+		
+		QueryResult qr = null;
+		
+		if (VersionControlHelper.isLatestIteration(epm)) {
+			qr = PersistenceHelper.manager.navigate(epm, "buildTarget", EPMBuildRule.class);
+		} else {
+			qr = PersistenceHelper.manager.navigate(epm, "built", EPMBuildHistory.class);
+		}
+			
+		while (qr != null && qr.hasMoreElements()) {
+			return (WTPart) qr.nextElement();
+		}
+
+		return null;
+	}
+	
+	public WTPart getPart(String number, String version) throws Exception {
+		QuerySpec qs = new QuerySpec(WTPart.class);
+
+        qs.appendWhere(VersionControlHelper.getSearchCondition(WTPart.class, true), new int[] { 0 });
+        qs.appendAnd();
+        qs.appendWhere(new SearchCondition(WTPart.class, "master>number", "=", number), new int[] { 0 });
+        qs.appendAnd();
+        qs.appendWhere(new SearchCondition(WTPart.class, "versionInfo.identifier.versionId", "=", version), new int[] { 0 });
+        
+        QueryResult qr = PersistenceHelper.manager.find(qs);
+        if ( qr.hasMoreElements() ) {
+            return (WTPart) qr.nextElement();
+        }
+
+        return null;
+	}
+	
+	public WTPart getPart(String number) throws Exception {
+		QuerySpec qs = new QuerySpec();
+
+		int idx = qs.appendClassList(WTPart.class, true);
+		
+        qs.appendWhere(VersionControlHelper.getSearchCondition(WTPart.class, true), new int[] { idx });
+        qs.appendAnd();
+        qs.appendWhere(new SearchCondition(WTPart.class, "master>number", "=", number), new int[] { idx });
+        SearchUtil.addLastVersionCondition(qs, WTPart.class, idx);
+        QueryResult qr = PersistenceHelper.manager.find(qs);
+        if ( qr.hasMoreElements() ) {
+        	Object[] obj = (Object[]) qr.nextElement();
+            return (WTPart) obj[0];
+        }
+
+        return null;
+	}
+	
+	public List<WTPart> getDrawingPartList(String number) throws Exception {
+		List<WTPart> list = new ArrayList<>();
+		
+		QuerySpec qs = new QuerySpec();
+
+		int idx = qs.appendClassList(WTPart.class, true);
+		
+        qs.appendWhere(VersionControlHelper.getSearchCondition(WTPart.class, true), new int[] { idx });
+        SearchUtil.addLastVersionCondition(qs, WTPart.class, idx);
+        qs.appendAnd();
+        qs.appendWhere(new SearchCondition(WTPart.class, "master>number", SearchCondition.LIKE, number + "X%"), new int[] { idx });
+       
+        QueryResult qr = PersistenceHelper.manager.find(qs);
+        while(qr.hasMoreElements()) {
+        	Object[] obj = (Object[]) qr.nextElement();
+            WTPart part = (WTPart) obj[0];
+            
+            list.add(part);
+        }
+
+        return list;
+	}
+	
+	public boolean isCreoDrawing(EPMDocument epm){
+		
+		return EpmUtil.isCreoDrawing(epm);
+	}
+
+	public WTPart getDrawingPart(EPMDocument epm) {
+		
+		WTPart part = null; 
+		
+		try {
+			
+			if(isCreoDrawing(epm)){
+				String number= epm.getNumber();
+				String version = epm.getVersionIdentifier().getValue();
+				number = CommonUtil.getFileNameNonExtension(number);
+				part = PartHelper.manager.getPart(number, version);
+			}else{
+				part = PartHelper.manager.getWTPart(epm);
+			}
+			
+			return part;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public List<PartData> getCreateSearchPartList(Map<String, Object> reqMap) throws Exception {
+		
+		List<PartData> list = new ArrayList<>();
+		
+		QuerySpec query = getCreateSearchPartListQuery(reqMap);
+		
+		QueryResult result = PersistenceHelper.manager.find((StatementSpec)query);
+		
+		while(result.hasMoreElements()){
+			Object[] obj = (Object[]) result.nextElement();
+			WTPart part = (WTPart) obj[0];
+			
+			PartData data = new PartData(part);
+			data.loadAttributes();
+			
+			list.add(data);
+		}
+		
+		return list;
+	}
+	
+	public QuerySpec getCreateSearchPartListQuery(Map<String, Object> reqMap) throws Exception {
+		
+		//기본속성
+		String number = StringUtil.checkNull((String) reqMap.get("number"));
+		
+		QuerySpec query = new QuerySpec();
+		int idx = query.addClassList(WTPart.class, true);
+		
+		SearchCondition sc = null;
+		
+		//최신 이터레이션
+		if(query.getConditionCount() > 0) {
+			query.appendAnd(); 
+		}
+    	query.appendWhere(VersionControlHelper.getSearchCondition(WTPart.class, true), new int[]{idx});
+
+    	//제품 
+    	PDMLinkProduct product = WCUtil.getPDMLinkProduct();
+    	if(query.getConditionCount() > 0) {
+			query.appendAnd();
+		}
+		sc = new SearchCondition(WTPart.class, WTPart.CONTAINER_REFERENCE+".key.id", SearchCondition.EQUAL ,CommonUtil.getOIDLongValue(product));
+		query.appendWhere(sc, new int[] { idx });
+		
+		//버전
+		SearchUtil.addLastVersionCondition(query, WTPart.class, idx);
+		
+		//부품번호
+		if(number.length() > 0) {
+			if(query.getConditionCount() > 0) {
+				query.appendAnd();
+			}
+			sc = new SearchCondition(WTPart.class, WTPart.NUMBER, SearchCondition.LIKE, number + "%", false);
+			query.appendWhere(sc, new int[] { idx });
+		}
+		
+		query.appendOrderBy(new OrderBy(new ClassAttribute(WTPart.class, WTPart.NUMBER), true), new int[] { idx });
+    	return query;
+	}
+	
+	/**
+	 * @desc : 과련 프로젝트 가져오기
+	 * @author : shkim
+	 * @date : 2020. 2. 12.
+	 * @method : getRelatedProjectList
+	 * @return : List<ProjectData>
+	 * @param part
+	 * @throws Exception
+	 */
+	public List<ProjectData> getRelatedProjectList(WTPart part) throws Exception {
+		List<ProjectData> list = new ArrayList<>();
+		
+		WTPartMaster master = (WTPartMaster) part.getMaster();
+		
+		QueryResult qr = PersistenceHelper.manager.navigate(master, EProjectMasteredLink.PROJECT_ROLE, EProjectMasteredLink.class);
+		
+		while(qr.hasMoreElements()) {
+			EProject project = (EProject) qr.nextElement();
+			ProjectData data = new ProjectData(project);
+			list.add(data);
+		}
+		
+		return list;
+	}
+	
+	/**
+	 * 
+	 * @date : 2022. 12. 01
+	 * @author : shjeong
+	 * @method : getPartAllVersion
+	 * @param String
+	 * @return : WTPart
+	 * @throws Exception
+	 * @desc : 모든 버전 가져오기
+	 */
+	public List<WTPart> getPartAllVersion(String number) throws Exception {
+		
+		List<WTPart> list = new ArrayList<WTPart>();
+		
+		QuerySpec qs = new QuerySpec();
+
+		int idx = qs.appendClassList(WTPart.class, true);
+		
+		View view = ViewHelper.service.getView("Design");
+
+		qs.appendWhere(new SearchCondition(WTPart.class, "master>number", "=", number), new int[] { idx });
+		
+		qs.appendAnd();
+		SearchCondition sc = new SearchCondition(WTPart.class, "view.key.id", SearchCondition.EQUAL,
+				CommonUtil.getOIDLongValue(view));
+		qs.appendWhere(sc, new int[] { idx });
+		
+		QueryResult qr = PersistenceHelper.manager.find(qs);
+		while (qr.hasMoreElements()) {
+			Object[] obj = (Object[]) qr.nextElement();
+			list.add((WTPart) obj[0]);
+		}
+
+		return list;
+	}
+}

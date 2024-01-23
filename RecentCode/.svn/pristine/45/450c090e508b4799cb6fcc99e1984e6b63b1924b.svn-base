@@ -1,0 +1,31 @@
+package com.e3ps.common.util;
+
+import com.e3ps.common.jdf.config.ConfigImpl;
+
+import wt.access.AccessControlHelper;
+import wt.access.AccessPermission;
+import wt.admin.AdminDomainRef;
+import wt.admin.AdministrativeDomain;
+import wt.admin.AdministrativeDomainHelper;
+import wt.inf.container.WTContainerHelper;
+import wt.inf.container.WTContainerRef;
+import wt.org.WTPrincipal;
+import wt.session.SessionHelper;
+
+public class AccessControlUtil {
+	
+	private AccessControlUtil() {}
+	
+	public static boolean checkPermissionForObject(Class class1) throws Exception {
+		
+		WTPrincipal sessionUser = SessionHelper.getPrincipal();
+		String orgName = ConfigImpl.getInstance().getString("org.context.name");
+		String productName = ConfigImpl.getInstance().getString("product.context.name");
+		String targetObject = "WCTYPE|" + class1.getName();
+		WTContainerRef container_ref = WTContainerHelper.service.getByPath("/wt.inf.container.OrgContainer="+orgName+"/wt.pdmlink.PDMLinkProduct="+productName);
+		AdministrativeDomain domain = AdministrativeDomainHelper.manager.getDomain("/Default", container_ref);
+    	AdminDomainRef doaminref = AdminDomainRef.newAdminDomainRef(domain);
+    	
+		return AccessControlHelper.manager.hasAccess(sessionUser, targetObject, doaminref, null, AccessPermission.READ);
+	}
+}

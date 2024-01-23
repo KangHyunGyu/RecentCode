@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<!DOCTYPE NmLoader SYSTEM "standardX05.dtd">
+<NmLoader>
+<!-- CAD 속성 START-->
+	<csvAttrDefinizer handler="wt.iba.definition.DefinitionLoaderWithCache.createAttrDefinizer">
+		<csvname>DNC</csvname>
+		<csvhierarchyDisplayName/>
+		<csvorganizerPaths/>
+		<csvdefinitionPaths/>
+		<csvdisplay_name/>
+		<csvdescription/>
+		<csvdata_type>org</csvdata_type>
+		<csvQoMName/>
+		<csvnameValuePairs/>
+		<csvlogicalIdentifier> </csvlogicalIdentifier>
+	</csvAttrDefinizer>
+	
+	<csvAttrDefinizer handler="wt.iba.definition.DefinitionLoaderWithCache.createAttrDefinizer">
+		<csvname>PLM_category</csvname>
+		<csvhierarchyDisplayName/>
+		<csvorganizerPaths>DNC</csvorganizerPaths>
+		<csvdefinitionPaths/>
+		<csvdisplay_name>분류</csvdisplay_name>
+		<csvdescription>분류(주석)</csvdescription>
+		<csvdata_type>String</csvdata_type>
+		<csvQoMName/>
+		<csvnameValuePairs/>
+		<csvlogicalIdentifier>PLM_category</csvlogicalIdentifier>
+	</csvAttrDefinizer>
+	
+	<csvAttrDefinizer handler="wt.iba.definition.DefinitionLoaderWithCache.createAttrDefinizer">
+		<csvname>PLM_designer1</csvname>
+		<csvhierarchyDisplayName/>
+		<csvorganizerPaths>DNC</csvorganizerPaths>
+		<csvdefinitionPaths/>
+		<csvdisplay_name>설계자</csvdisplay_name>
+		<csvdescription>설계자(프로젝트)</csvdescription>
+		<csvdata_type>String</csvdata_type>
+		<csvQoMName/>
+		<csvnameValuePairs/>
+		<csvlogicalIdentifier>PLM_designer1</csvlogicalIdentifier>
+	</csvAttrDefinizer>
+	
+	<csvAttrDefinizer handler="wt.iba.definition.DefinitionLoaderWithCache.createAttrDefinizer">
+		<csvname>PLM_designer2</csvname>
+		<csvhierarchyDisplayName/>
+		<csvorganizerPaths>DNC</csvorganizerPaths>
+		<csvdefinitionPaths/>
+		<csvdisplay_name>작성자</csvdisplay_name>
+		<csvdescription>작성자(요약)</csvdescription>
+		<csvdata_type>String</csvdata_type>
+		<csvQoMName/>
+		<csvnameValuePairs/>
+		<csvlogicalIdentifier>PLM_designer2</csvlogicalIdentifier>
+	</csvAttrDefinizer>
+	
+	<csvAttrDefinizer handler="wt.iba.definition.DefinitionLoaderWithCache.createAttrDefinizer">
+		<csvname>PLM_material</csvname>
+		<csvhierarchyDisplayName/>
+		<csvorganizerPaths>DNC</csvorganizerPaths>
+		<csvdefinitionPaths/>
+		<csvdisplay_name>재질</csvdisplay_name>
+		<csvdescription>재질(범주)</csvdescription>
+		<csvdata_type>String</csvdata_type>
+		<csvQoMName/>
+		<csvnameValuePairs/>
+		<csvlogicalIdentifier>PLM_material</csvlogicalIdentifier>
+	</csvAttrDefinizer>
+	
+	<csvAttrDefinizer handler="wt.iba.definition.DefinitionLoaderWithCache.createAttrDefinizer">
+		<csvname>PLM_partName</csvname>
+		<csvhierarchyDisplayName/>
+		<csvorganizerPaths>DNC</csvorganizerPaths>
+		<csvdefinitionPaths/>
+		<csvdisplay_name>부품 이름</csvdisplay_name>
+		<csvdescription>부품 이름</csvdescription>
+		<csvdata_type>String</csvdata_type>
+		<csvQoMName/>
+		<csvnameValuePairs/>
+		<csvlogicalIdentifier>PLM_partName</csvlogicalIdentifier>
+	</csvAttrDefinizer>
+	
+	<csvAttrDefinizer handler="wt.iba.definition.DefinitionLoaderWithCache.createAttrDefinizer">
+		<csvname>PLM_partNumber</csvname>
+		<csvhierarchyDisplayName/>
+		<csvorganizerPaths>DNC</csvorganizerPaths>
+		<csvdefinitionPaths/>
+		<csvdisplay_name>부품 번호</csvdisplay_name>
+		<csvdescription>부품 번호</csvdescription>
+		<csvdata_type>String</csvdata_type>
+		<csvQoMName/>
+		<csvnameValuePairs/>
+		<csvlogicalIdentifier>PLM_partNumber</csvlogicalIdentifier>
+	</csvAttrDefinizer>
+	
+	<csvAttrDefinizer handler="wt.iba.definition.DefinitionLoaderWithCache.createAttrDefinizer">
+		<csvname>PLM_productSerialNo</csvname>
+		<csvhierarchyDisplayName/>
+		<csvorganizerPaths>DNC</csvorganizerPaths>
+		<csvdefinitionPaths/>
+		<csvdisplay_name>장비 시리얼 번호</csvdisplay_name>
+		<csvdescription>장비 시리얼 번호</csvdescription>
+		<csvdata_type>String</csvdata_type>
+		<csvQoMName/>
+		<csvnameValuePairs/>
+		<csvlogicalIdentifier>PLM_productSerialNo</csvlogicalIdentifier>
+	</csvAttrDefinizer>
+	
+	<csvAttrDefinizer handler="wt.iba.definition.DefinitionLoaderWithCache.createAttrDefinizer">
+		<csvname>PLM_treatment</csvname>
+		<csvhierarchyDisplayName/>
+		<csvorganizerPaths>DNC</csvorganizerPaths>
+		<csvdefinitionPaths/>
+		<csvdisplay_name>후처리</csvdisplay_name>
+		<csvdescription>후처리(키워드)</csvdescription>
+		<csvdata_type>String</csvdata_type>
+		<csvQoMName/>
+		<csvnameValuePairs/>
+		<csvlogicalIdentifier>PLM_treatment</csvlogicalIdentifier>
+	</csvAttrDefinizer>
+</NmLoader>

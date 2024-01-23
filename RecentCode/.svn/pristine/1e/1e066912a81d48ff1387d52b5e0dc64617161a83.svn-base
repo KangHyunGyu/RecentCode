@@ -1,0 +1,412 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!-- 각 화면 개발시 Tag 복사해서 붙여넣고 사용할것 -->    
+<%@ taglib prefix="c"		uri="http://java.sun.com/jsp/jstl/core"			%>
+<%@ taglib prefix="e3ps" 	uri="/WEB-INF/tlds/e3ps-functions.tld"%>
+
+<script>
+$(document).ready(function(){
+	
+	//grid setting
+	add_distributePartList_createAUIGrid(add_distributePartList_columnLayout);
+	
+	AUIGrid.resize(add_distributePartList_myGridID);
+	
+});
+
+//사용자 타이핑의 민감도 체크를 위한 타이머
+var timerId = null;
+
+//추가한 구매요청 품목 리스트 저장 변수
+var distributePartList_cache = [];
+
+//AUIGrid 생성 후 반환 ID
+var add_distributePartList_myGridID;
+
+var add_objList = [];
+
+
+//AUIGrid 칼럼 설정
+var add_distributePartList_columnLayout = [
+	{ dataField : "icon",		headerText : "",		width:"30", editable : false,
+		renderer : { // HTML 템플릿 렌더러 사용
+			type : "TemplateRenderer"
+		},	
+	},
+	{ dataField : "distPartNumber",		headerText : "${e3ps:getMessage('품목 번호')}<span class='required'>*</span>",			width:"20%",
+		editRenderer : { // 편집 모드 진입 시 원격 리스트 출력하고자 할 때
+		    type : "RemoteListRenderer",
+		    showEditorBtnOver : true, // 마우스 오버 시 에디터버턴 보이기
+		    autoCompleteMode : true, // 자동완성 모드 설정 (기본값 :false)
+			autoEasyMode : true, // 자동완성 모드일 때 첫 아이템 자동 선택할지 여부 (기본값 : false)
+			keyField : "distPartNumber", // key 에 해당되는 필드명
+		    fieldName : "number",
+			remoter : function( request, response ) { 
+				
+				if(String(request.term).length <= 3 ) {
+					response([]); 
+					return;
+				}
+
+				if(timerId != null) {
+					clearTimeout(timerId);
+				}
+				
+				var param = new Object();
+				
+				param["viewName"] ="Design";
+				param["number"] = request.term;
+				param["likeSearch"] = "like";
+				param["state"] = "APPROVED";
+				
+				var url = getURLString("/part/searchPartAction");
+				
+				ajaxCallServer(url, param, function(data){
+
+					add_objList = data.list;
+					response(add_objList); 
+					
+				});
+				
+				timerId = setTimeout(function() {
+					
+				}, 200);  
+				
+				
+				
+			},
+			listTemplateFunction : function(rowIndex, columnIndex, text, item, dataField, listItem) {
+				
+				var html = '<div class="myList-style">';
+				html += '<span class="myList-col" style="padding-left:10px; width:120px;" title="' + listItem.number + '">' + listItem.number + '</span>';
+				html += '<span class="myList-col" style="width:150px;">' + listItem.name + '</span>';
+				html += '<span class="myList-col" style="width:80px; text-align:right;">' + listItem.rev + '</span>';
+				html += '</div>';
+				
+				return html;
+			}
+		
+		},
+		tooltip : {
+	        tooltipFunction : function(rowIndex, columnIndex, value, headerText, item, dataField) {
+	            var str = "<span style='color:#f00;'>※ ${e3ps:getMessage('승인된 품목만 검색됩니다')}</span>";
+	            return str;
+	   		}
+		}
+	},
+	{ dataField : "distPartName",		headerText : "${e3ps:getMessage('품목 명')}",	style:"AUIGrid_Left",		width:"*%",	sortValue : "master>name", editable : false,
+		filter : {
+			showIcon : true,
+			iconWidth:30
+		},
+		renderer : {
+			type : "LinkRenderer",
+			baseUrl : "javascript", 
+			jsCallback : function(rowIndex, columnIndex, value, item) {
+				var oid = item.distPartOid;
+				openView(oid);
+			}
+		}	
+	},
+	{ dataField : "version",		headerText : "${e3ps:getMessage('버전')}",			width:"6%", editable : false,
+		filter : {
+			showIcon : true,
+			iconWidth:30
+		}	
+	},
+	{ dataField : "stateName",		headerText : "${e3ps:getMessage('상태')}",			width:"6%", editable : false,
+		filter : {
+			showIcon : true,
+			iconWidth:30
+		}	
+	},
+	{ dataField : "bom",		headerText : "BOM",		width:"4%", editable : false,
+		renderer : { // HTML 템플릿 렌더러 사용
+			type : "TemplateRenderer"
+		},
+		labelFunction : function (rowIndex, columnIndex, value, headerText, item ) { // HTML 템플릿 작성
+			
+			var icon = "/Windchill/jsp/portal/images/bom_icon.png";
+			
+			var template = "<img title='${e3ps:getMessage('BOM 보기')}' class='pointer' onclick='openBomTree(\"" + item.distPartOid + "\")' src='" + icon + "'/>";
+			
+			return template;
+		}
+	},
+];
+
+
+function add_distributePartList_createAUIGrid(add_distributePartList_columnLayout) {
+	
+	// 그리드 속성 설정
+	var gridPros = {
+		
+		selectionMode : "multipleCells",
+		
+		showSelectionBorder : true,
+		
+		showAutoNoDataMessage : false,
+		
+		showRowNumColumn : true,
+		
+		showEditedCellMarker : false,
+		
+		wrapSelectionMove : true,
+		
+		showRowCheckColumn : true,
+		
+		editable : true,
+		
+		enableSorting : false,
+		
+		softRemoveRowMode : false,
+		
+		noDataMessage : gridNoDataMessage,
+		
+		autoGridHeight : false,
+		
+		height : ${gridHeight},
+		
+		//툴팁 출력 지정
+		showTooltip : true,
+		
+		//툴팁 마우스 대면 바로 나오도록 
+		tooltipSensitivity: 500
+	};
+
+	// 실제로 #grid_wrap 에 그리드 생성
+	add_distributePartList_myGridID = AUIGrid.create("#add_distributePartList_grid_wrap", add_distributePartList_columnLayout, gridPros);
+	
+	// 셀 클릭 이벤트 바인딩
+	AUIGrid.bind(add_distributePartList_myGridID, "cellClick", add_distributePartList_auiGridCellClickHandler);
+	
+	// 에디팅 정상 종료 이벤트 바인딩
+	AUIGrid.bind(add_distributePartList_myGridID, "cellEditEnd", add_distributePartList_auiCellEditHandler);
+	
+	// 에디팅 취소 이벤트 바인딩
+	AUIGrid.bind(add_distributePartList_myGridID, "cellEditCancel", add_distributePartList_auiCellEditHandler);
+	
+	var gridData = new Array();
+	AUIGrid.setGridData(add_distributePartList_myGridID, gridData);
+	
+}
+
+
+//셀 클릭 핸들러
+function add_distributePartList_auiGridCellClickHandler(event) {
+	
+}
+
+//편집 핸들러
+function add_distributePartList_auiCellEditHandler(event) {
+	
+	var editedItem = new Object();
+		
+	switch(event.type) {
+	case "cellEditEnd" :
+		if(event.dataField == "distPartNumber") {
+			
+			var item = add_getItem(event.value);
+			
+			if(typeof item === "undefined" || isEmpty(item) ) {
+				AUIGrid.updateRow(add_distributePartList_myGridID, {
+					icon : "",
+					distPartNumber : "",
+					distPartName : "",
+					version : "",
+					stateName : "",
+					distPartOid : "",
+					bom : "",
+				}, event.rowIndex);
+				return;
+			}
+			
+			let currentPartsList = AUIGrid.getGridData(add_distributePartList_myGridID);
+			if(currentPartsList.some( (x) => {return x.distPartOid == item.oid})) {
+				alert("${e3ps:getMessage('이미 추가되어있는 부품입니다')}");
+				AUIGrid.updateRow(add_distributePartList_myGridID, {
+					distPartNumber : "",
+				}, event.rowIndex);
+				return;
+			}
+			
+			AUIGrid.updateRow(add_distributePartList_myGridID, {
+				icon : item.icon,
+				distPartName : item.name,
+				version : item.rev,
+				stateName : item.stateName,
+				distPartOid : item.oid,
+				bom : item.bom,
+			}, event.rowIndex);
+		}
+		
+		
+		
+		break;
+	case "cellEditCancel" :
+		break;
+	}
+};
+
+//추가 버튼
+function add_distributePartList_addRow() {
+	
+	 
+	var item = new Object();
+	AUIGrid.addRow(add_distributePartList_myGridID, item, "last");
+}
+
+
+function getPurchasePartsByBom(items) {
+	//현재 그리드에 존재하는 구매요청 품목 리스트 가져오기
+	setCurrentListToCache();
+	//그리드 row 전부 삭제
+	AUIGrid.setGridData(add_distributePartList_myGridID,[]);
+	
+	//가져운 리스트를 캐시 데이터랑 합친다.
+	items = [...items, ...purchasePartList_cache]; 
+	
+	//중복 데이터 필터링( 중복되는 품목은 수량을 합친다. )
+	let serializationParts = verificationParts(items);
+	
+	//필터링된 DATA GRID 에 출력	
+	serializationParts.forEach((it)=>{
+		var item = new Object();
+		item.icon = it.icon;
+		item.distPartNumber = it.number;
+		item.distPartName = it.name;
+		item.spec = it.attributes.W_SPEC;
+		item.maker = it.attributes.W_MAKER;
+		item.version = it.rev;
+		item.stateName = it.stateName;
+		item.quantity = it.quantity;
+		item.bomquantity = it.bomquantity;
+		item.unit = it.unit;
+		item.distPartOid = it.oid;
+		AUIGrid.addRow(add_distributePartList_myGridID, item, "last"); 
+	})
+	
+}
+
+function verificationParts(itemList){
+	let partList = [];
+	let qty = document.getElementById('qty').value;
+	itemList.forEach((rowData)=>{
+		
+		let isExistence = false;
+		
+		isExistence = partList.some( it => it.oid == rowData.oid );
+		
+		if(isExistence){//중복되는 Row 수량 업데이트
+			partList.map( (its) => {
+				if(its.oid == rowData.oid){
+					var returnQuantity;
+					/* if(!Number.isInteger(its.quantity) || !Number.isInteger(rowData.quantity)){ //하나라도 소수라면
+						returnQuantity = +(its.quantity+rowData.quantity).toFixed(12);
+					}else{
+						returnQuantity = its.quantity + rowData.quantity;
+					} */
+					its.bomquantity = its.bomquantity + rowData.bomquantity;
+					its.quantity = its.bomquantity * qty;
+				}
+			}); 
+		}else{//중복되는것이 없다면 그냥 추가
+			partList = [...partList,rowData];
+		}
+	}); 
+	
+	return partList;
+}
+
+function setCurrentListToCache(){
+	purchasePartList_cache = [];
+	let currentPartsList = AUIGrid.getGridData(add_distributePartList_myGridID);
+	
+	currentPartsList.forEach((x)=>{
+		let item = new Object();
+		item.icon = x.icon;
+		item.oid = x.distPartOid;
+		item.parentOid = x.parentPartOid;
+		item.rev = x.version;
+		item.parentNumber = x.parentPartNumber;
+		item.number = x.distPartNumber;
+		item.name = x.distPartName;
+		item.stateName = x.stateName;
+		item.quantity = x.quantity;
+		item.bomquantity = x.quantity;
+		item.unit = x.unit;
+		
+		let attributeItem = new Object();
+		attributeItem.W_SPEC = x.spec;
+		attributeItem.W_MAKER = x.maker;
+		item.attributes = attributeItem;
+		
+		purchasePartList_cache.push(item);
+	})
+}
+<%----------------------------------------------------------
+*                      그리드 Row 추가 
+----------------------------------------------------------%>
+function addRow() {
+
+	// 그리드의 편집 인푸터가 열린 경우 에디팅 완료 상태로 만듬.
+	AUIGrid.forceEditingComplete(add_distributePartList_myGridID, null);
+	
+	var item = new Object();
+	item.distPartNumber ="";
+	item.distPartName = "";
+	item.version = "";
+	item.stateName ="";
+	item.bom ="";
+	
+	
+	AUIGrid.addRow(add_distributePartList_myGridID, item, "last");
+}
+<%----------------------------------------------------------
+*                      그리드 Row 삭제
+----------------------------------------------------------%>
+function removeRow() {
+		
+		var checkItemList = AUIGrid.getCheckedRowItems(add_distributePartList_myGridID);
+		
+		for(var i = 0; i < checkItemList.length; i++){
+			
+			AUIGrid.removeRowByRowId(add_distributePartList_myGridID, checkItemList[i].item._$uid);
+		}
+		
+		AUIGrid.setAllCheckedRows(add_distributePartList_myGridID, false); 
+}
+<%----------------------------------------------------------
+*                      선택 품목 Item 
+----------------------------------------------------------%>
+function add_getItem(number) {
+	var item;
+	
+	$.each(add_objList, function(n, v) {
+		if(v.number == number) {
+			item = v;
+			return false;
+		}
+	});
+	return item;
+};
+
+</script>
+<!-- button -->
+<br/>
+<div class="seach_arm2 pb5">
+	<div class="leftbt">
+		<span class="title">
+			<img class="pointer" onclick="switchDiv(this);" src="/Windchill/jsp/portal/images/minus_icon.png">
+			${title}
+		</span>
+	</div>
+	<div class="rightbt" id="partListRightBtn">
+		<button type="button" class="i_read" style="width:60px" onclick="addRow()" id="addBtn">${e3ps:getMessage('추가')}</button>
+		<button type="button" class="i_delete" style="width:60px" onclick="removeRow()">${e3ps:getMessage('삭제')}</button>
+		<%-- <button type="button" class="i_create" style="width: 60px" onclick="purchasePart_epmList_addRow()">${e3ps:getMessage('배포 도면 확인')}</button> --%>
+	</div>
+</div>
+<!-- //button -->
+<div class="list " id="add_distributePartList_grid_wrap" style="height:${gridHeight};">
+</div>

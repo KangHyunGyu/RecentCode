@@ -1,0 +1,106 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+pageEncoding="UTF-8"%>
+<!-- 각 화면 개발시 Tag 복사해서 붙여넣고 사용할것 -->
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %> <%@ taglib
+prefix="e3ps" uri="/WEB-INF/tlds/e3ps-functions.tld"%>
+<script>
+  $(document).ready(function () {
+    //팝업 리사이즈
+//     popupResize();
+  });
+</script>
+<br />
+<div class="seach_arm2 pt10 pb5">
+  <div class="leftbt">
+    <!-- <h4><img class="pointer" onclick="switchPopupDiv(this);" src="/Windchill/jsp/portal/images/minus_icon.png"> ${e3ps:getMessage('기본 정보')}</h4> -->
+    <h4>
+      <img class="" src="/Windchill/jsp/portal/images/t_icon.png" />
+      ${e3ps:getMessage('기본 정보')}
+    </h4>
+  </div>
+  <div class="rightbt"></div>
+</div>
+<!-- pro_table -->
+<div class="pro_table">
+  <table class="mainTable">
+    <colgroup>
+      <col style="width: 15%" />
+      <col style="width: 35%" />
+      <col style="width: 15%" />
+      <col style="width: 35%" />
+    </colgroup>
+    <tbody>
+      <tr>
+        <th scope="col">${e3ps:getMessage('ECR 번호')}</th>
+        <td colspan="3">${data.ecrNumber}</td>
+      </tr>
+      <tr>
+        <th scope="col">${e3ps:getMessage('ECR 제목')}</th>
+        <td>${data.name}</td>
+        <th scope="col">${e3ps:getMessage('거래처명')}</th>
+        <td>${data.customer}</td>
+      </tr>
+      <tr>
+        <th scope="col">${e3ps:getMessage('설계변경 사유')}</th>
+        <td>${data.echangeReason}</td>
+        <th scope="col">${e3ps:getMessage('적용요구시점')}</th>
+        <td>${data.applyDateName}</td>
+      </tr>
+      
+      <tr>
+        <th scope="col">${e3ps:getMessage('장비명')}</th>
+        <td>${data.equipmentName}</td>
+        <th scope="col">${e3ps:getMessage('완료희망일')}</th>
+        <td>${data.completeHopeDate}</td>
+      </tr>
+      
+      <tr>
+       		<th scope="col">${e3ps:getMessage('요청자')}</th>
+        	<td>value</td>
+        	
+        	<th scope="col"></th>
+        	<td></td>
+      </tr>
+      
+      <tr>
+        <th scope="col">${e3ps:getMessage('등록자')}</th>
+        <td>${data.creator}</td>
+        <th scope="col">${e3ps:getMessage('등록일')}</th>
+        <td>${data.createDate}</td>
+      </tr>
+      <tr> 
+		<th>${e3ps:getMessage('내용')}</th>
+		<td colspan="3">
+			<jsp:include page="${e3ps:getIncludeURLString('/change/include_ecrContent')}" flush="true">
+				<jsp:param name="oid" value="${data.oid}" />
+				<jsp:param name="type" value="view" />
+			</jsp:include>
+		</td>
+	  </tr>
+	  <tr>
+        <th scope="col">${e3ps:getMessage('비고')}</th>
+        <td colspan="3" class="pd10">
+          <div class="textarea_autoSize">
+            <textarea name="description" id="description" readonly><c:out value="${data.description }" escapeXml="false" /></textarea>
+          </div>
+        </td>
+      </tr>
+      
+       <tr>
+	    <th scope="col">${e3ps:getMessage('첨부파일')}</th>
+	    <td colspan="3" class="pd15">
+	  	  <jsp:include page="${e3ps:getIncludeURLString('/content/include_fileView')}" flush="true">
+	  	    <jsp:param name="oid" value="${data.oid}"/>
+		  </jsp:include>
+	    </td>								
+	  </tr>
+	  
+      <%-- <tr>
+        <th scope="col">${e3ps:getMessage('수정자')}</th>
+        <td>${data.modifierFullName}</td>
+        <th scope="col">${e3ps:getMessage('수정일')}</th>
+        <td>${data.modifyDate}</td>
+      </tr> --%>
+    </tbody>
+  </table>
+</div>

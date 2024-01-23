@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" ?><!DOCTYPE NmLoader SYSTEM "standardX20.dtd">
+<NmLoader>
+  
+  <!-- 문서 Folder -->
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Document</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Document/1.계약 개발 검토서</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Document/2.서비스 요청서</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Document/3.측정 의뢰서</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Document/4.분석 의뢰서</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Document/5.공정 변경 요청서</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Document/6.공정 개발 검토서</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Document/기타</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  
+  <!-- 도면/품목 Folder -->
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Drawing_Part</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Drawing_Part/1.ASS'Y</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Drawing_Part/2.Phantom</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Drawing_Part/3.제품</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Drawing_Part/4.반제품</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Drawing_Part/5.구매품</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Drawing_Part/6.R＆D</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Drawing_Part/7.원자재</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Drawing_Part/8.원료</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Drawing_Part/9.첨가제</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Drawing_Part/10.기타</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  
+  <!-- 배포 Folder -->
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Distribute</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  
+  <!-- 프로젝트 Folder -->
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Project</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Change</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Change/ECR</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  <csvSubFolder handler="wt.folder.LoadFolder.createSubFolder"><csvuser></csvuser><csvfolderPath>/Default/Change/ECO</csvfolderPath><csvadminDomain></csvadminDomain></csvSubFolder>
+  
+</NmLoader>

@@ -1,0 +1,418 @@
+
+# 로더 돌리기 전 확인 사항 
+	로더 안될 시 로컬 IP wt.auth.trustedHosts 에 넣고 xconfmanager -p 후 서비스 재시작!
+	<Property name="wt.auth.trustedHosts" overridable="true" targetFile="codebase/wt.properties" value="192.168.137.135" />
+
+# RB 업데이트  
+	ResourceBuild com.e3ps.approval.ApproveRoleTypeRB**
+	ResourceBuild com.e3ps.approval.ApproveStateTypeRB**  
+	ResourceBuild wt.lifecycle.StateRB**
+	ResourceBuild com.e3ps.project.OutputTypeRB**
+	ResourceBuild com.e3ps.common.NumberCodeTypeRB** 
+	ResourceBuild com.e3ps.admin.AuthorityGroupTypeRB** 
+	ResourceBuild com.e3ps.admin.AuthorityObjectTypeRB**   
+	   
+# EsolutionMenu Loader 
+	windchill com.e3ps.load.EsolutionMenuLoader %WT_HOME%\loadFiles\e3ps\EsolutionMenu.xls wcadmin wcadmin    
+  
+# NumberCode Loader ( Methode Server 켜진 상황에서 돌려야함 )
+	windchill com.e3ps.load.CodeLoader %WT_HOME%\loadFiles\e3ps\NumberCode\NumberCode.xls wcadmin wcadmin  
+  
+# Project Template Loader (엑셀 확장자 .xlsx 는 적용 안됌)
+	windchill com.e3ps.load.TemplateLoader %WT_HOME%\loadFiles\e3ps\WorldexMassProductTemplate8.xls wcadmin wcadmin
+
+# Lifecycle 가져오기
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\lifecycle\LC_Default\TAG-NmLoader-0.xml -u wcadmin -p wcadmin
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\lifecycle\LC_Project\TAG-NmLoader-0.xml -u wcadmin -p wcadmin -CONT_PATH /wt.inf.container.OrgContainer=worldex/wt.pdmlink.PDMLinkProduct=worldex
+
+# 폴더 로더
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\folders_worldex.xml -u wcadmin -p wcadmin -CONT_PATH /wt.inf.container.OrgContainer=worldex/wt.pdmlink.PDMLinkProduct=worldex
+	
+# 객체별 정책 로더 (ResourceBuild 무조건 업데이트 후 돌릴 것)
+	windchill com.e3ps.load.ObjectAuthGroupLoader wcadmin wcadmin
+	
+# ACL Loader (esolution.properties 에 컨텍스트 이름 업데이트 후 돌릴 것)
+	windchill com.e3ps.load.ACLLoader %WT_HOME%\loadFiles\e3ps\ACLLoader.xls wcadmin wcadmin    	
+
+# IBA 속성 로더
+	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\PartAttributeDefinitionsWorldex.xml -u wcadmin -p wcadmin
+  	windchill wt.load.LoadFromFile -d %WT_HOME%\loadFiles\e3ps\DocAttributeDefinitionsWorldex.xml -u wcadmin -p wcadmin
+
+
+
+
+
+
+
+# View 업데이트 
+---------------------------------------------- PART VIEW ---------------------------------------------- 
+CREATE VIEW PARTLOCATION ("PART", "LOC", "CREATESTAMPA2", "UPDATESTAMPA2", "UPDATECOUNTA2", "CLASSNAMEA2A2", "IDA2A2", "MODIFYSTAMPA2", "MARKFORDELETEA2") AS 
+WITH Hierarchys AS (
+    SELECT idA3B2folderingInfo, ida2a2, '/'+CAST(name AS NVARCHAR(MAX)) AS LOC, 0 AS Level
+    FROM subfolder
+    WHERE idA3B2folderingInfo = 0 and name ='Drawing_Part'
+    
+    UNION ALL
+    
+    SELECT e.idA3B2folderingInfo, e.ida2a2,  CAST(eh.LOC + '/' + e.name AS NVARCHAR(MAX)) AS LOC, eh.Level + 1
+    FROM subfolder e
+    INNER JOIN Hierarchys eh ON eh.ida2a2 = e.idA3B2folderingInfo
+)  
+SELECT E.IDA2A2 part,T.LOC loc,E.CREATESTAMPA2 CREATESTAMPA2,E.UPDATESTAMPA2 UPDATESTAMPA2,
+E.UPDATECOUNTA2 UPDATECOUNTA2,E.CLASSNAMEA2A2 CLASSNAMEA2A2,E.IDA2A2 IDA2A2,
+E.MODIFYSTAMPA2 MODIFYSTAMPA2,E.MARKFORDELETEA2 MARKFORDELETEA2
+FROM WTPART E, (
+SELECT idA3B2folderingInfo AS POID, ida2a2 AS OID, LOC, Level
+FROM Hierarchys
+)
+T WHERE E.IDA3B2FOLDERINGINFO=T.OID;
+---------------------------------------------- PART VIEW ---------------------------------------------- 
+
+---------------------------------------------- DOC VIEW ---------------------------------------------- 
+CREATE VIEW DOCLOCATION ("DOC", "LOC", "CREATESTAMPA2", "UPDATESTAMPA2", "UPDATECOUNTA2", "CLASSNAMEA2A2", "IDA2A2", "MODIFYSTAMPA2", "MARKFORDELETEA2") AS 
+WITH Hierarchys AS (
+    SELECT idA3B2folderingInfo, ida2a2, '/'+CAST( name AS NVARCHAR(MAX)) AS LOC, 0 AS Level
+    FROM subfolder
+    WHERE idA3B2folderingInfo = 0 and name ='Document'
+    
+    UNION ALL
+    
+    SELECT e.idA3B2folderingInfo, e.ida2a2,  CAST(eh.LOC + '/' + e.name AS NVARCHAR(MAX)) AS LOC, eh.Level + 1
+    FROM subfolder e
+    INNER JOIN Hierarchys eh ON eh.ida2a2 = e.idA3B2folderingInfo
+)
+SELECT E.IDA2A2 doc,T.LOC loc,E.CREATESTAMPA2 CREATESTAMPA2,E.UPDATESTAMPA2 UPDATESTAMPA2,
+E.UPDATECOUNTA2 UPDATECOUNTA2,E.CLASSNAMEA2A2 CLASSNAMEA2A2,E.IDA2A2 IDA2A2,
+E.MODIFYSTAMPA2 MODIFYSTAMPA2,E.MARKFORDELETEA2 MARKFORDELETEA2
+FROM E3PSDOCUMENT E, (
+SELECT idA3B2folderingInfo AS POID, ida2a2 AS OID, LOC, Level
+FROM Hierarchys
+) T WHERE E.IDA3B2FOLDERINGINFO=T.OID;
+---------------------------------------------- DOC VIEW ---------------------------------------------- 
+
+---------------------------------------------- EPM VIEW ---------------------------------------------- 
+CREATE VIEW EPMLOCATION ("EPM", "LOC", "CREATESTAMPA2", "UPDATESTAMPA2", "UPDATECOUNTA2", "CLASSNAMEA2A2", "IDA2A2", "MODIFYSTAMPA2", "MARKFORDELETEA2") AS 
+WITH Hierarchys AS (
+    SELECT idA3B2folderingInfo, ida2a2, '/'+CAST(name AS NVARCHAR(MAX)) AS LOC, 0 AS Level
+    FROM subfolder
+    WHERE idA3B2folderingInfo = 0 and name ='Drawing_Part'
+    
+    UNION ALL
+    
+    SELECT e.idA3B2folderingInfo, e.ida2a2,  CAST(eh.LOC + '/' + e.name AS NVARCHAR(MAX)) AS LOC, eh.Level + 1
+    FROM subfolder e
+    INNER JOIN Hierarchys eh ON eh.ida2a2 = e.idA3B2folderingInfo
+)  
+SELECT E.IDA2A2 epm,T.LOC loc,E.CREATESTAMPA2 CREATESTAMPA2,E.UPDATESTAMPA2 UPDATESTAMPA2,
+E.UPDATECOUNTA2 UPDATECOUNTA2,E.CLASSNAMEA2A2 CLASSNAMEA2A2,E.IDA2A2 IDA2A2,
+E.MODIFYSTAMPA2 MODIFYSTAMPA2,E.MARKFORDELETEA2 MARKFORDELETEA2
+FROM EPMDOCUMENT E, (
+SELECT idA3B2folderingInfo AS POID, ida2a2 AS OID, LOC, Level
+FROM Hierarchys
+)
+T WHERE E.IDA3B2FOLDERINGINFO=T.OID;
+---------------------------------------------- EPM VIEW ---------------------------------------------- 
+
+---------------------------------------------- 20230925 ---------------------------------------------- 
+
+CREATE TABLE DistributeRegistration (
+   administrativeLockIsNull   TINYINT,
+   typeadministrativeLock   NVARCHAR(50),
+   blob$entrySetadHocAcl   VARBINARY(max),
+   classnamekeycontainerReferen   NVARCHAR(200),
+   idA3containerReference   BIGINT,
+   classnamekeyA7   NVARCHAR(200),
+   idA3A7   BIGINT,
+   descriptionDRF   NVARCHAR(4000),
+   classnamekeyA8   NVARCHAR(200),
+   idA3A8   BIGINT,
+   classnamekeydomainRef   NVARCHAR(200),
+   idA3domainRef   BIGINT,
+   entrySetadHocAcl   VARCHAR(8000),
+   eventSet   NVARCHAR(4000),
+   classnamekeyA2folderingInfo   NVARCHAR(200),
+   idA3A2folderingInfo   BIGINT,
+   classnamekeyB2folderingInfo   NVARCHAR(200),
+   idA3B2folderingInfo   BIGINT,
+   indexersindexerSet   NVARCHAR(4000),
+   inheritedDomain   TINYINT,
+   classnamekeyA2ownership   NVARCHAR(200),
+   idA3A2ownership   BIGINT,
+   securityLabels   NVARCHAR(4000),
+   atGatestate   TINYINT,
+   classnamekeyA2state   NVARCHAR(200),
+   idA3A2state   BIGINT,
+   statestate   NVARCHAR(200) NOT NULL,
+   teamIdIsNull   TINYINT,
+   classnamekeyteamId   NVARCHAR(200),
+   idA3teamId   BIGINT,
+   teamTemplateIdIsNull   TINYINT,
+   classnamekeyteamTemplateId   NVARCHAR(200),
+   idA3teamTemplateId   BIGINT,
+   createStampA2   DATETIME2,
+   markForDeleteA2   BIGINT NOT NULL,
+   modifyStampA2   DATETIME2,
+   classnameA2A2   NVARCHAR(200),
+   idA2A2   BIGINT NOT NULL,
+   updateCountA2   INT,
+   updateStampA2   DATETIME2,
+ CONSTRAINT PK_DistributeRegistration PRIMARY KEY (idA2A2));
+ 
+ ##-------------------------------------------- 20230925 ---------------------------------------------- 
+ 
+ ##-------------------------------------------- 20231025 ----------------------------------------------
+ CREATE TABLE EsolutionMenu (
+   alias   NVARCHAR(200),
+   code   NVARCHAR(200),
+   disabled   TINYINT,
+   href   NVARCHAR(200),
+   imgsrc   NVARCHAR(200),
+   menuLevel   INT,
+   name   NVARCHAR(200),
+   name_en   NVARCHAR(200),
+   classnamekeyA3   NVARCHAR(200),
+   idA3A3   BIGINT,
+   sort   INT,
+   createStampA2   DATETIME2,
+   markForDeleteA2   BIGINT NOT NULL,
+   modifyStampA2   DATETIME2,
+   classnameA2A2   NVARCHAR(200),
+   idA2A2   BIGINT NOT NULL,
+   updateCountA2   INT,
+   updateStampA2   DATETIME2,
+ CONSTRAINT PK_EsolutionMenu PRIMARY KEY (idA2A2));
+ 
+ ##-------------------------------------------- 20231025 ----------------------------------------------
+ 
+ ##-------------------------------------------- 20231030 ----------------------------------------------
+ 
+CREATE TABLE EChangeContents (
+   contents   NVARCHAR(200),
+   classnamekeyA3   NVARCHAR(200),
+   idA3A3   BIGINT,
+   name   NVARCHAR(200),
+   sort   INT,
+   createStampA2   DATETIME2,
+   markForDeleteA2   BIGINT NOT NULL,
+   modifyStampA2   DATETIME2,
+   classnameA2A2   NVARCHAR(200),
+   idA2A2   BIGINT NOT NULL,
+   updateCountA2   INT,
+   updateStampA2   DATETIME2,
+ CONSTRAINT PK_EChangeContents PRIMARY KEY (idA2A2));
+ 
+ ALTER TABLE EChangeRequest2 
+ADD applyDate NVARCHAR(200) NULL, 
+customer NVARCHAR(200) NULL, 
+description NVARCHAR(200) NULL, 
+echangeReason NVARCHAR(200) NULL, 
+specificDate DATETIME2 NULL;
+ 
+ ##-------------------------------------------- 20231030 ----------------------------------------------
+ 
+ ##-------------------------------------------- 20231101 ----------------------------------------------
+ 
+ CREATE TABLE PDRDocumentContents (
+   contents   NVARCHAR(200),
+   name   NVARCHAR(200),
+   classnamekeyA3   NVARCHAR(200),
+   idA3A3   BIGINT,
+   createStampA2   DATETIME2,
+   markForDeleteA2   BIGINT NOT NULL,
+   modifyStampA2   DATETIME2,
+   classnameA2A2   NVARCHAR(200),
+   idA2A2   BIGINT NOT NULL,
+   updateCountA2   INT,
+   updateStampA2   DATETIME2,
+ CONSTRAINT PK_PDRDocumentContents PRIMARY KEY (idA2A2));
+ 
+
+ALTER TABLE PDRDocumentContents ADD sort INT NULL;
+ALTER TABLE EChangeContents ADD sort INT NULL;
+
+ ##-------------------------------------------- 20231101 ----------------------------------------------
+ ##-------------------------------------------- 20231102 ----------------------------------------------
+ 
+ CREATE TABLE ETCDocumentContents (
+   contents   NVARCHAR(200),
+   classnamekeyA3   NVARCHAR(200),
+   idA3A3   BIGINT,
+   name   NVARCHAR(200),
+   sort   INT,
+   createStampA2   DATETIME2,
+   markForDeleteA2   BIGINT NOT NULL,
+   modifyStampA2   DATETIME2,
+   classnameA2A2   NVARCHAR(200),
+   idA2A2   BIGINT NOT NULL,
+   updateCountA2   INT,
+   updateStampA2   DATETIME2,
+ CONSTRAINT PK_ETCDocumentContents PRIMARY KEY (idA2A2));
+ 
+ ##-------------------------------------------- 20231102 ----------------------------------------------
+  
+
+ 
+ ##-------------------------------------------- 20231107 ----------------------------------------------
+ 
+ALTER TABLE EChangeOrder2 ALTER COLUMN applyDate NVARCHAR(200) NULL;
+ALTER TABLE EChangeOrder2 ADD specificDate DATETIME2 NULL;
+ALTER TABLE EChangeOrder2 
+ADD customer NVARCHAR(200) NULL, 
+description NVARCHAR(200) NULL, 
+echangeReason NVARCHAR(200) NULL, 
+classnamekeyC5 NVARCHAR(200) NULL, 
+idA3C5 BIGINT NULL;
+
+##-------------------------------------------- 20231107 ----------------------------------------------
+##-------------------------------------------- 20231108 ----------------------------------------------
+
+# EChangeRequest2 모델링 삭제 후 재생성
+  - 이전 모델링의 잔재가 남아있어 ECR 삭제가 되지 않는 오류가 발생
+  
+  
+  
+  
+eSolution.properties -> 운영서버 개발서버만 반영.
+server.type 값을 plm으로 변경
+
+
+
+
+data/drm 폴더 내 zip 파일
+D:/certi  폴더에 압출 해제 적용.
+
+
+  //수동
+ ant -f %WT_HOME%\bin\tools.xml class -Dclass.includes=com/e3ps/doc/PDRDocumentContents**
+
+
+# Migration
+windchill com.e3ps.load.WtPartMigration true D:/ptc/Windchill_12.1/Windchill/loadFiles/e3ps/migrationData.xls
+
+##-------------------------------------------- 20231114 ----------------------------------------------
+
+# NumberCodeRB 활동구분, 설계변경 단계 추가
+ - ResourceBuild com.e3ps.common.NumberCodeTypeRB** 
+ 
+ 
+ 
+# ---------------------------------------------- WTPart name, number DB NVARCHAR length 수정 ----------------------------------------------
+1. <WT_HOME>\wtCustom\wt\part\partModel.properties​ 오픈
+2.  WTPartMaster.name.UpperLimit=4000
+	WTPartMaster.number.UpperLimit=4000 
+	수정 (최대 4000)
+3.	ant -f bin\tools.xml custom_column -Dgen.input=wt.part
+4. upgrademanager -cs 
+5. DB 명령어 수행
+
+DROP INDEX WTPartMaster$COMPOSITE1 ON WTPartMaster;
+DROP INDEX WTPartMaster$COMPOSITE3 ON WTPartMaster;
+DROP INDEX WTPartMaster$COMPOSITE22 ON WTPartMaster;
+DROP INDEX WTPartMaster$COMPOSITE0 ON WTPartMaster;
+DROP INDEX WTPartMaster$COMPOSITE4 ON WTPartMaster;
+DROP INDEX WTPartMaster$COMPOSITE2 ON WTPartMaster;
+ALTER TABLE WTPartMaster DROP COLUMN WT_FBI_COMPUTE_1_0, WT_FBI_COMPUTE_0_0, WT_FBI_COMPUTE_2_0;
+ALTER TABLE WTPartMaster ALTER COLUMN name NVARCHAR(4000) NOT NULL;
+ALTER TABLE WTPartMaster ALTER COLUMN WTPartNumber NVARCHAR(4000) NOT NULL;
+ALTER TABLE WTPartMaster ADD WT_FBI_COMPUTE_1_0 AS REVERSE(UPPER(name)), WT_FBI_COMPUTE_0_0 AS UPPER(name), WT_FBI_COMPUTE_2_0 AS REVERSE(WTPartNumber);
+CREATE INDEX WTPartMaster$COMPOSITE3 ON WTPartMaster(name,authoringLanguagetranslation,idA2A2)
+ ON INDX;
+
+CREATE INDEX WTPartMaster$COMPOSITE1 ON WTPartMaster(WT_FBI_COMPUTE_1_0)
+ ON INDX;
+
+CREATE INDEX WTPartMaster$COMPOSITE22 ON WTPartMaster(WTPartNumber)
+ ON INDX;
+
+CREATE INDEX WTPartMaster$COMPOSITE0 ON WTPartMaster(WT_FBI_COMPUTE_0_0)
+ ON INDX;
+
+CREATE INDEX WTPartMaster$COMPOSITE4 ON WTPartMaster(name)
+ ON INDX;
+
+CREATE INDEX WTPartMaster$COMPOSITE2 ON WTPartMaster(WT_FBI_COMPUTE_2_0)
+ ON INDX;
+# ------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+##-------------------------------------------- 권한 셋팅 2023/11/17 ----------------------------------------------
+
+메뉴별 권한 생성
+* 처음 생성 시
+EsolutionMenu 테이블 생성
+EsolutionMenuLoader 돌릴 것
+* 이미 메뉴 존재 시
+delete from EsolutionMenu; 쿼리 돌려서 데이터 전부 삭제
+EsolutionMenuLoader 돌릴 것
+
+폴더별 권한 생성
+FolderAuthGroup 테이블 생성
+* 폴더가 없는 경우(처음 생성 시) 폴더로더 돌릴 것  
+* 폴더가 있을 경우 OOTB 접속하여 Document 하위 폴더 모두 수정 한번씩 해주면 완료
+
+객체별 권한 생성
+ObjectAuthGroup 테이블 생성
+하위 명령어 Windchill shell 에서 전부 돌리면 끝
+ResourceBuild com.e3ps.admin.AuthorityGroupTypeRB** 
+ResourceBuild com.e3ps.admin.AuthorityObjectTypeRB**   
+windchill com.e3ps.load.ObjectAuthGroupLoader wcadmin wcadmin
+
+##-------------------------------------------- 20231123 ----------------------------------------------
+
+# EcoPartLink 수정
+  ALTER TABLE EcoPartLink ADD checkin TINYINT NULL, isDelete TINYINT NULL, revise TINYINT NULL, visible TINYINT NULL
+  
+##-------------------------------------------- 20231124 ----------------------------------------------
+
+# OOTB에서 LC_ECO 추가
+ResourceBuild wt.lifecycle.StateRB**
+
+# EChangeRequest2, EChangeOrder2 수정
+  - 테이블 DROP 후 upgrademanager -cs 명령어를 통해 sql 생성 후 테이블 재 생성
+  
+# OOTB에서 Default/Change/ECR, Default/Change/ECO 폴더 생성
+
+##-------------------------------------------- 20231207 ----------------------------------------------
+
+ALTER TABLE DistributeRegistration ADD distributeTarget NVARCHAR(200) NULL;
+ALTER TABLE DistributeRegistration ADD distributeCompany NVARCHAR(400) NULL;
+
+##-------------------------------------------- 20231208 ----------------------------------------------
+ant -f %WT_HOME%\bin\tools.xml model_uninstall -Dmodel_uninstall.filter=com.e3ps.change.EcrProductLink
+ant -f %WT_HOME%\bin\tools.xml model_uninstall -Dmodel_uninstall.filter=com.e3ps.change.EcoProductLink.
+
+
+
+아래 폴더 경로 만들기
+drm.api.decryfolder=D:\\ptc\\Windchill_12.1\\Windchill\\codebase\\temp\\e3ps\\decry\\
+drm.api.encryfolder=D:\\ptc\\Windchill_12.1\\Windchill\\codebase\\temp\\e3ps\\encry\\
+drm.api.orgFileFolder=D:\\ptc\\Windchill_12.1\\Windchill\\codebase\\temp\\e3ps\\orgFile\\
+
+##-------------------------------------------- 20231215 ----------------------------------------------
+
+#다운로드 이력 IP 주소 Column 추가
+ALTER TABLE DownloadHistory ADD ip NVARCHAR(200) NULL;
+
+##-------------------------------------------- 20231219 ----------------------------------------------
+
+#StateRB, LC_ECO 수정
+ResourceBuild wt.lifecycle.StateRB** 명령어 실행 후 ootb 라이프사이클 LC_ECO 삭제후  새로 등록
+ECR, ECO에 값이 있는 경우
+select * from EChangeActivity ea ;
+select * from EChangeContents ec ;
+select * from EChangeOrder2 eo ;
+select * from EChangeRequest2 er ;
+select * from ApprovalLine al;
+select * from ApprovalMaster am ;
+select * from ApprovalObjectLink aol ;
+하위 테이블에서 ECR, ECO 관련 데이터 모두 삭제
+
+
+
+
+
+
+
+
+

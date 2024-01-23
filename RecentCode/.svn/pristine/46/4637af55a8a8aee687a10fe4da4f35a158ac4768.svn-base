@@ -1,0 +1,6 @@
+jar-in-jar=false
+windchill-version=10.2.20.09.04
+standard-dtd=standardX24.dtd
+format=WNC_FORMAT
+multiple=true
+lastKnownRepository=279804905-1442997889143-1357047951-119-1-168-192|plmdev.ihaan.com

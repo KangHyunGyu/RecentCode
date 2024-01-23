@@ -1,0 +1,460 @@
+package com.e3ps.common.util;
+
+import java.text.DecimalFormat;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.e3ps.common.log4j.Log4jPackages;
+import com.e3ps.org.People;
+import com.e3ps.org.service.PeopleHelper;
+
+import wt.content.ApplicationData;
+import wt.content.ContentItem;
+import wt.content.URLData;
+import wt.enterprise.RevisionControlled;
+import wt.fc.Persistable;
+import wt.fc.PersistenceHelper;
+import wt.fc.QueryResult;
+import wt.fc.ReferenceFactory;
+import wt.httpgw.URLFactory;
+import wt.org.OrganizationServicesHelper;
+import wt.org.WTUser;
+import wt.query.QuerySpec;
+import wt.query.SearchCondition;
+import wt.session.SessionHelper;
+import wt.util.WTContext;
+import wt.util.WTException;
+import wt.vc.VersionControlHelper;
+import wt.vc.Versioned;
+
+public class CommonUtil {
+
+	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Log4jPackages.COMMON.getName());
+	
+	private static final String webContext = "worldex";
+	
+	private CommonUtil() {
+	}
+	
+	private static ReferenceFactory rf = null;
+	
+	public static String getOIDString(Persistable per) {
+		if (per == null)
+			return null;
+		return PersistenceHelper.getObjectIdentifier(per).getStringValue();
+	}
+	
+	public static String getFullOIDString(Persistable persistable) {
+		try {
+			if (rf == null)
+				rf = new ReferenceFactory();
+			return rf.getReferenceString(rf.getReference(persistable));
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	public static long getOIDLongValue(String oid) {
+		String tempoid = oid;
+		tempoid = tempoid.substring(tempoid.lastIndexOf(":") + 1);
+		return Long.parseLong(tempoid);
+	}
+	
+	public static long getOIDLongValue(Persistable per) {
+		String tempoid = getOIDString(per);
+		tempoid = tempoid.substring(tempoid.lastIndexOf(":") + 1);
+		return Long.parseLong(tempoid);
+	}
+	
+	public static String getVROID(String oid) {
+		Object obj = getObject(oid);
+		if (obj == null)
+			return null;
+		return getVROID((Persistable) getObject(oid));
+	}
+	
+	public static String getVROID(Persistable persistable) {
+
+		if (persistable == null)
+			return null;
+		try {
+			if (rf == null)
+				rf = new ReferenceFactory();
+		//	return getVRString(rf.getReference(persistable));
+			return getVRString(persistable);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	/*
+	private static String getVRString(WTReference wtRef) throws WTException {
+		VersionReference verRef = (VersionReference) wtRef;
+		VersionForeignKey verForeignKey = (VersionForeignKey) verRef.getKey();
+		return "VR:" + verRef.getKey().getClassname() + ":" + verForeignKey.getBranchId();
+	}
+	*/
+	private static String getVRString(Persistable per) throws WTException {
+		if( per instanceof RevisionControlled) {
+			RevisionControlled rev = (RevisionControlled)per;
+			
+			return "VR:" + rev.getClassInfo().getClassname() + ":" + rev.getBranchIdentifier();
+		}else {
+			return getOIDString(per);
+		}
+		
+		
+	}
+	
+	public static Persistable getObject(String oid) {
+		if (oid == null)
+			return null;
+		try {
+			if (rf == null)
+				rf = new ReferenceFactory();
+			return rf.getReference(oid).getObject();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	public static Persistable getPersistable(String oid) {
+		return getObject(oid);
+	}
+	
+	public static boolean isAdmin() throws WTException {
+		return isMember("Administrators");
+	}
+
+	public static boolean isMember(String group) throws WTException {
+		WTUser user = (wt.org.WTUser) SessionHelper.manager.getPrincipal();
+		return isMember(group, user);
+	}
+
+	public static boolean isMember(String group, WTUser user) throws WTException {
+		Enumeration en = user.parentGroupNames();
+		while (en.hasMoreElements()) {
+			String st = (String) en.nextElement();
+			if (st.equals(group))
+				return true;
+		}
+		return false;
+	}
+	// 아이디 공용여부 확인 
+	public static boolean isPublic() throws Exception{
+		WTUser user = (WTUser)SessionHelper.getPrincipal();
+		return PeopleHelper.manager.isPublic(user);
+	}
+	
+	public static String getURLString(String arg1) {
+		
+		String url = "/Windchill/" + webContext + arg1;
+		
+		return url;
+	}
+
+	public static String getIncludeURLString(String arg1) {
+		String url = "/" + webContext + arg1;
+		
+		return url;
+	}
+	
+	public static boolean isLastVersion(Versioned versioned) {
+
+		try {
+
+			Class cls = versioned.getClass();
+
+//			if (versioned instanceof WTPart) {
+//				cls = WTPart.class;
+//			} else if (versioned instanceof EPMDocument) {
+//				cls = EPMDocument.class;
+//			} else if (versioned instanceof WTDocument) {
+//				cls = WTDocument.class;
+//			} else {
+//				return false;
+//			}
+			
+			long longOid = CommonUtil.getOIDLongValue(versioned);
+
+			QuerySpec qs = new QuerySpec();
+
+			int idx = qs.appendClassList(cls, true);
+
+			// 최신 이터레이션
+			qs.appendWhere(VersionControlHelper.getSearchCondition(cls, true),
+					new int[] { idx });
+
+			// 최신 버젼
+			SearchUtil.addLastVersionCondition(qs, cls, idx);
+
+			qs.appendAnd();
+			qs.appendWhere(new SearchCondition(cls, "thePersistInfo.theObjectIdentifier.id", SearchCondition.EQUAL, longOid), new int[] { idx });
+			QueryResult rt = PersistenceHelper.manager.find(qs);
+
+			if (rt.size() > 0)
+				return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+	
+	public static String getExtension(String fileName){
+		return fileName.substring(fileName.lastIndexOf(".")+1);
+	}
+	
+	public static String getFileNameNonExtension(String fileName){
+		
+		String extension = getExtension(fileName);
+		fileName = fileName.substring(0,fileName.lastIndexOf(extension)-1);
+		return fileName;
+	}
+	
+	public static String getBrowser(HttpServletRequest request) {
+		String userAgent = request.getHeader("User-Agent");
+		//LOGGER.info(userAgent);
+		if (userAgent != null) {
+			if (userAgent.indexOf("Trident") > -1) {
+				return "MSIE";
+			} else if (userAgent.indexOf("Chrome") > -1) {
+				return "Chrome";
+			} else if (userAgent.indexOf("Opera") > -1) {
+				return "Opera";
+			} else if (userAgent.indexOf("Firefox") > -1) {
+				return "Firefox";
+			} else if (userAgent.indexOf("iPhone") > -1 && userAgent.indexOf("Mobile") > -1) {
+				return "iPhone";
+			} else if (userAgent.indexOf("Android") > -1 && userAgent.indexOf("Mobile") > -1) {
+				return "Android";
+			}
+		}
+		return "";
+	}
+	
+	public static String getClientIP(HttpServletRequest request) {
+		
+	    String ip = request.getHeader("X-FORWARDED-FOR"); 
+
+	    if(ip == null || ip.length() == 0) {
+	        ip = request.getHeader("Proxy-Client-IP");
+	    }
+
+	    if(ip == null || ip.length() == 0) {
+	        ip = request.getHeader("WL-Proxy-Client-IP");  // 웹로직
+	    }
+
+	    if(ip == null || ip.length() == 0) {
+	        ip = request.getRemoteAddr();
+	    }
+
+	    return ip;
+	}
+	
+	public static double getSplitCost(String str) {
+		double intValue = 0.0;
+		try{
+			if(str.length() > 0) {
+				if(str.startsWith("-")) {
+					str = str.substring(1);
+					String[] tempStr = str.split(",");
+					String strValue = "";
+					for(int i=0; i<tempStr.length; i++) {
+						strValue += tempStr[i];
+					}
+					intValue = Double.parseDouble(strValue);
+					intValue = intValue*-1;
+					return intValue;
+				}else{
+					String[] tempStr = str.split(",");
+					String strValue = "";
+					
+					for(int i=0; i<tempStr.length; i++) {
+						strValue += tempStr[i];
+					}
+					
+					intValue = Double.parseDouble(strValue);
+					return intValue;
+				}
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		return intValue;
+	}
+	
+	public static String getCommaData(double sum) {
+		String str = "";
+		try{
+			DecimalFormat df = new DecimalFormat("#,##0");
+			str = df.format(sum);		
+			//str = NumberFormat.getInstance().format(sum);
+			return str;
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		return str;
+	}
+	/**
+     * 로그인된 사용자의 WTUser 객체를 리턴한다.
+     * 
+     * @return
+     */
+    public static WTUser getCurrentUser() {
+		WTUser user = null;
+		try {
+		    user = (WTUser) SessionHelper.manager.getPrincipal();
+		} catch (WTException e) {
+		    e.printStackTrace();
+		}
+		return user;
+    }
+	/**
+     * 로그인된 사용자의 아이디를 리턴한다.
+     * 
+     * @return
+     */
+    public static String getCurrentUserId() {
+    	return getCurrentUser().getName();
+    }
+    
+    
+    /**
+     * 
+     * @desc	: 유저가 공영ID 및 일반 유저 체크로 메일 정보
+     * @author	: tsuam
+     * @date	: 2019. 11. 15.
+     * @method	: getUserMail
+     * @return	: Map<String,String>
+     * @param userID
+     * @return
+     * @throws Exception
+     */
+    public static Map<String,String> getUserMail(String userID) throws Exception{
+    	
+    	Map<String,String> map = new HashMap<String, String>();
+    	People pp= PeopleHelper.manager.getIDPeople(userID);
+    	
+    	
+    	if(pp == null ){
+    		LOGGER.info(userID +": People is null " );
+    		WTUser user = (WTUser)SessionHelper.manager.getPrincipal();
+    		map.put("toName", user.getFullName());
+    		map.put("toMail", user.getEMail());
+    	}else{
+    		WTUser user = pp.getUser();
+    		map.put("toName", user.getFullName());
+    		map.put("toMail", user.getEMail());
+    	}
+    	
+    	
+    	return map;
+    }
+    
+    public static Map<String,String> getUserMail(People pp) throws Exception{
+    	
+    	Map<String,String> map = new HashMap<String, String>();
+    	
+		WTUser user = pp.getUser();
+		map.put("toName", user.getName());
+		map.put("toMail", user.getEMail());
+    	
+    	return map;
+    }
+    
+    public static String getContentIconStr(ContentItem item) throws WTException {
+		String iconStr = getContentIcon(item);
+	
+		String filename = "";
+		if (item instanceof ApplicationData) {
+			ApplicationData data = (ApplicationData) item;
+			String extStr = "";
+			String tempFileName = data.getFileName ();
+			filename = tempFileName;
+		}
+		
+		return "<img src='" + iconStr + "' border=0 alt='" + filename + "'>";
+	}
+    
+    public static String getContentIcon(ContentItem item) throws WTException {
+		URLFactory urlFac = new URLFactory ();
+		String iconStr = "";
+		String fileiconpath = "jsp/project/images/fileicon/";
+		if (item instanceof URLData) {
+			iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "link.gif";
+		} else if (item instanceof ApplicationData) {
+			ApplicationData data = (ApplicationData) item;
+
+			String extStr = "";
+			String tempFileName = data.getFileName ();
+			int dot = tempFileName.lastIndexOf ( "." );
+			if (dot != -1) extStr = tempFileName.substring ( dot + 1 ); // includes
+																									// "."
+
+			if (extStr.equalsIgnoreCase ( "cc" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "ed.gif";
+			else if (extStr.equalsIgnoreCase ( "exe" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "exe.gif";
+			else if (extStr.equalsIgnoreCase ( "doc" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "doc.gif";
+			else if (extStr.equalsIgnoreCase ( "ppt" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "ppt.gif";
+			else if (extStr.equalsIgnoreCase ( "xls" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "xls.gif";
+			else if (extStr.equalsIgnoreCase ( "csv" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "xls.gif";
+			else if (extStr.equalsIgnoreCase ( "txt" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "notepad.gif";
+			else if (extStr.equalsIgnoreCase ( "mpp" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "mpp.gif";
+			else if (extStr.equalsIgnoreCase ( "pdf" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "pdf.gif";
+			else if (extStr.equalsIgnoreCase ( "tif" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "tif.gif";
+			else if (extStr.equalsIgnoreCase ( "gif" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "gif.gif";
+			else if (extStr.equalsIgnoreCase ( "jpg" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "jpg.gif";
+			else if (extStr.equalsIgnoreCase ( "ed" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "ed.gif";
+			else if (extStr.equalsIgnoreCase ( "zip" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "zip.gif";
+			else if (extStr.equalsIgnoreCase ( "tar" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "zip.gif";
+			else if (extStr.equalsIgnoreCase ( "rar" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "zip.gif";
+			else if (extStr.equalsIgnoreCase ( "jar" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "zip.gif";
+			else if (extStr.equalsIgnoreCase ( "igs" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "epmall.gif";
+			else if (extStr.equalsIgnoreCase ( "pcb" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "epmall.gif";
+			else if (extStr.equalsIgnoreCase ( "asc" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "epmall.gif";
+			else if (extStr.equalsIgnoreCase ( "dwg" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "epmall.gif";
+			else if (extStr.equalsIgnoreCase ( "dxf" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "epmall.gif";
+			else if (extStr.equalsIgnoreCase ( "sch" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "epmall.gif";
+			else if (extStr.equalsIgnoreCase ( "html" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "htm.gif";
+			else if (extStr.equalsIgnoreCase ( "htm" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "htm.gif";
+			else if (extStr.equalsIgnoreCase ( "docx" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "doc.gif";
+			else if (extStr.equalsIgnoreCase ( "pptx" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "ppt.gif";
+			else if (extStr.equalsIgnoreCase ( "xlsx" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "xls.gif";
+			else if (extStr.equalsIgnoreCase ( "bmp" )) iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "bmp.gif";
+			else iconStr = urlFac.getBaseURL ().getPath () + fileiconpath + "generic.gif";
+		}
+        else
+        {
+            return null;
+        }
+		
+		return iconStr;
+	}
+    
+    public static WTUser findUserID(String userID) throws WTException {
+		WTUser wtuser = (WTUser) OrganizationServicesHelper.manager.getAuthenticatedUser ( userID );
+		return wtuser;
+	}
+
+    public static boolean isUSLocale(){
+    	try{
+	    	Locale userLocale = SessionHelper.manager.getLocale();
+	        if(userLocale == null) {
+	            userLocale = WTContext.getContext().getLocale();
+	        }
+	        if(userLocale.equals(Locale.US)) {
+	        	return true;
+	        }
+	        if("en".equals(userLocale.getLanguage())){
+	        	return true;
+	        }
+    	}catch(Exception ex){
+    		ex.printStackTrace();
+    	}
+    	return false;
+    }
+}

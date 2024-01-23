@@ -1,0 +1,148 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!-- 각 화면 개발시 Tag 복사해서 붙여넣고 사용할것 -->    
+<%@ taglib prefix="c"		uri="http://java.sun.com/jsp/jstl/core"			%>
+<%@ taglib prefix="e3ps" 	uri="/WEB-INF/tlds/e3ps-functions.tld"%>
+<script>
+$(document).ready(function(){
+	
+	//팝업 리사이즈
+// 	popupResize();
+	//grid reset
+	AUIGrid.destroy(dh_myGridID);
+	//grid setting
+	dh_createAUIGrid(dh_columnLayout);
+	//get grid data
+	dh_getGridData();
+	
+});
+
+//AUIGrid 생성 후 반환 ID
+var dh_myGridID;
+
+//AUIGrid 칼럼 설정
+var dh_columnLayout = [
+	{ dataField : "fName",				headerText : "${e3ps:getMessage('파일 명')}",				width:"*",
+		filter : {
+			showIcon : true,
+			iconWidth:30
+		}	
+	},
+	/*
+	{ dataField : "name",			headerText : "${e3ps:getMessage('이름')}",				width:"*%",
+		filter : {
+			showIcon : true,
+			iconWidth:30
+		}	
+	},
+	*/
+	{ dataField : "departmentName",			headerText : "${e3ps:getMessage('부서')}",				width:"15%",
+		filter : {
+			showIcon : true,
+			iconWidth:30
+		}	
+	},
+	{ dataField : "name",			headerText : "${e3ps:getMessage('담당자')}",				width:"15%",
+		filter : {
+			showIcon : true,
+			iconWidth:30
+		}	
+	},
+	
+	{ dataField : "downloadDate",		headerText : "${e3ps:getMessage('다운로드 시간')}",		width:"15%",
+		filter : {
+			showIcon : true,
+			iconWidth:30
+		}	
+	},
+// 	{ dataField : "ip",				headerText : "${e3ps:getMessage('IP 주소')}",		width:"15%",
+// 		filter : {
+// 			showIcon : true,
+// 			iconWidth:30
+// 		}	
+// 	},
+];
+
+//AUIGrid 를 생성합니다.
+function dh_createAUIGrid(dh_columnLayout) {
+	
+	// 그리드 속성 설정
+	var gridPros = {
+		
+		selectionMode : "multipleCells",
+		showSelectionBorder : true,
+		noDataMessage : gridNoDataMessage,
+		rowIdField : "_$uid",
+		showRowNumColumn : true,
+		showEditedCellMarker : false,
+		wrapSelectionMove : true,
+		showRowCheckColumn : false,
+		enableFilter : true,
+		enableMovingColumn : true
+		
+	};
+
+	// 실제로 #grid_wrap 에 그리드 생성
+	dh_myGridID = AUIGrid.create("#dh_grid_wrap", dh_columnLayout, gridPros);
+	
+	// 셀 클릭 이벤트 바인딩
+	AUIGrid.bind(dh_myGridID, "cellClick", dh_auiGridCellClickHandler);
+	
+	var gridData = new Array();
+	AUIGrid.setGridData(dh_myGridID, gridData);
+}
+
+function dh_getGridData(){
+
+	var param = new Object();
+	
+	param.oid = "${oid}";
+	AUIGrid.showAjaxLoader(dh_myGridID);
+	var url = getURLString("/common/getDownloadHistory");
+	ajaxCallServer(url, param, function(data){
+
+		// 그리드 데이터
+		var gridData = data.list;
+		
+		// 그리드에 데이터 세팅
+		AUIGrid.setGridData(dh_myGridID, gridData);
+
+		AUIGrid.setAllCheckedRows(dh_myGridID, false);
+		AUIGrid.removeAjaxLoader(dh_myGridID);
+		
+	});
+}
+
+//셀 클릭 핸들러
+function dh_auiGridCellClickHandler(event) {
+	
+	var dataField = event.dataField;
+	var oid = event.rowIdValue;
+	
+}
+
+//필터 초기화
+function dh_resetFilter(){
+    AUIGrid.clearFilterAll(dh_myGridID);
+}
+
+function dh_xlsxExport() {
+	AUIGrid.setProperty(dh_myGridID, "exportURL", getURLString("/common/xlsxExport"));
+	
+	 // 엑셀 내보내기 속성
+	  var exportProps = {
+			 postToServer : true,
+	  };
+	  // 내보내기 실행
+	  AUIGrid.exportToXlsx(dh_myGridID, exportProps);
+}
+</script>
+<div class="seach_arm2 pt10 pb5">
+	<div class="leftbt"><h4><img class="pointer" onclick="switchPopupDiv(this);" src="/Windchill/jsp/portal/images/minus_icon.png"> ${e3ps:getMessage('다운로드 이력')}</h4></div>
+	<div class="rightbt">
+		<button type="button" class="s_bt03" onclick="dh_resetFilter();">${e3ps:getMessage('필터 초기화')}</button>
+		<button type="button" class="s_bt03" onclick="dh_xlsxExport();">${e3ps:getMessage('엑셀 다운로드')}</button>
+	</div>
+</div>
+<div class="list" id="dh_grid_wrap" style="height:400px">
+</div>

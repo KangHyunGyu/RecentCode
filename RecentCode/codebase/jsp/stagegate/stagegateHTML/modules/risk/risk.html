@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<base href="../..">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Summary</title>
+
+	<link rel="stylesheet" href="./css/style.css">
+	<link rel="stylesheet" href="./css/custom.css">
+</head>
+
+<body>
+
+	<!-- pop -->
+	<div class="pop">
+
+		<!-- top -->
+		<div class="top">
+			<h2>
+				Stage-Gate Dashboard – PSO Project 001
+			</h2>
+
+			<span class="close">
+				<a>
+					<img src="./images/colse_bt.png" alt="닫기">
+				</a>
+			</span>
+		</div>
+		<!-- //top -->
+
+		<div class="pop_nav">
+			▶ 관련 프로젝트: PSO Project 2/관련 부품번호(부품명): SHPART001(SHPartName001)
+		</div>
+
+		<!--tap -->
+		<div class="tap pt15">
+			<ul>
+				<li data-module="summary">Summary</li>
+				<li data-module="timing">Timing</li>
+				<li data-module="quality">Quality</li>
+				<li data-module="c_stop">C_Stop</li>
+				<li class="on" data-module="risk">Risk</li>
+				<li data-module="deliverable">Deliverable Status</li>
+				<li data-module="gateReviews">Gate Reviews</li>
+				<li data-module="viewProductDev">Product Dev.</li>
+				<li data-module="viewInchanges">ECR</li>
+				<!-- <li data-module="">MM</li>
+			<li data-module="">Action</li> -->
+			</ul>
+
+			<div class="tapbutton">
+				<button type="button" class="s_bt03">1</button>
+				<button type="button" class="s_bt03">2</button>
+				<button type="button" class="s_bt03">3</button>
+				<button type="button" class="s_bt03">4</button>
+				<button type="button" class="s_bt09">5</button>
+				<button type="button" class="s_bt03">6</button>
+				<button type="button" class="s_bt010">7</button>
+			</div>
+		</div>
+		<!--//tap -->
+
+		<div class="seach_arm3 pl25 pt5 ">
+			<div class="leftbt">
+				<img class="pointer content--toggle" src="./images/minus_icon.png" data-target="risk">
+				Risk
+				<button class="s_bt03 property_update" data-target="risk"></button>
+			</div>
+		</div>
+
+		<div class="pro_table pt5 pl25 pr25 ">
+			<table class="mainTable risk" summary="risk">
+				<caption>
+					Risk
+				</caption>
+				<colgroup>
+					<col style="width:auto">
+					<col style="width:21%">
+					<col style="width:7%">
+					<col style="width:5%">
+					<col style="width:5%">
+					<col style="width:5%">
+					<col style="width:5%">
+					<col style="width:25%">
+					<col style="width:7%">
+					<col style="width:7%">
+					<col style="width:7%">
+				</colgroup>
+
+				<thead>
+					<tr>
+						<th scope="col" rowspan="2">
+							N°
+						</th>
+						<th scope="col" rowspan="2" class="tac">
+							Risk Description
+						</th>
+						<th scope="col" rowspan="2" class="tac">
+							Program Review Type
+						</th>
+						<th scope="col" colspan="4" class="tac">
+							Risk Assessment(
+							<font class="font_red">R</font> /
+							<font class="font_yellow">Y</font> /
+							<font class="font_green">G</font>
+							)
+						</th>
+						<th scope="col" colspan="4" class="tac">
+							Recovry Plan
+						</th>
+					</tr>
+					<tr class="height65">
+						<th scope="col" class="tac pd0">
+							<div class="rotate270">
+								Customer
+							</div>
+						</th>
+						<th scope="col" class="tac pd0">
+							<div class="rotate270">
+								Budget
+							</div>
+						</th>
+						<th scope="col" class="tac pd0">
+							<div class="rotate270">
+								Timing
+							</div>
+						</th>
+						<th scope="col" class="tac pd0">
+							<div class="rotate270">
+								Perform.
+							</div>
+						</th>
+						<th scope="col" class="tac">
+							Proposed Action
+						</th>
+						<th scope="col" class="tac">
+							Leader
+						</th>
+						<th scope="col" class="tac">
+							<div class="lineH20">
+								Target <br />
+								completion <br />
+								date
+							</div>
+						</th>
+						<th scope="col" class="tac">
+							<div class="lineH20">
+								Actual <br />
+								completion <br />
+								date
+							</div>
+						</th>
+					</tr>
+				</thead>
+
+				<tbody></tbody>
+			</table>
+		</div>
+
+	</div>
+	<script src="./index.js"></script>
+	<script src="./modules/risk/data.js"></script>
+	<script src="./modules/risk/risk.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,57 @@
+<%@page import="wt.admin.AdminDomainRef"%>
+<%@page import="wt.admin.AdministrativeDomainHelper"%>
+<%@page import="wt.folder.SubFolder"%>
+<%@page import="wt.session.SessionHelper"%>
+<%@page import="wt.org.WTPrincipal"%>
+<%@page import="wt.method.MethodContext"%>
+<%@page import="wt.method.RemoteMethodServer"%>
+<%@page import="com.e3ps.admin.AuthorityGroup"%>
+<%@page import="com.e3ps.admin.util.ObjectKey"%>
+<%@page import="wt.folder.FolderMemberLink"%>
+<%@page import="wt.content.ApplicationData"%>
+<%@page import="com.e3ps.part.bean.PartData"%>
+<%@page import="java.util.Map"%>
+<%@page import="com.e3ps.part.service.BomHelper"%>
+<%@page import="com.e3ps.part.bean.BomTreeData"%>
+<%@page import="java.util.List"%>
+<%@page import="com.e3ps.common.util.StringUtil"%>
+<%@page import="com.e3ps.common.util.CommonUtil"%>
+<%@page import="com.e3ps.part.service.PartHelper"%>
+<%@page import="java.util.HashMap"%>
+<%@page import="wt.vc.views.ViewHelper"%>
+<%@page import="wt.vc.views.View"%>
+<%@page import="wt.vc.baseline.Baseline"%>
+<%@page import="com.ptc.wvs.common.cadagent.CadProxy"%>
+<%@page import="wt.lifecycle.State"%>
+<%@page import="wt.vc.VersionControlHelper"%>
+<%@page import="wt.fc.QueryResult"%>
+<%@page import="wt.fc.ReferenceFactory"%>
+<%@page import="wt.part.WTPart"%>
+<%@page import="java.util.ArrayList"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%
+	/* String oid = "wt.content.ApplicationData:1082126";
+	ApplicationData appData = (ApplicationData) CommonUtil.getObject(oid);
+	System.out.println("ecr appData -> "+appData);
+	System.out.println("appData.getRole() -> "+appData.getRole()); */
+	/* out.println("start\n");
+	CadProxy cadProxy = new CadProxy();
+	out.println(cadProxy.getUseworker()+"\n");
+	out.println("end\n");
+	
+	
+	FolderMemberLink */
+	/* out.print("map:"+ request.getServerName() +"<br>" + request.getRequestURI() + "<br>");
+	String[] uriArr = request.getRequestURI().split("/");
+	String contextName = uriArr[2];
+	out.print("contextName:"+ contextName+ "<br>");
+	WTPrincipal sessionUser = SessionHelper.manager.getPrincipal();
+	out.println("sessionUser ==> " +sessionUser); */
+	//out.print(keyList.stream().filter(item -> ag.getAuthObjectType().equals((String)item.get("code"))).findFirst().orElseThrow(()-> new Exception("ENUM 클래스에 코드가 존재하지 않음")).get("name"));
+	
+	AdminDomainRef ref = AdministrativeDomainHelper.getAdminDomainRef("/Default");
+	SubFolder folder = (SubFolder)CommonUtil.getObject("wt.folder.SubFolder:1136908");
+	AdministrativeDomainHelper.manager.changeAdministrativeDomain(folder, ref, true);
+	
+%>
+
